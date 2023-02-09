@@ -4,6 +4,7 @@
         "./src",
         "./package/usb_camera",
         "./drivers/usb_camera",
-        "./test/drivers"
+        "./test/drivers",
+        "./drivers/lcd"
     ]
 }

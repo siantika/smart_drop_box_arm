@@ -1,8 +1,9 @@
 import sys
-sys.path.insert(0,'drivers/usb_camera')
-from usb_camera import UsbCamera
+sys.path.insert(0,'drivers/lcd')
+from lcd import Lcd
 
-cam = UsbCamera('/dev/video2')
+from time import sleep
 
-cam.setDirSavedPhoto('')
-cam.capturePicture()
+
+lcd = Lcd(dev_addr=0x24, bus_line=0)
+sleep(2)

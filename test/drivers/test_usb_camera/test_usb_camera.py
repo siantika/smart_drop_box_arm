@@ -5,6 +5,10 @@ from unittest.mock import Mock, patch
 sys.path.append('drivers/usb_camera') ### include the library, we want to test
 from usb_camera import UsbCamera
 
+"""
+    This test requires USB CAMERA HARDWARE!
+"""
+
 device_address = '/dev/video2' ### in ASUS laptop, please check for other device
 dir_saved_photo = 'test/image_result/'
 cmd_capture_photo = ['fswebcam','-d', str(device_address), '-r', '640x480', '--save', str(dir_saved_photo)+('%Y-%m-%d_%H-%M-%S.jpg')]
@@ -59,6 +63,7 @@ class TestUsbCamera:
             self.set_dir_saved_photo()
             cam.capture_photo()
             mock_subprocess_run.assert_called_once_with(cmd_capture_photo) ### dont producing files
+
 
    
     def test_capture_photo_should_saved_captured_photo_in_correct_directory(self):
