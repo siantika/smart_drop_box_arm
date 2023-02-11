@@ -7,6 +7,7 @@
         "./test/drivers",
         "./drivers/lcd",
         "./drivers/mock_wiringpi",
-        "./drivers/hx711"
+        "./drivers/hx711",
+        "./drivers/door"
     ]
 }

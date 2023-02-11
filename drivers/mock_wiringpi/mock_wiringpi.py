@@ -18,3 +18,9 @@ class MockWiringPi:
             return 0 = LOW || 1 = HIGH
         '''
         return 0
+
+class GPIO:
+    INPUT = 0
+    OUTPUT = 1
+    LOW = 0
+    HIGH = 1
