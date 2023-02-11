@@ -5,6 +5,8 @@
         "./package/usb_camera",
         "./drivers/usb_camera",
         "./test/drivers",
-        "./drivers/lcd"
+        "./drivers/lcd",
+        "./drivers/mock_wiringpi",
+        "./drivers/hx711"
     ]
 }
