@@ -1,9 +1,7 @@
 import sys
-sys.path.insert(0,'drivers/lcd')
-from lcd import Lcd
+sys.path.insert(0,'drivers/sound')
+from sound import Sound
+import os
 
-from time import sleep
+sound = Sound()
 
-
-lcd = Lcd(dev_addr=0x24, bus_line=0)
-sleep(2)
