@@ -10,6 +10,7 @@
         "./drivers/hx711",
         "./drivers/door",
         "./drivers/sound",
-        "./conf"
+        "./conf",
+        "./drivers/keypad"
     ]
 }

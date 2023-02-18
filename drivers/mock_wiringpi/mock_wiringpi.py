@@ -18,9 +18,15 @@ class MockWiringPi:
             return 0 = LOW || 1 = HIGH
         '''
         return 0
+    
+    def pullUpDnControl(self, pin, mode):
+        return pin, mode
 
 class GPIO:
     INPUT = 0
     OUTPUT = 1
     LOW = 0
     HIGH = 1
+    PUD_OFF = 0
+    PUD_DOWN = 1
+    PUD_UP = 2
