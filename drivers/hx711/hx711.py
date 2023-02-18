@@ -9,7 +9,10 @@
     NOTE: Please install wiringOP lib before use this!
           Don't forget to put '--hw-orpi' when run this code!, see example.py in github repo!
 
+    see: 'example/hx711_ex.py' file
+
     GPL 2.0 Licenses. 
+
 
 '''
 import sys
