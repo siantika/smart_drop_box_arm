@@ -18,7 +18,5 @@ PINS_COLUMN_KEYPAD = [6,7,8,9]
 keypad = Keypad(PINS_ROW_KEYPAD, PINS_COLUMN_KEYPAD)
 
 print("please touch the keypad once (single char)")
-
 read_input_char = keypad.reading_input_char()
-
 print(read_input_char)
