@@ -1,3 +1,24 @@
+'''
+    File           : lcd.py
+    Author         : I Putu Pawesi Siantika, S.T.
+    Year           : Feb, 2023
+    Description    : 
+    
+    The minimal command to use LCD 16 x 2 with i2c pcf8574.
+    . Please find the address of i2c and the bus ( you can use i2c-tools package in linux)
+    see test_lcd.py for full documentation!
+
+    * Prerequisites *
+    1. SMBus lib.
+    2. Download or put this library in your working directory project.
+    3. Import it to your project file (eg. main.py)
+
+    Example code:
+        see: './example/lcd_ex.py' file!
+
+    License: see 'licenses.txt' file in the root of project
+'''
+
 from smbus2 import SMBus
 import time
 

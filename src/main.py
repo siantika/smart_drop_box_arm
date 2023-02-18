@@ -1,7 +1,7 @@
-import sys
-sys.path.insert(0,'drivers/sound')
-from sound import Sound
-import os
+# import sys
+# sys.path.append('drivers/sound')
+# from sound import Sound
+# import os
 
-sound = Sound()
+# sound = Sound()
 
