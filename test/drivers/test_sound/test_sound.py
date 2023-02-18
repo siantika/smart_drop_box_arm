@@ -1,13 +1,12 @@
 from unittest.mock import patch, call
 import os
 import sys
+import datetime
 sys.path.append('drivers/sound')
 import configparser
 import subprocess
 from sound import Sound
-
-
-
+import shutil
 
 class TestSound:
     def set_up(self):
@@ -17,8 +16,6 @@ class TestSound:
     def tear_down(self):
         pass
 
-
-  
     def test_init_process_should_be_correct(self):
         '''
             init process should:
@@ -62,10 +59,8 @@ class TestSound:
         
         
     #     assert self._config_file.readline() == "["+ self._now.strftime("%Y-%m-%d %H:%M:%S")+"]" + " -->  No config file was found!\n"
-    #     self.tear_down()
-    #     os.rmdir('./log')
-
-
+    #     shutil.rmtree('./log')
+ 
     def test_play_sound_should_be_correct(self):
         '''
             Create dir : ./assets/sound first
@@ -89,8 +84,6 @@ class TestSound:
 
         self.patcher1.stop()
         self.tear_down()
-
-
 
     def test_stop_sound_should_be_correct(self):
         '''
