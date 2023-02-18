@@ -1,3 +1,26 @@
+'''
+    File           : keypad.py
+    Author         : I Putu Pawesi Siantika, S.T.
+    Year           : Feb, 2023
+    Description    : 
+    
+    This code just modification from "the ref" below. Basically, i just changed the RPi library
+    to wiringOP. It can read a single char input from keypad 4x4. 
+
+    * Prerequisites *
+    1. Download or put this library in your working directory project.
+    2. Import it to your project file (eg. main.py)
+
+    Example code:
+        see: './example/keypad_ex.py' file!
+
+    License: see 'licenses.txt' file in the root of project
+
+    ref: https://forum.armbian.com/topic/24562-armbian-orange-pi-read-matrix-keypad-4x4-in-python/
+
+
+'''
+ 
 import sys
 import time
 if '--hw-orpi' in sys.argv:
@@ -35,7 +58,7 @@ class Keypad:
             wiringpi.pullUpDnControl(self._column_pin_array[2], GPIO.PUD_DOWN)
             wiringpi.pullUpDnControl(self._column_pin_array[3], GPIO.PUD_DOWN)
 
-    # ref: https://forum.armbian.com/topic/24562-armbian-orange-pi-read-matrix-keypad-4x4-in-python/
+   
     def _read_line(self, line, chars):
         self._chars = chars
         self._line = line
