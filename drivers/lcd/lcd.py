@@ -9,7 +9,7 @@
     see test_lcd.py for full documentation!
 
     * Prerequisites *
-    1. SMBus lib.
+    1. SMBus2 lib.
     2. Download or put this library in your working directory project.
     3. Import it to your project file (eg. main.py)
 
@@ -46,7 +46,7 @@ class Lcd:
         self._dev_addr = int(dev_addr)
         self._bus_line = int(bus_line)
         self.bus = SMBus()
-        self.bus.open(0)
+        self.bus.open(self._bus_line) 
 
     ### low level methods and private
     def _write_byte_data(self, byte_data):
@@ -107,10 +107,14 @@ class Lcd:
             raise ValueError("text's length exceeded 16 chars!")
 
     def init_lcd(self):
+        '''
+            Don't change the hierrachy of methods!
+        '''
+        time.sleep(0.5)
         self._set_mode_in_4_bit()
+        self.set_display_control_default()
         self.clear_lcd()
         self.return_home()
-        self.set_display_control_default()
         time.sleep(0.2)
        
 

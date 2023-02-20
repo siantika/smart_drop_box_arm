@@ -12,8 +12,8 @@ else:
 from keypad import Keypad
 
 ### var
-PINS_ROW_KEYPAD = [2,3,4,5]
-PINS_COLUMN_KEYPAD = [6,7,8,9]
+PINS_ROW_KEYPAD = [2,3,4,6]
+PINS_COLUMN_KEYPAD = [8,11,12,14]
 
 keypad = Keypad(PINS_ROW_KEYPAD, PINS_COLUMN_KEYPAD)
 

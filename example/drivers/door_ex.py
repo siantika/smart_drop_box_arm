@@ -3,6 +3,7 @@ sys.path.append('drivers/door')
 
 if '--hw-orpi' in sys.argv:
     import wiringpi 
+    from wiringpi import GPIO
     
 else:
     sys.path.append('drivers/mock_wiringpi')
