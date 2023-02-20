@@ -8,6 +8,9 @@ sys.path.append('drivers/mock_wiringpi')
 
 from keypad import Keypad
 
+test_row_pins_array = [2,3,4,5]
+test_column_pins_array = [6,7,8,9]
+
 
 class TestKeypad:
 
@@ -41,8 +44,8 @@ class TestKeypad:
 
         self.set_up()
      
-        assert keypad._row_pin_array == [2,3,4,5]
-        assert keypad._column_pin_array == [6,7,8,9]
+        assert keypad._row_pin_array == test_row_pins_array
+        assert keypad._column_pin_array == test_column_pins_array
 
         self.mock_wiringpi_wiringPiSetup.assert_called_once()
         self.mock_wiringpi_pinMode.assert_has_calls(
@@ -106,4 +109,30 @@ class TestKeypad:
                 call(1,0) # line 1 = LOW
             ]
         )
+
+    # @patch('time.sleep')
+    # @patch('keypad.Keypad._read_line')
+    # def test_read_input_char_should_put_correct_row_pins_array(self, mock__read_line, mock_time_sleep):
+    #     '''
+    #         Note: please comment the while true in 'keypad.py' to run this test. If in production code,
+    #             please comment this test case!.
+                
+    #     '''
+    #     self.set_up()
+      
+    #     keypad.reading_input_char()
+
+    #     mock__read_line.assert_has_calls(
+    #         [
+    #             call(test_row_pins_array [0], ['1', '2', '3', 'A']),
+    #             call(test_row_pins_array [1], ['4', '5', '6', 'B']),
+    #             call(test_row_pins_array [2], ['7', '8', '9', 'C']),
+    #             call(test_row_pins_array [3], ['*', '0', '#', 'D'])
+    #         ]
+    #     )
+    #     mock_time_sleep.assert_called_once_with(0.2)
+
+    #     self.tear_down()
+        
+
  
