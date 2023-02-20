@@ -110,29 +110,29 @@ class TestKeypad:
             ]
         )
 
-    @patch('time.sleep')
-    @patch('keypad.Keypad._read_line')
-    def test_read_input_char_should_put_correct_row_pins_array(self, mock__read_line, mock_time_sleep):
-        '''
-            Note: please comment the while true in 'keypad.py' to run this test. If in production code,
-                please comment this test case!.
+    # @patch('time.sleep')
+    # @patch('keypad.Keypad._read_line')
+    # def test_read_input_char_should_put_correct_row_pins_array(self, mock__read_line, mock_time_sleep):
+    #     '''
+    #         Note: please comment the while true in 'keypad.py' to run this test. If in production code,
+    #             please comment this test case!.
                 
-        '''
-        self.set_up()
+    #     '''
+    #     self.set_up()
       
-        keypad.reading_input_char()
+    #     keypad.reading_input_char()
 
-        mock__read_line.assert_has_calls(
-            [
-                call(test_row_pins_array [0], ['1', '4', '7', '*']),
-                call(test_row_pins_array [1], ['2', '5', '8', '0']),
-                call(test_row_pins_array [2], ['3', '6', '9', '#']),
-                call(test_row_pins_array [3], ['A', 'B', 'C', 'D'])
-            ]
-        )
-        mock_time_sleep.assert_called_once_with(0.2)
+    #     mock__read_line.assert_has_calls(
+    #         [
+    #             call(test_row_pins_array [0], ['1', '4', '7', '*']),
+    #             call(test_row_pins_array [1], ['2', '5', '8', '0']),
+    #             call(test_row_pins_array [2], ['3', '6', '9', '#']),
+    #             call(test_row_pins_array [3], ['A', 'B', 'C', 'D'])
+    #         ]
+    #     )
+    #     mock_time_sleep.assert_called_once_with(0.2)
 
-        self.tear_down()
+    #     self.tear_down()
         
 
  
