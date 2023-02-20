@@ -25,6 +25,7 @@ import sys
 import time
 if '--hw-orpi' in sys.argv:
     import wiringpi 
+    from wiringpi import GPIO
     
 else:
     sys.path.append('drivers/mock_wiringpi')
@@ -86,11 +87,11 @@ class Keypad:
     def reading_input_char(self):
         self._selected_char = None
         while self._selected_char == None:
-            self._selected_char = self._read_line(1, ['1', '2', '3', 'A'])
-            self._selected_char = self._read_line(2, ['4', '5', '6', 'B'])
-            self._selected_char = self._read_line(3, ['7', '8', '9', 'C'])
-            self._selected_char = self._read_line(4, ['*', '0', '#', 'D'])            
-            time.sleep(0.2)
+            self._selected_char = self._read_line(self._row_pin_array[0], ['1', '2', '3', 'A'])
+            self._selected_char = self._read_line(self._row_pin_array[1], ['4', '5', '6', 'B'])
+            self._selected_char = self._read_line(self._row_pin_array[2], ['7', '8', '9', 'C'])
+            self._selected_char = self._read_line(self._row_pin_array[3], ['*', '0', '#', 'D'])            
+        time.sleep(0.2)
         return self._selected_char
     
     

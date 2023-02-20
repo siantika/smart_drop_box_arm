@@ -29,6 +29,8 @@ TWO_LINE_BIT = 0x08
 MODE_SETUP_LCD = 0x00
 MODE_WRITE_LCD = 0x01
 
+BACKLIGHT_ON = 0x08
+
 CLEAR_LCD_CMD = 0x01
 RETURN_HOME_CMD = 0x02
 DISPLAY_CONTROL_INITIAL = 0x08
@@ -52,13 +54,13 @@ class Lcd:
         time.sleep(0.0001)
     
     def _latch_en_pin(self, byte_data):
-        self._write_byte_data(byte_data | EN_PIN)
+        self._write_byte_data(byte_data | EN_PIN | BACKLIGHT_ON)
         time.sleep(0.0005)
-        self._write_byte_data(byte_data & ~EN_PIN)
-        time.sleep(0.0001)
+        self._write_byte_data((byte_data & ~EN_PIN) | BACKLIGHT_ON )
+        time.sleep(0.001)
     
     def _send_data_to_reg(self, data):
-        self._write_byte_data(data)
+        self._write_byte_data(data | BACKLIGHT_ON)
         self._latch_en_pin(data)
 
     def _set_mode_in_4_bit(self):
@@ -92,7 +94,7 @@ class Lcd:
                 self._send_data_4_bit(SET_LCD_POS_0, MODE_SETUP_LCD)
             
             elif self._line == 1:
-                self._send_data_4_bit(SET_LCD_POS_1, MODE_WRITE_LCD)
+                self._send_data_4_bit(SET_LCD_POS_1, MODE_SETUP_LCD)
             
             ### display text in LCD.
             ### built-in method: ord --> convert char to unicode-8(utf)

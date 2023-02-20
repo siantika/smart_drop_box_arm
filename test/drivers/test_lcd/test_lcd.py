@@ -16,6 +16,7 @@ test_data_byte_sent = 0x20
 test_mode_set_config = 0
 test_mode_set_write_data = 1
 
+BACKLIGHT_ON = 0x08
 
 '''
     all are mockup !
@@ -96,19 +97,21 @@ class TestLcd:
     def test_latch_low_bit_assigned_shouldbe_executed_correctly(self, mock_write_byte, mock_time_sleep):
         '''
             execute delay respectively.
-            this refer to datasheet in https://www.sparkfun.com/datasheets/LCD/ADM1602K-NSW-FBS-3.3v.pdf (P.7)
+            this refer to datasheet in https://www.sparkfun.com/datasheets/LCD/ADM1602K-NSW-FBS-3.3v.pdf (P.7).
+            Added LCD_BACKLIGHT ON = 0x08 (setup_mode)
         '''
         self.set_up()
-        lcd._latch_en_pin(0x01)    
+        lcd._latch_en_pin(0x01)     ### data = 0x01
 
         mock_write_byte.assert_has_calls([
-            call(0x27, 0x05),
-            call(0x27, 0x01),
+            call(0x27, 0x0D), ### data 0x01 | EN pin (0x04)| backlight on (0x08)
+            call(0x27, 0x09), ## OR with backlight ON
         ])
 
         mock_time_sleep.assert_has_calls([
             call(0.0005),
             call(0.0001),
+            call(0.001) ### for after latch delay!
         ])
 
     @patch('time.sleep')
@@ -122,8 +125,8 @@ class TestLcd:
         lcd._latch_en_pin(0xF0)    
 
         mock_write_byte.assert_has_calls([
-            call(0x27, 0xF4),
-            call(0x27, 0xF0),
+            call(0x27, 0xF4 | BACKLIGHT_ON), ### or with BACKLIGHT (enable)
+            call(0x27, 0xF0 | BACKLIGHT_ON), ### or with BACKLIGHT (enable)
         ])
 
         mock_time_sleep.assert_has_calls([
@@ -137,7 +140,7 @@ class TestLcd:
     @patch('lcd.Lcd._latch_en_pin')
     def test_data_shouldbe_sent_correctly(self, mock__latch_en_pin,mock__write_byte_data, mock_write_byte, mock_time_sleep,):
         self.set_up()
-        lcd._send_data_to_reg(0xAA)
+        lcd._send_data_to_reg(0xAA | BACKLIGHT_ON) ### backlight LCD on
         mock__write_byte_data.assert_called_once_with(0xAA)
         mock__latch_en_pin.assert_called()
 
@@ -313,7 +316,7 @@ class TestLcd:
         lcd.write_text(0, "sian")
         self.mock__send_data_4_bit.assert_has_calls(
             [
-                call(0x80, 0x00),
+                call(0x80, 0x00), ### setup MODE = 0
                 ### send text in unicode --> sian = 73 69 61 6E (write mode)
                 call(0x73, 0x01),
                 call(0x69, 0x01),
@@ -332,7 +335,7 @@ class TestLcd:
         lcd.write_text(1,"25si90'!") ### text's unicode = 32 35 73 69 39 30 27 21
         self.mock__send_data_4_bit.assert_has_calls(
             [
-                call(0xC0, 0x01),
+                call(0xC0, 0x00), ### setup MODE = 0
                 ### send text in unicode --> sian = 73 69 61 6E (write mode)
                 call(0x32, 0x01),
                 call(0x35, 0x01),
@@ -349,7 +352,6 @@ class TestLcd:
 
 
         ### initialize lcd
-
     @patch.object(Lcd, 'set_display_control_default')
     @patch.object(Lcd, 'return_home')
     @patch.object(Lcd, '_set_mode_in_4_bit')
