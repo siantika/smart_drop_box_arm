@@ -23,7 +23,7 @@ BACKLIGHT_ON = 0x08
 '''
 class TestLcd:
 
-    def set_up(self):
+    def set_up(self, test_bus_line = 0):
         global lcd
         #mock SMBus lib
         self.patcher = patch('smbus2.SMBus.open')
@@ -72,11 +72,25 @@ class TestLcd:
         assert isinstance(lcd.bus, SMBus) == True
         self.tear_down()
 
-    def test_init_process_bus_should_open_correct_bus_line(self):
+    def test_init_process_bus_should_open_correct_bus_line_0(self):
+        '''
+            Called the bus 0
+        '''
         self.set_up()
         self.mock_SMBus_open.assert_called_once_with(test_bus_line)
         self.tear_down()
 
+    def test_init_process_bus_should_open_correct_bus_line_1(self):
+        '''
+            Called the bus 0
+        '''
+        self.set_up(test_bus_line = 1)
+
+        self.mock_SMBus_open.assert_called_once_with(1)
+
+        self.tear_down()
+
+        
 
     '''
         Test private the methods
@@ -375,8 +389,12 @@ class TestLcd:
         mock_clear_lcd.assert_called_once()
         mock_return_home.assert_called_once()
         mock_set_display_control_lcd.assert_called_once()
-        self.mock_sleep.assert_called_once_with(0.2)
-
+        self.mock_sleep.assert_has_calls(
+            [
+                call(0.5),
+                call(0.2)
+            ]
+        )
         self.tear_down()
 
 

@@ -4,6 +4,7 @@ sys.path.append('drivers/hx711')
 ### real hardware
 if '--hw-orpi' in sys.argv:
     import wiringpi 
+    from wiringpi import GPIO
 
 ### mock for testing in native pc (arch-linux)
 else:
