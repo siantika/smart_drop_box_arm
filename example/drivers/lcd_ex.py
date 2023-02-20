@@ -11,9 +11,9 @@ lcd = Lcd(PIN_DEV_ADDR, BUS_I2C_DEV)
 
 lcd.init_lcd()
 
-lcd.write_text(0, 'Helo Bali') ### line ([0,1]), text
+lcd.write_text(0, ' Hello Bali ') ### line ([0,1]), text
 lcd.write_text(1, 'Om Swastyastu')
 
 lcd.clear_lcd()
 
-lcd.write_text('Om shanti 3x Om')
+lcd.write_text(1, 'Om shanti 3x Om')
