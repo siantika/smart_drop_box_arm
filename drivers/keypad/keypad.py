@@ -86,12 +86,12 @@ class Keypad:
     
     def reading_input_char(self):
         self._selected_char = None
-        #while self._selected_char == None:
-        self._selected_char = self._read_line(self._row_pin_array[0], ['1', '4', '7', '*'])
-        self._selected_char = self._read_line(self._row_pin_array[1], ['2', '5', '8', '0'])
-        self._selected_char = self._read_line(self._row_pin_array[2], ['3', '6', '9', '#'])
-        self._selected_char = self._read_line(self._row_pin_array[3], ['A', 'B', 'C', 'D'])            
-        time.sleep(0.2)
+        while self._selected_char == None:
+            self._selected_char = self._read_line(self._row_pin_array[0], ['1', '4', '7', '*'])
+            self._selected_char = self._read_line(self._row_pin_array[1], ['2', '5', '8', '0'])
+            self._selected_char = self._read_line(self._row_pin_array[2], ['3', '6', '9', '#'])
+            self._selected_char = self._read_line(self._row_pin_array[3], ['A', 'B', 'C', 'D'])            
+            time.sleep(0.2)
         return self._selected_char
     
     
