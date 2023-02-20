@@ -1,4 +1,5 @@
 import sys
+import time
 sys.path.append('drivers/lcd')
 from lcd import Lcd
 
@@ -14,6 +15,7 @@ lcd.init_lcd()
 lcd.write_text(0, ' Hello Bali ') ### line ([0,1]), text
 lcd.write_text(1, 'Om Swastyastu')
 
-lcd.clear_lcd()
+time.sleep(2) ### delay for 2 secs
 
+lcd.clear_lcd()
 lcd.write_text(1, 'Om shanti 3x Om')
