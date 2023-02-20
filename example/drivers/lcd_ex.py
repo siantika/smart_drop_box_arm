@@ -16,4 +16,4 @@ lcd.write_text(1, 'Om Swastyastu')
 
 lcd.clear_lcd()
 
-lcd.write_text('Om shanti 3x Om')
+lcd.write_text(1, 'Om shanti 3x Om')
