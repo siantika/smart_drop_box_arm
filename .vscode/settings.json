@@ -11,6 +11,7 @@
         "./drivers/door",
         "./drivers/sound",
         "./conf",
-        "./drivers/keypad"
+        "./drivers/keypad",
+        "./drivers/indicator"
     ]
 }
