@@ -12,7 +12,7 @@ lcd = Lcd(PIN_DEV_ADDR, BUS_I2C_DEV)
 
 lcd.init_lcd()
 
-lcd.write_text(0, ' Hello Bali ') ### line ([0,1]), text
+lcd.write_text(0, ' Hello Basdfaadfsfsdfsdfsdfsdli ') ### line ([0,1]), text
 lcd.write_text(1, 'Om Swastyastu')
 
 time.sleep(2) ### delay for 2 secs
