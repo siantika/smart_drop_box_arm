@@ -12,6 +12,8 @@
         "./drivers/sound",
         "./conf",
         "./drivers/keypad",
-        "./drivers/indicator"
+        "./drivers/indicator",
+        "./applications/lcd_thread",
+        "./applications/mock_threading"
     ]
 }
