@@ -14,6 +14,7 @@
         "./drivers/keypad",
         "./drivers/indicator",
         "./applications/lcd_thread",
-        "./applications/mock_threading"
+        "./applications/mock_threading",
+        "./drivers/database_connector"
     ]
 }
