@@ -11,7 +11,7 @@ from unittest.mock import patch, Mock
 import sys
 sys.path.append('drivers/database_connector')
 from database_connector import DatabaseConnector
-
+import requests
 
 TEST_URL = 'http:// localhost.com'
 TEST_URL_POST = 'http://localhost.com/data_no_resi'
@@ -510,3 +510,108 @@ class TestDatabaseConDeleteData:
         assert _result  == "Internal server error."
         
         self.stop_all_patch()
+
+
+### Mock the response HTTP 
+class TestResponseServer:
+    def help_mock_requests_methods(self):
+        self.mock_requests_patch = patch('requests.delete').start()
+
+    def stop_all_patch(self):
+        patch.stopall()
+
+    def test_response_should_return_FORBIDDEN_when_status_code_is_403(self):
+        '''
+            I Use delete method, it doesn't matter to use another methods, since I only want
+            to know the response code only.
+        
+        '''
+        self.help_mock_requests_methods()
+        self.mock_requests_patch.return_value.status_code = 403
+        self.mock_requests_patch.return_value.text = "Access forbidden!"
+        database_con = DatabaseConnector(TEST_DELETE_URL)
+   
+        _response, _result  = database_con.delete_data(param = 'id', value = '4')
+
+        assert _response == 403
+        assert _result  == "Access forbidden!"
+        
+        self.stop_all_patch()
+
+    def test_response_should_return_NO_AUTH_when_status_code_is_401(self):
+        '''
+            I Use delete method, it doesn't matter to use another methods, since I only want
+            to know the response code only.
+        
+        '''
+        self.help_mock_requests_methods()
+        self.mock_requests_patch.return_value.status_code = 401
+        self.mock_requests_patch.return_value.text = "No Authorization."
+        database_con = DatabaseConnector(TEST_DELETE_URL)
+   
+        _response, _result  = database_con.delete_data(param = 'id', value = '4')
+
+        assert _response == 401
+        assert _result  == "No Authorization."
+        
+        self.stop_all_patch()
+
+###
+class TestGenerateToken:
+    def help_mock_jwt_method(self):
+        self.mock_jwt_encode = patch('jwt.encode').start()
+
+    def stop_all_patch(self):
+        patch.stopall()
+
+    def test_generate_token_should_invoke_method_correctly(self):
+        self.help_mock_jwt_method()
+        db = DatabaseConnector(TEST_URL)
+        db.encode(
+            payload_data =
+                {
+                "name":"sian",
+                "email":"sian@mediavimana@gmail.com"
+                },
+            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
+            algo = 'HS256',
+            token_type='Bearer',
+        )
+
+        self.mock_jwt_encode.assert_called_once_with(
+            payload={
+                "name":"sian",
+                "email":"sian@mediavimana@gmail.com",
+            },
+            key = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1',
+            algorithm = 'HS256',
+            headers = {'typ':'JWT'},
+        )
+
+        self.stop_all_patch()
+
+
+    def test_generate_token_should_return_correctly(self):
+        '''
+            Should return string contained 'type of token ['Bearer', 'auth', etc] and jwt token.
+        '''
+        self.help_mock_jwt_method()
+        _return_token_utf8 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
+        self.mock_jwt_encode.return_value = _return_token_utf8.encode('utf-8')
+        db = DatabaseConnector(TEST_URL)
+        _ret_val = db.encode(
+            payload_data =
+                {
+                "name":"sian",
+                "email":"sian@mediavimana@gmail.com"
+                },
+            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
+            algo = 'HS256',
+            token_type='Bearer',
+        )
+
+        assert isinstance(_ret_val, str)
+        assert _ret_val == "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
+        self.stop_all_patch()
+
+

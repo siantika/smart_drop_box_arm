@@ -11,6 +11,7 @@
 """
 
 import json
+import jwt
 import requests
 
 class DatabaseConnector:
@@ -60,6 +61,10 @@ class DatabaseConnector:
             _message = response.text
         elif _status_code == 405:
             _message = "Method Not Allowed."
+        elif _status_code == 403:
+            _message = "Access forbidden!"
+        elif _status_code == 401:
+            _message = "No Authorization."
         else:
             _message = _status_code # returns uncovered message
         return _message
@@ -85,7 +90,7 @@ class DatabaseConnector:
     
     def post_data(self, **kwargs) -> tuple:
         """
-            This function post a data to database base on user defined parameter (key-val argument).
+            This function post data to database base on user defined parameter (key-val argument).
 
             Args:
                 kwargs (dict{(str):(str)}) :  User defined parameters for post data in endpoint url.
@@ -158,4 +163,27 @@ class DatabaseConnector:
         _response = requests.delete(self._url , params = _payload, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
+    
+    def encode(self, payload_data:dict, secret, algo, token_type)-> str:
+        """
+            This function encodes data as JWT token.
+
+            Args:
+                payload (dict)  : data payload to be encoded
+                secret  (str)   : Your secret key to perform encoding data
+                algo    (str)   : Algorithm for encoding data
+                token_type (str): The type of token --> eg. Bearer,Auth,etc
+
+            Returns:
+                str: Authorization header data 
+        """
+        _encoded_data = jwt.encode(
+            payload = payload_data,
+            key = secret,
+            algorithm = algo,
+            headers = {'typ':'JWT'}
+        )
+        _decoded_to_utf8 = _encoded_data.decode('utf-8')
+        _tokenized = f"{token_type} {_decoded_to_utf8}"
+        return _tokenized
     
