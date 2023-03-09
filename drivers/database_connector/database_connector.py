@@ -20,13 +20,14 @@ class DatabaseConnector:
 
         Here is where you would provide a more detailed description of what the class does,
         what its attributes are, what methods it has, and how they work.
+        NOTE: If server reqiures authorization, you need to invoke set_encode and encode respectively!
 
         This class performs database transaction with API server. It performs CRUD (create, read, update, delete) 
         in database. 
 
         Attributes:
-            _url (str)  : url endpoint from server.
-        
+            url (str)       : url endpoint from server.
+                    
         This class uses 'requests' library. It uses 'requests' methods for perfoming CRUD.
         The class method will invoke 'self._url' for specifying the url endpoint. Each method 
         will perform particular operation (get, post, update, and delete) by invoking 'requests'
@@ -37,6 +38,11 @@ class DatabaseConnector:
         if not isinstance(url, str):
             raise ValueError('url must be String!')
         self._url = url
+        self._algo = ''
+        self._token_type = ''
+        self._secret_key = ''
+        self._auth_header = ''
+
 
     def _help_return_response_requests(self, response : requests) -> str:
         """
@@ -46,7 +52,7 @@ class DatabaseConnector:
                 response (request) : Object method called in CRUD methods.
 
             Returns:
-                str: message operation result from server.
+                str: message operation result.
         """
         _status_code = response.status_code
         if _status_code == 500:
@@ -99,7 +105,7 @@ class DatabaseConnector:
                 tuple: response status code and result message of operation.
         """
         _payload = json.dumps(kwargs)
-        _header = {'content-type': 'application/json'}
+        _header = {'content-type': 'application/json', 'Authorization':f'{self._auth_header}'}
         _response = requests.post(self._url, data = _payload, headers = _header, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
@@ -141,7 +147,7 @@ class DatabaseConnector:
         '''
         _dict_params = {param_matching:param_matching_value, **kwargs}
         _payload = json.dumps(_dict_params)
-        _header = {'content-type':'application/json'}
+        _header = {'content-type':'application/json', 'Authorization':f'{self._auth_header}'}
         _response = requests.patch(self._url, data = _payload, headers=_header, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
@@ -160,30 +166,61 @@ class DatabaseConnector:
         if not isinstance(param, str) and not isinstance(value, str):
             raise ValueError('Parameters must be String!')
         _payload = {param:value}
-        _response = requests.delete(self._url , params = _payload, timeout=1.0)
+        _headers = {'content-type':'application/json', 'Authorization':f'{self._auth_header}'}
+        _response = requests.delete(self._url , params = _payload, headers = _headers, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
     
-    def encode(self, payload_data:dict, secret, algo, token_type)-> str:
+    def encode(self, payload_data:dict)-> str:
         """
-            This function encodes data as JWT token.
+            This function encodes data as JWT token. The enocded data  from
+            JWT.encode produces a byte-string data, so we need decode it.
 
             Args:
                 payload (dict)  : data payload to be encoded
-                secret  (str)   : Your secret key to perform encoding data
-                algo    (str)   : Algorithm for encoding data
-                token_type (str): The type of token --> eg. Bearer,Auth,etc
 
             Returns:
                 str: Authorization header data 
         """
         _encoded_data = jwt.encode(
             payload = payload_data,
-            key = secret,
-            algorithm = algo,
+            key = self._secret_key,
+            algorithm = self._algo,
             headers = {'typ':'JWT'}
         )
-        _decoded_to_utf8 = _encoded_data.decode('utf-8')
-        _tokenized = f"{token_type} {_decoded_to_utf8}"
+        _decoded_to_utf8 = _encoded_data.decode('utf-8') ### please put encode!
+        _tokenized = f"{self._token_type} {_decoded_to_utf8}"
+        # set auth_header class attribute
+        self._auth_header = _tokenized
         return _tokenized
-    
+
+    def set_encode(self, secret:str, algo:str, token_type:str)->None:
+        """
+            This function sets the encode class attributes.
+
+            Args:
+                secret  (str)   : Your secret key to perform encoding data
+                algo    (str)   : Algorithm for encoding data
+                token_type (str): The type of token --> eg. Bearer,Auth,etc
+
+            Returns:
+                None
+        """
+        self._secret_key = secret
+        self._algo = algo
+        self._token_type = token_type
+
+    def reset_encode(self)-> None:
+        """
+            This function clear attributes class regard encoding methods.
+
+            Args:
+                -
+
+            Returns:
+                None
+        """
+        self._secret_key = ''
+        self._algo  = ''
+        self._token_type = ''
+        self._auth_header = ''

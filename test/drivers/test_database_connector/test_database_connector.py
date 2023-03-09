@@ -7,28 +7,50 @@
     5. return status code for each methods
 
 '''
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 import sys
 sys.path.append('drivers/database_connector')
 from database_connector import DatabaseConnector
-import requests
 
 TEST_URL = 'http:// localhost.com'
 TEST_URL_POST = 'http://localhost.com/data_no_resi'
 TEST_PATCH_URL = 'http://localhost.com/update.php'
 TEST_DELETE_URL = 'http://localhost.com/delete'
 
+SECRET_KEY_LOCAL = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1'
+
+test_header_const = {'content-type':'application/json', 'Authorization':'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw'}
 
 ### Test Group init method
 class TestDatabaseConInit:
+
+    def help_mock_database_connector(self):
+        self.mock_generate_token = patch('database_connector.DatabaseConnector.encode').start()
+
+    def stop_all_patch():
+        patch.stopall()
 
     def test_init_process_should_be_correct(self):
         database_con = DatabaseConnector(TEST_URL)
         assert database_con._url == 'http:// localhost.com'
         assert isinstance(database_con._url, str)
+        assert hasattr(database_con, '_secret_key')
+        assert hasattr(database_con, '_token_type')
+        assert hasattr(database_con, '_url')
+        assert hasattr(database_con, '_algo')
+
+        # initialize encode variable and it has to be '' string!
+        assert database_con._algo == ''
+        assert database_con._token_type == ''
+        assert database_con._secret_key == ''
+        assert database_con._auth_header == ''
+        assert isinstance(database_con._secret_key, str)
+        assert isinstance(database_con._algo, str)
+        assert isinstance(database_con._token_type, str)
+        assert isinstance(database_con._auth_header, str)
 
 
-    def test_init_url_raise_an_value_error_when_inserted_other_data_type_than_string(self):
+    def test_url_raise_an_value_error_when_inserted_other_data_type_than_string(self):
         try:    
             database_con = DatabaseConnector(1212315315)
         except ValueError as ve:
@@ -148,20 +170,19 @@ class TestDatabaseConPostData:
     def stop_all_patch(self):
         patch.stopall()
 
-
     '''
         NOTE: json.dumps should be mocked with instruction 'with' otherwise, it wouldn't work!    
     '''
     def test_post_data_to_database_should_invoke_post_method_from_requests_lib_and_get_arg_as_data_to_be_sent(self):
         self.help_mock_requests_methods()
         with patch('json.dumps') as mock_dumps:
-            mock_dumps.return_value ={"name": "sd card", "no_resi": "4931"}
-
             database_con = DatabaseConnector(TEST_URL_POST)
+            database_con._auth_header =  "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"    
+            mock_dumps.return_value ={"name": "sd card", "no_resi": "4931"}
             database_con.post_data(name = 'sd card',  no_resi = '4931')
 
             mock_dumps.assert_called_once_with({"name": "sd card", "no_resi": "4931"})
-            self.mock_requests_post.assert_called_once_with(TEST_URL_POST, data={"name": "sd card", "no_resi": "4931"}, headers={'content-type': 'application/json'}, timeout=1.0)
+            self.mock_requests_post.assert_called_once_with(TEST_URL_POST, data={"name": "sd card", "no_resi": "4931"}, headers=test_header_const, timeout=1.0)
             
         self.stop_all_patch()
 
@@ -170,7 +191,6 @@ class TestDatabaseConPostData:
         self.help_mock_requests_methods()
         with patch('json.dumps') as mock_dumps:
             mock_dumps.return_value ={"name": "sd card", "no_resi": "4931"}
-
             database_con = DatabaseConnector(TEST_URL_POST)
             _result = database_con.post_data(name = 'sd card',  no_resi = '4931')
 
@@ -185,12 +205,11 @@ class TestDatabaseConPostData:
         with patch('json.dumps') as mock_dumps:
             mock_dumps.return_value = '{"name"="sd card", "no_resi"="4931", "image"="sd_card_img.jpg"}'
             database_con = DatabaseConnector(TEST_URL_POST)
-
+            database_con._auth_header =  "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"    
             database_con.post_data(name='sd card', no_resi='4931', image='sd_card_img.jpg')
-            self.mock_requests_post.assert_called_with(TEST_URL_POST, data = '{"name"="sd card", "no_resi"="4931", "image"="sd_card_img.jpg"}', headers={'content-type': 'application/json'}, timeout=1.0)
+            self.mock_requests_post.assert_called_with(TEST_URL_POST, data = '{"name"="sd card", "no_resi"="4931", "image"="sd_card_img.jpg"}', headers=test_header_const, timeout=1.0)
         
         self.stop_all_patch()
-
 
     ### STATUS CODE ERROR TESTING
     def test_post_data_to_database_should_return_the_data_when_status_code_is_200(self):
@@ -262,10 +281,9 @@ class TestDatabaseConUpdateData:
             }  
 
             database_con = DatabaseConnector(TEST_PATCH_URL)
-
+            database_con._auth_header = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
             database_con.update_data(param_matching = 'id', param_matching_value = '2', name = 'Trafo 5 ampere', no_resi = '4623')
-
-            self.mock_requests_patch.assert_called_once_with(TEST_PATCH_URL, data = { 'id':'2','name':'Trafo 5 ampere','no_resi':'4623'}, headers={'content-type':'application/json'}, timeout=1.0) 
+            self.mock_requests_patch.assert_called_once_with(TEST_PATCH_URL, data = { 'id':'2','name':'Trafo 5 ampere','no_resi':'4623'}, headers=test_header_const, timeout=1.0) 
             mock_dumps.assert_called_once_with({
                 'id':'2',
                 'name':'Trafo 5 ampere',
@@ -435,10 +453,9 @@ class TestDatabaseConDeleteData:
     def test_delete_data_should_invoke_delete_method_in_requests_lib_correctly(self):
         self.help_mock_requests_methods()
         database_con = DatabaseConnector(TEST_DELETE_URL)
-
+        database_con._auth_header = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
         database_con.delete_data(param = 'id', value = '4')
-
-        self.mock_requests_patch.assert_called_once_with(TEST_DELETE_URL, params={'id':'4'}, timeout=1.0)
+        self.mock_requests_patch.assert_called_once_with(TEST_DELETE_URL, params={'id':'4'}, headers = test_header_const, timeout=1.0)
 
 
      ### STATUS CODE ERROR TESTING
@@ -556,8 +573,8 @@ class TestResponseServer:
         
         self.stop_all_patch()
 
-###
-class TestGenerateToken:
+### Test cases for Tokenize methods
+class TestToken:
     def help_mock_jwt_method(self):
         self.mock_jwt_encode = patch('jwt.encode').start()
 
@@ -567,15 +584,17 @@ class TestGenerateToken:
     def test_generate_token_should_invoke_method_correctly(self):
         self.help_mock_jwt_method()
         db = DatabaseConnector(TEST_URL)
+        db.set_encode(
+            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
+            algo = 'HS256',
+            token_type ='Bearer',
+        )
         db.encode(
             payload_data =
                 {
                 "name":"sian",
                 "email":"sian@mediavimana@gmail.com"
-                },
-            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
-            algo = 'HS256',
-            token_type='Bearer',
+                }
         )
 
         self.mock_jwt_encode.assert_called_once_with(
@@ -599,19 +618,56 @@ class TestGenerateToken:
         _return_token_utf8 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
         self.mock_jwt_encode.return_value = _return_token_utf8.encode('utf-8')
         db = DatabaseConnector(TEST_URL)
+        db.set_encode(
+            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
+            algo = 'HS256',
+            token_type ='Bearer',
+        )
         _ret_val = db.encode(
             payload_data =
                 {
                 "name":"sian",
                 "email":"sian@mediavimana@gmail.com"
-                },
-            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
-            algo = 'HS256',
-            token_type='Bearer',
+                }
         )
 
         assert isinstance(_ret_val, str)
         assert _ret_val == "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
         self.stop_all_patch()
 
+    def test_set_encode_should_be_correct(self):
+        db = DatabaseConnector(TEST_URL)
+        db.set_encode(
+            secret     = SECRET_KEY_LOCAL,
+            algo       = 'HS256',
+            token_type = 'Bearer',
+        )
 
+        assert db._secret_key == SECRET_KEY_LOCAL
+        assert db._algo  == 'HS256'
+        assert db._token_type == 'Bearer'
+
+    def test_reset_encode_should_be_correct(self):
+        self.help_mock_jwt_method()
+        _return_token_utf8 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
+        self.mock_jwt_encode.return_value = _return_token_utf8.encode('utf-8')
+        db = DatabaseConnector(TEST_URL)
+        db.set_encode(
+            secret     = SECRET_KEY_LOCAL,
+            algo       = 'HS256',
+            token_type = 'Bearer',
+        )
+        db.encode(
+            payload_data =
+                {
+                "name":"sian",
+                "email":"sian@mediavimana@gmail.com"
+                }
+        )
+
+        db.reset_encode()
+
+        assert db._secret_key == ''
+        assert db._algo  == ''
+        assert db._token_type == ''
+        assert db._auth_header == ''
