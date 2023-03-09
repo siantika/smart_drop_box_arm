@@ -610,7 +610,7 @@ class TestToken:
         self.stop_all_patch()
 
 
-    def test_generate_token_should_return_correctly(self):
+    def test_encode_should_return_correctly(self):
         '''
             Should return string contained 'type of token ['Bearer', 'auth', etc] and jwt token.
         '''
@@ -633,6 +633,27 @@ class TestToken:
 
         assert isinstance(_ret_val, str)
         assert _ret_val == "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
+        self.stop_all_patch()
+
+    def test_encode_should_set_auth_header_class_attrib_correctly(self):
+        self.help_mock_jwt_method()
+        _return_token_utf8 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
+        self.mock_jwt_encode.return_value = _return_token_utf8.encode('utf-8')
+        db = DatabaseConnector(TEST_URL)
+        db.set_encode(
+            secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
+            algo = 'HS256',
+            token_type ='Bearer',
+        )
+        _ret_val = db.encode(
+            payload_data =
+                {
+                "name":"sian",
+                "email":"sian@mediavimana@gmail.com"
+                }
+        )
+
+        assert db._auth_header == "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
         self.stop_all_patch()
 
     def test_set_encode_should_be_correct(self):
