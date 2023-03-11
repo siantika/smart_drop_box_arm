@@ -78,7 +78,7 @@ class LcdThread:
               To exiting this function, we have to give keypad_flag argument with 0.
 
         Param : @keypad_flag -> trigered the operation keypad_handling function.
-                @queue_keypad_data -> store input pin from user. The data will be printed in LCD 
+                @queue_keypad_data -> store input data from user. The data will be printed in LCD 
                                         (First Input First Output style).
                 @keypad_status_operation_flag ->  It prints data according validation result in another thread
                                                 ['true', 'false', None (default)]

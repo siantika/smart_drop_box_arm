@@ -15,6 +15,7 @@
         "./drivers/indicator",
         "./applications/lcd_thread",
         "./applications/mock_threading",
-        "./drivers/database_connector"
+        "./drivers/database_connector",
+        "./applications/network_thread"
     ]
 }
