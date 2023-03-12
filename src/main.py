@@ -1,18 +1,15 @@
 import sys
-sys.path.append('drivers/database_connector')
-from database_connector import DatabaseConnector
+import queue
+sys.path.append('applications/network_thread')
+from network_thread import NetworkThread
 
-db = DatabaseConnector('https://localhost.com')
+q_read = queue.Queue()
+q_send = queue.Queue()
+net = NetworkThread(
+        server_address= 'www.google.co.id', 
+        server_port= 80, 
+        queue_to_read= q_read, 
+        queue_to_send = q_send
+    )
 
-token = db.encode(
-            payload_data =
-            {
-            "name":"sian",
-            "email":"sian@mediavimana@gmail.com"
-            },
-        secret = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1', 
-        algo = 'HS256',
-        token_type='Bearer',
-        )
-
-print(token)
+net.run()
