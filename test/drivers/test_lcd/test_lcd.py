@@ -368,12 +368,11 @@ class TestLcd:
         ### initialize lcd
     @patch.object(Lcd, 'set_display_control_default')
     @patch.object(Lcd, 'return_home')
-    @patch.object(Lcd, '_set_mode_in_4_bit')
     @patch.object(Lcd, 'clear_lcd')    
-    def test_init_lcd_should_execute_correctly(self, mock_clear_lcd, mock_return_home, mock_set_display_control_lcd, mock__set_mode_in_4_bit):
+    def test_init_lcd_should_execute_correctly(self, mock_clear_lcd, mock_return_home, mock_set_display_control_lcd):
         '''
             1. set address
-            2. set mode to 4 mode
+            2. set mode to 4 mode (DELETED, It causes error)
             3. clear display
             4. return home
             5. set display cursor
@@ -385,14 +384,12 @@ class TestLcd:
 
         lcd.init_lcd()
 
-        mock__set_mode_in_4_bit.assert_called_once()
         mock_clear_lcd.assert_called_once()
         mock_return_home.assert_called_once()
         mock_set_display_control_lcd.assert_called_once()
         self.mock_sleep.assert_has_calls(
             [
-                call(0.5),
-                call(0.2)
+                call(0.0005),
             ]
         )
         self.tear_down()
