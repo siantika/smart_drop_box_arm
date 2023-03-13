@@ -110,12 +110,11 @@ class Lcd:
         '''
             Don't change the hierrachy of methods!
         '''
-        time.sleep(0.5)
-        self._set_mode_in_4_bit()
+        time.sleep(0.0005)
         self.set_display_control_default()
         self.clear_lcd()
         self.return_home()
-        time.sleep(0.2)
+
        
 
     
