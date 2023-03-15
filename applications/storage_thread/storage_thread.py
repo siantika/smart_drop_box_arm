@@ -109,9 +109,6 @@ class StorageThread:
                    queue_to_thread_opt   (queue.Queue)
                    queue_from_thread_net (queue.Queue)
                    queue_to_thread_net   (queue.Queue) 
-
-            Returns:
-                None
                 
         """
         self.queue_from_thread_opt = queue_from_thread_opt
@@ -165,9 +162,6 @@ class StorageThread:
                 payload_header(dict): Payload will be sent in header http.
                                       (default is {})
 
-            Returns:
-                None
-                
         """
         if payload_header is None:
             payload_header = DEFAULT_PAYLOAD_HEADER#
@@ -197,12 +191,6 @@ class StorageThread:
         """
             This function helps to auth the connection to local server.
             By invoking this function, the connection will be encoded.
-            
-            Args:
-                None
-
-            Returns:
-                None
                 
         """
         self.set_security(
@@ -243,6 +231,7 @@ class StorageThread:
             elif lowercase_method == "update":
                 http_code, fin_resp = self.db_connection.update_data(payload)
         return http_code, fin_resp
+    
     def send_queue_data(self, data:dict, queue_data: queue.Queue)-> str:
         """
             This function helps to send data to shared resources queue. 
@@ -303,12 +292,6 @@ class StorageThread:
     def run(self)-> None:
         '''
             This function is the excution of the storage thread.
-                
-            Args:
-                None
-
-            Returns:
-                None
 
         '''
         queue_from_server  = self.read_queue_data(self.queue_from_thread_net)
