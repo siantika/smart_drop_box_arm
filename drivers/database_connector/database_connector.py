@@ -105,8 +105,6 @@ class DatabaseConnector:
         _get_path = self._endpoints_urls['get']
         _full_get_path = urljoin(self._base_url, _get_path)
         _parameters = {param: value}
-        print(self._base_url)
-        print(_full_get_path)
         _header = {'content-type': 'application/json'}
         _response = requests.get(
             _full_get_path, params=_parameters, headers=_header, timeout=1.0)
