@@ -11,39 +11,52 @@
 """
 
 import json
+from urllib.parse import urljoin
 import jwt
 import requests
-
 
 class DatabaseConnector:
     """
         This is a class that performing database transcations.
 
-        Here is where you would provide a more detailed description of what the class does,
-        what its attributes are, what methods it has, and how they work.
-        NOTE: If server reqiures authorization, you need to invoke set_encode and encode respectively!
-
-        This class performs database transaction with API server. It performs CRUD (create, read, update, delete) 
-        in database. 
+        This class performs database transactions with API server. It performs CRUD 
+        (create, read, update, delete) in database. 
 
         Attributes:
-            url (str)       : url endpoint from server.
+            base_url (str)       : base url server.
+            endpoint_url (dict)  : enpoints API relative from base_url.
+                                   eg: {
+                                        'post'   : 'url relative from base_url',
+                                        'get'    : 'idem',
+                                        'update' : 'idem',
+                                        'delete' : 'idem',
+                                    }
+                                    keys should be specify like that!
+
 
         This class uses 'requests' library. It uses 'requests' methods for perfoming CRUD.
-        The class method will invoke 'self._url' for specifying the url endpoint. Each method 
-        will perform particular operation (get, post, update, and delete) by invoking 'requests'
-        methods. Each methods will return status code and message of operation result.
+        The class needs base url and enpoint paths. These attributes will be specifying 
+        the particular API endpoints needed by methods (update, get, delete, and update).
+
+        Post and Update method use dict arg attributes (key:val), in the other hand, get and
+        delete use params.
+
+        NOTE: If server reqiures authorization, you need to invoke set_encode and 
+              encode respectively! (default: no auth)
 
     """
 
-    def __init__(self, url: str):
-        if not isinstance(url, str):
+    def __init__(self, base_url: str, endpoint_url:dict):
+        if not isinstance(base_url, str):
             raise ValueError('url must be String!')
-        self._url = url
+        if not base_url.endswith('/'):
+            raise ValueError("base url should end with '/' !")
+        self._base_url = base_url
         self._algo = ''
         self._token_type = ''
         self._secret_key = ''
         self._auth_header = ''
+        self._endpoints_urls = endpoint_url
 
     def _help_return_response_requests(self, response: requests) -> str:
         """
@@ -89,72 +102,56 @@ class DatabaseConnector:
         """
         if not isinstance(param, str) and not isinstance(value, str):
             raise ValueError('Parameters must be String!')
+        _get_path = self._endpoints_urls['get']
+        _full_get_path = urljoin(self._base_url, _get_path)
         _parameters = {param: value}
         _header = {'content-type': 'application/json'}
         _response = requests.get(
-            self._url, params=_parameters, headers=_header, timeout=1.0)
+            _full_get_path, params=_parameters, headers=_header, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
 
-    def post_data(self, **kwargs) -> tuple:
+    def post_data(self, data:dict) -> tuple:
         """
             This function post data to database base on user defined parameter (key-val argument).
 
             Args:
-                kwargs (dict{(str):(str)}) :  User defined parameters for post data in endpoint url.
+                data (dict) :  User defined parameters and values for post data in endpoint url.
 
             Returns:
                 tuple: response status code and result message of operation.
         """
-        _payload = json.dumps(kwargs)
-        _header = {'content-type': 'application/json',
-                   'Authorization': f'{self._auth_header}'}
-        _response = requests.post(
-            self._url, data=_payload, headers=_header, timeout=1.0)
-        _result = self._help_return_response_requests(_response)
+        _post_path = self._endpoints_urls['post']
+        _full_post_path = urljoin(self._base_url, _post_path)
+        _payload   = json.dumps(data)
+        _header    = {'content-type': 'application/json',
+                          'Authorization': f'{self._auth_header}'}
+        _response  = requests.post(
+            _full_post_path, data =_payload, headers=_header, timeout=1.0)
+        _result    = self._help_return_response_requests(_response)
         return _response.status_code, _result
 
-    def update_data(self, param_matching: str, param_matching_value: str, **kwargs) -> tuple:
+    def update_data(self, data:dict) -> tuple:
         '''
-            Update data according parameter_matching and parameter_value_matching
+            Update data base on key-value args parameters
 
             Args:
-                param_matching (str)          : Parameter in url end point for key to search other params
-                param_matching_value  (str)   : The value of matching parameter
-                kwargs  (dict{(str):(str)}) : Custom parameters (key-value) define by user
+                data (dict)   : parameters and values for update endpoint url.
 
             Returns:
                 tuple: response status code and result message of operation.
-
-            Case Ex: 
-                I have a table in database named 'items'. It looks like below:
-                        ------------------------------
-                        | id | name_of_item | no_resi  | 
-                        ------------------------------
-                        | 1  | solder 60 W  |   4958   |
-                        | 2  | arduino uno  |   8968   |
-                        | 3  | breadboard   |   2312   |
-                        ------------------------------
-
-                        I want to update the arduino uno's no resi, so I will code:
-                            '' ******************************************* ''
-                            db = DatabaseConnector(url)
-
-                            db.update_data(
-                                        param_matching = 'name_of_item', 
-                                        param_matching_value = 'arduino uno', 
-                                        no_resi = '0023'
-                                        )
-                            '' ******************************************* ''
-                        So, arduino unos no_resi-value updated to be '0023'. We can use 'id' as matching parameter and
-                        added another parameters and its value according the API doc.
         '''
-        _dict_params = {param_matching: param_matching_value, **kwargs}
-        _payload = json.dumps(_dict_params)
+        # Create full path url for update data
+        _update_path = self._endpoints_urls['update']
+        _full_update_path = urljoin(self._base_url, _update_path)
+        # Encode data to JSON
+        _payload = json.dumps(data)
+        # create auth header
         _header = {'content-type': 'application/json',
                    'Authorization': f'{self._auth_header}'}
+        # Make update request to server
         _response = requests.patch(
-            self._url, data=_payload, headers=_header, timeout=1.0)
+            _full_update_path, data=_payload, headers=_header, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
 
@@ -172,21 +169,23 @@ class DatabaseConnector:
 
         if not isinstance(param, str) and not isinstance(value, str):
             raise ValueError('Parameters must be String!')
+        _delete_path = self._endpoints_urls['delete']
+        _full_delete_path = urljoin(self._base_url, _delete_path)
         _payload = {param: value}
         _headers = {'content-type': 'application/json',
                     'Authorization': f'{self._auth_header}'}
         _response = requests.delete(
-            self._url, params=_payload, headers=_headers, timeout=1.0)
+            _full_delete_path, params=_payload, headers=_headers, timeout=1.0)
         _result = self._help_return_response_requests(_response)
         return _response.status_code, _result
 
     def encode(self, payload_data: dict) -> str:
         """
-            This function encodes data as JWT token. The enocded data  from
-            JWT.encode produces a byte-string data, so we need decode it.
+            This function encodes data as JWT token. The encoded data  from
+            JWT. Encoding produces a byte-string data, so we need decode it.
 
             Args:
-                payload (dict)  : data payload to be encoded
+                payload (dict)  : Payload in HTTP header
 
             Returns:
                 str: Authorization header data 
@@ -221,7 +220,7 @@ class DatabaseConnector:
 
     def reset_encode(self) -> None:
         """
-            This function clear attributes class regard encoding methods.
+            This function clears attributes class regard encoding methods.
 
             Args:
                 -

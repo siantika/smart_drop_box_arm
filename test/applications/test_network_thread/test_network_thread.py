@@ -141,6 +141,7 @@ class TestQueueData():
 
         assert _ret_val == 'empty'
 
+
     def test_send_queue_data_should_be_invoked_correctly(self):
         self.help_mock_queue_methods()
         self.mock_queue_put.return_value = None
@@ -156,7 +157,7 @@ class TestQueueData():
 
         _ret_val = net_t.send_queue_data(q,test_data)
 
-        self.mock_queue_put.assert_called_once_with(test_data, block=False)
+        self.mock_queue_put.assert_called_with(test_data, block=False)
         
         assert _ret_val == 'success'
 

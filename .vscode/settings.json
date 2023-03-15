@@ -16,6 +16,7 @@
         "./applications/lcd_thread",
         "./applications/mock_threading",
         "./drivers/database_connector",
-        "./applications/network_thread"
+        "./applications/network_thread",
+        "./applications/storage_thread"
     ]
 }
