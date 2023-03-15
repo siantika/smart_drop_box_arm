@@ -35,32 +35,7 @@ class TestSound:
         assert type(sound._sound_card) == str
 
         self.tear_down()
-        
-    # only use when to test no existing file and dont forget to comment test_init_correct version above!
-    # please delete the log.txt first and create log directory
-    # os mkdir and rmdir don't work
-    # def test_init_should_be_correct_to_handle_failure(self):
-    #     '''
-    #         error case in init, should log issue:
-    #         eg.
-    #         [date time]     [error messages]
-
-    #         . File stored in log/log.txt
-    #     '''
-
-    #     self.set_up()
-    #     self._now = datetime.datetime.now()
-        
-    #     ### check the existence of log/log.txt
-    #     assert os.path.isfile('./log/log.txt')
-        
-    #     # log.txt stores error message and date time (assert the last one log!)
-    #     self._config_file = open('./log/log.txt', 'r') 
-        
-        
-    #     assert self._config_file.readline() == "["+ self._now.strftime("%Y-%m-%d %H:%M:%S")+"]" + " -->  No config file was found!\n"
-    #     shutil.rmtree('./log')
- 
+         
     def test_play_sound_should_be_correct(self):
         '''
             Create dir : ./assets/sound first
