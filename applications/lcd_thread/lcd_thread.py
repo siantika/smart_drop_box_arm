@@ -1,27 +1,26 @@
 '''
     File           : lcd_thread.py
     Author         : I Putu Pawesi Siantika, S.T.
-    Year           : Feb, 2023
+    Year           : Mar, 2023
     Description    : 
     
-        This code helps to create an thread for lcd operation. It can read queue data (mutex),
-    perform routine operation for LCD (printing items stored in box and waiting of items),
-    and handling keypad operation.
-
-        Since this code needs to access several mutex data, we have to put threading.Lock to avoid
-    race condition between thread. 
+        This code helps to create an thread for lcd operation. It will print data
+    if queue_data_read attribute is exist with correct data ({'cmd': 'routine' or 
+    'keypad', 'payload'=[firstline_data, secondline_data]}) else it will print the 
+    lastest data from queue_data_read attribute.
     
-        The driver of this code is 'run' method. It has 2 flows, the first is printing items stored and item waiting, 
-    and the second is keypad handling. It is determined by keypad_flag list. keypad_flag is 0 means 
-    the first flow is used and keypad_flag is 1 means the second flow is used.
-
+        Since this code needs to access shared resource (queue_data_read attribute), 
+    we have to put threading.Lock to avoid race condition between threads. 
+    
         Attributes:
-            dev_addr (hex)                  : Device i2c address (eg. 0x27)
-            bus_addr (int)                  : Bus address used in i2c.
-            buffer_no_resi_data (str)       : Buffer for 4 digits resi numbs in keypad_handling method.
-            queue_data_read (queue.Queue)   : Data contain first and second data to displayed. Content must be string and max is 2 itms
-            keypad_flag (list)              : Flag for determining go to mode keypad handling.
-            queue_keypad_char (queue.Queue) : Buffer for a char that will be displayed in LCD when keypad handling method invoked.
+            queue_data_read (queue.Queue)  : Queue data to read from other thread.
+                                             Queue data content is dict objec.
+                                             eg. {'cmd': 'routine' or 'keypad', 
+                                            'payload'=[firstline_data, secondline_data]}
+            _lcd (lcd.Lcd)                 : Lcd object from lcd driver. It uses to operate
+                                             LCD 16x2 I2C.
+            _lock (threading.Lock)         : lock object from threading.Lock. It uses for 
+                                             mutex operations.
 
     NOTE: It must declared in function if it as a threading and invode run method .eg.
         """
@@ -38,96 +37,130 @@
     License: see 'licenses.txt' file in the root of project
 '''
 import queue
+import configparser
 import sys
-import time
 import threading
 sys.path.append('drivers/lcd')
 from lcd import Lcd
 
-EMPTY_STRING = ""
-NO_RESI_MAX_LENGTH = 4
+DEV_ADDR = 0x27
+DEV_BUS = 0
 
 class LcdThread:
-    def __init__(
-            self,
-            dev_addr,
-            bus_addr,
-            queue_data_read: queue.Queue,
-            keypad_flag: list,
-            keypad_char_data: queue.Queue
-    ):
-        self._dev_addr = dev_addr
-        self._bus_addr = bus_addr
-        self._buffer_no_resi_data = EMPTY_STRING
-        self._queue_data_read = queue_data_read
-        self._keypad_flag = keypad_flag  # content should be 0 or 1 (interger)
-        self._queue_keypad_char = keypad_char_data
-        # check data type
-        if not isinstance(self._keypad_flag[0], int) and \
-            not isinstance(self._queue_keypad_char, queue.Queue):
-            raise ValueError(
-                "Keypad flag or keypad char data should be list data type!")
-        self._lcd = Lcd(self._dev_addr, self._bus_addr)
-        self._lcd.init_lcd()
-        time.sleep(2)
-        self._lcd.write_text(0, 'Selamat Datang')
+    '''
+        This class is used for create a LCD thread.
+    
+    '''
+    def __init__(self)-> None:
+        self.queue_data_read = ''
+        self._lcd = Lcd(DEV_ADDR, DEV_BUS)
         self._lock = threading.Lock()
+        self._lcd.init_lcd()
+        self._welcome_display()
 
-    def read_queue_data(self):
+
+    def _welcome_display(self)->None:
+        '''
+            Printing device version in LCD
+        '''
+        version = self._get_device_version()
+        self._lcd.write_text(0, "*Smart Drop Box*")
+        self._lcd.write_text(1, f"----{version}----") # version content must contains 8 chars
+
+
+    def _get_device_version(self)-> str:
+        '''
+            Get device version from config.ini file. It will print error info in lcd if
+            version chars exceeds 8 chars.
+
+            Raises  : 
+                    Inheritance error handling from configparser class.
+                    ValueError : when version's length exceeds 8 chars and assigned None/empty.
+
+            Return  : 
+                    device_version (str) : device version in max. 8 chars 
+
+        '''
+        parser_ver = configparser.ConfigParser()
+        parser_ver.read('./conf/config.ini')
+        device_version = parser_ver.get('version', 'dev_version')
+        len_dev_ver = len(device_version)
+
+        if len_dev_ver > 8 or len_dev_ver == 0:
+            self._lcd.write_text(0, 'Error Info:')
+            self._lcd.write_text(1, 'Check Ver str!')
+            raise ValueError ("Version's length should not exceeded 8 chars or empty!")
+        return device_version
+
+
+    def read_queue_data(self)-> queue.Queue:
+        '''
+            Read queue from shared resource. It uses lock method to prevent race
+            conditions between threads accessing the same resource.
+
+            Returns:
+                the queue data if exists, else return None.
+
+        '''
+        if not isinstance(self.queue_data_read, queue.Queue):
+            raise AttributeError('queue_data_read attribute had not been setted!')
         with self._lock:
-            return EMPTY_STRING if self._queue_data_read.empty() \
-                else self._queue_data_read.get()
+            return None if self.queue_data_read.empty() \
+                else self.queue_data_read.get(timeout=1)
 
-    def parse_data(self, data: list):
-        first_line = data[0]
-        second_line = data[1]
-        return first_line, second_line
 
-    def get_keypad_flag(self):
-        with self._lock:
-            return self._keypad_flag[0]
+    def set_queue_data(self, queue_data :queue.Queue):
+        '''
+            Set queue data from shared resource to be read.
+        '''
+        self.queue_data_read = queue_data
 
-    def get_keypad_char_data(self):
-        with self._lock:
-            return EMPTY_STRING if self._queue_keypad_char.empty() \
-                else self._queue_keypad_char.get()
-        
-    def keypad_handling(self):
-        # get char data
-        char_data = self.get_keypad_char_data()
-        # contains message for successfuly inserted correct no resi
-        data_display = self.read_queue_data()
-        no_resi_buff_length = len(self._buffer_no_resi_data)
-        if char_data is not EMPTY_STRING and no_resi_buff_length <= NO_RESI_MAX_LENGTH:
-            self._lcd.clear_lcd()
-            self._lcd.write_text(0, 'Masukan No Resi:')
-            self._buffer_no_resi_data += char_data
-            self._lcd.write_text(1, self._buffer_no_resi_data)
-        # handling exceeded input data and clear no resi buff.
-        if no_resi_buff_length > NO_RESI_MAX_LENGTH:
-            self._buffer_no_resi_data = EMPTY_STRING
-            self._lcd.clear_lcd()
-            self._lcd.write_text(0, "No resi lebih")
-            self._lcd.write_text(1, "dari 4 digit!")
-        # check data_display is exist
-        if len(data_display) != 0:
-            first_line, second_line = self.parse_data(data_display)
-            self._buffer_no_resi_data = EMPTY_STRING
-            self._lcd.clear_lcd()
-            self._lcd.write_text(0, f"{first_line}")
-            self._lcd.write_text(1, f"{second_line}")
-            time.sleep(1.5)
 
-    def run(self):
-        # check data from queue
-        data_display = self.read_queue_data()
-        # check if keypad is entered
-        is_keypad_flag = self.get_keypad_flag()
-        if is_keypad_flag:
-            self.keypad_handling()
-        # check if items data is available
-        if len(data_display) != 0 and is_keypad_flag != 1:
-            item_stored, item_waiting = self.parse_data(data_display)
+    def parse_dict_data(self, data: dict)-> tuple:
+        '''
+            Parsing dictionary data to be 2 items of a tuple.
+            first data in dict contains command for LCD, the other one contains payload
+            (first line and second line data that will be displayed in LCD).
+
+            Raises:
+                ValueError  : if content in payload are not string.
+            
+            Returns:
+                cmd and data_text in tuple. data_text contains list of string data
+        '''
+        cmd  = data['cmd']
+        data_text = data['payload']
+        # Payload content should string
+        if not all(isinstance(item, str) for item in data_text):
+            raise ValueError("Payload contents should be string!")
+
+        return cmd, data_text
+
+    def print_data(self)-> None:
+        '''
+            Function that handle all the need of lcd tasks.
+                    
+        '''
+        # default value:
+        cmd = None
+        # read queue data from thread opt
+        queue_data = self.read_queue_data()
+        #if queue data exist, parse it
+        if queue_data is not None:
+            cmd, display_data = self.parse_dict_data(queue_data)
+        # print data to lcd if cmds are match
+        if cmd in ('routine', 'keypad'):
+            first_line   = display_data[0]
+            second_line = display_data[1]
             self._lcd.clear_lcd()
-            self._lcd.write_text(0, f'Itms stored : {item_stored}')
-            self._lcd.write_text(1, f'Itms waiting: {item_waiting}')
+            self._lcd.write_text(0, first_line)
+            self._lcd.write_text(1, second_line)
+
+
+    def run(self)->None:
+        '''
+            Driver function to run the task in inifinity looping 
+        '''
+        while True:
+            self.print_data()
+    
