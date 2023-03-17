@@ -16,74 +16,64 @@ Make 2 threads.
         + data_display (list)     : 2 items str
     2) lcd thread
 '''
+#shared resources
+queue_data_thread_opt = queue.Queue(5)
 
-def input_from_user(keypad_flag:list, keypad_char:queue.Queue, data_to_be_displayed: queue.Queue):
+def input_from_user(data_queue: queue.Queue):
     while True:
         info_text = "Pilihan: \n \
-            1. Set is_enter_keypad.\n \
-            2. Set keypad_char_data.\n\
-            3. Set data display.\n \
+            1. Set keypad cmd.\n \
+            2. Set routine cmd (single char of no resi).\n\
+            3. Set routine cmd (4 digits resi).\n\
             input: "
         print()
         data = int(input(info_text))
 
         if data == 1:
-            input_data = int(input("Masukan data untuk is_enter_keypad (0 atau 1): "))
+            input_data = {
+                'cmd'     : 'routine',
+                'payload' : ['itms stored: 12', 'itms waiting: 5']
+            }
             with lock:
-                keypad_flag[0] = input_data
+                data_queue.put(input_data)
         elif data == 2:
-            input_data = str(input("Masukan data untuk keypad_char_data : "))
+            input_data = {
+                'cmd'     : 'keypad',
+                'payload' : ['Masukan resi:', '0']
+            }
             with lock:
-                keypad_char.put(input_data)
+                data_queue.put(input_data)
         elif data == 3:
-            input_data_1 = str(input("Masukan first line data  : "))
-            input_data_2 = str(input("Masukan second line data : "))
-            listed = [input_data_1, input_data_2]
+            input_data = {
+                'cmd'     : 'keypad',
+                'payload' : ['Masukan resi:', '0056']
+            }
             with lock:
-                data_to_be_displayed.put(listed)
+                data_queue.put(input_data)
         else:
             logging.warning('input di luar jangkauan!')
 
-def print_keypad_flag(keypad_flag:list):
-    while True:
-        with lock:
-            print(f"\nkeypad flag: {keypad_flag[0]}")
-        time.sleep(2)
-        
-#shared resources
-g_keypad_flag = [0]
-g_keypad_char_data = queue.Queue(4)
-g_data_display = queue.Queue(5)
-
 #create function
-def lcd_process(
-                _dev_addr,
-                _bus_addr,
-                _keypad_flag,
-                _keypad_char_data,
-                _queue_data_read
-              ):
-    lcd_t = LcdThread(
-        dev_addr=_dev_addr,
-        bus_addr= _bus_addr,
-        keypad_flag=_keypad_flag,
-        keypad_char_data = _keypad_char_data,
-        queue_data_read= _queue_data_read
-    )
+def lcd_process(data_queue):
+    lcd_t = LcdThread()
+    lcd_t.set_queue_data(data_queue)
+    lcd_t.run()
+
+def test_lcd_process(data_queue: queue.Queue):
     while True:
-        lcd_t.run()
+        try:
+            data = data_queue.get(block=True, timeout=1)
+        except queue.Empty:
+            continue
+        print(f"\ndata LCD: {data}")
+
 
 #create threads
-thread_lcd = threading.Thread(
-    target=lcd_process, 
-    args=(0x27,0,g_keypad_flag,g_keypad_char_data,g_data_display, ) # Remember put (args, ) for pass the list!
-    )
-thread_input = threading.Thread(
-    target=input_from_user, 
-    args=(g_keypad_flag, g_keypad_char_data, g_data_display, )
-    )
-
+thread_lcd = threading.Thread(target=lcd_process, args=(queue_data_thread_opt, ))
+thread_input = threading.Thread(target= input_from_user,  args= (queue_data_thread_opt,))
+test_thread_lcd = threading.Thread(target=test_lcd_process, args= (queue_data_thread_opt,))
 
 if __name__ == '__main__':
    thread_input.start()
    thread_lcd.start()
+#    test_thread_lcd.start()
