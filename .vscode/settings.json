@@ -17,6 +17,11 @@
         "./applications/mock_threading",
         "./drivers/database_connector",
         "./applications/network_thread",
-        "./applications/storage_thread"
+        "./applications/storage_thread",
+        "./applications/opt_thread",
+        "./utils",
+        "./applications/sound_thread",
+        "./applications/peripheral_operations",
+        "./applications/network"
     ]
 }

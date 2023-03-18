@@ -11,9 +11,13 @@
 """
 
 import json
+import sys
 from urllib.parse import urljoin
 import jwt
 import requests
+
+# Please refers to json data from server and see the key contains the data intended!
+KEY_DATA_IN_GET_METHOD = 'data'
 
 class DatabaseConnector:
     """
@@ -31,7 +35,7 @@ class DatabaseConnector:
                                         'update' : 'idem',
                                         'delete' : 'idem',
                                     }
-                                    keys should be specify like that!
+                                    keys should be specified like that!
 
 
         This class uses 'requests' library. It uses 'requests' methods for perfoming CRUD.
@@ -40,6 +44,9 @@ class DatabaseConnector:
 
         Post and Update method use dict arg attributes (key:val), in the other hand, get and
         delete use params.
+
+        Preventing from server error, it handles by returning status code 503 and response = "Server
+        Unavailable" (hard coded because the API in dynamic).
 
         NOTE: If server reqiures authorization, you need to invoke set_encode and 
               encode respectively! (default: no auth)
@@ -68,6 +75,7 @@ class DatabaseConnector:
             Returns:
                 str: message operation result.
         """
+        _message = None
         _status_code = response.status_code
         if _status_code == 500:
             _message = "Internal server error."
@@ -77,8 +85,25 @@ class DatabaseConnector:
             _message = "The request was invalid or cannot be otherwise served."
         elif _status_code == 204:
             _message = "The request was successful but there is no content to return."
+        elif _status_code == 201:
+            _message == "Success created a data in server!"
+        # NOTE: Please concern this code when API GET is changed! and the return code is 200
         elif _status_code == 200:
-            _message = response.text
+            _data_raw = response.text # it contains row data in dict
+            '''
+                We handle the wrong data (maybe API programer did wrong type while writing json data)
+                by returning error json decoder to response!
+            '''
+            try:
+                _decoded_data = json.loads(_data_raw)
+            except json.decoder.JSONDecodeError as msg_error:
+                _message = "API data does not retrun correct JSON format!"
+            else:
+                if KEY_DATA_IN_GET_METHOD not in _decoded_data:
+                    _message = "Success but not returned data"
+                else:
+                    _message =  _decoded_data[KEY_DATA_IN_GET_METHOD]
+
         elif _status_code == 405:
             _message = "Method Not Allowed."
         elif _status_code == 403:
@@ -100,36 +125,80 @@ class DatabaseConnector:
             Returns:
                 tuple: response status code and result message of operation.
         """
+        _status_code = None
+        _result = None
         if not isinstance(param, str) and not isinstance(value, str):
             raise ValueError('Parameters must be String!')
+        
         _get_path = self._endpoints_urls['get']
         _full_get_path = urljoin(self._base_url, _get_path)
         _parameters = {param: value}
-        _header = {'content-type': 'application/json'}
-        _response = requests.get(
-            _full_get_path, params=_parameters, headers=_header, timeout=1.0)
-        _result = self._help_return_response_requests(_response)
-        return _response.status_code, _result
+        _header = {'content-type': 'application/json',
+                   'Authorization': f'{self._auth_header}'}
+        
+        try:
+            _response = requests.get(
+                _full_get_path, params=_parameters, headers=_header, timeout=1.0)
+            _status_code = _response.status_code
+            _result = self._help_return_response_requests(_response)
+        except requests.exceptions.ConnectionError:
+            _status_code = 503
+            _result = "Server Unavailable"
+        finally:
+            return _status_code, _result
 
-    def post_data(self, data:dict) -> tuple:
+    def post_data(self, data:dict, endpoint:str) -> tuple:
         """
-            This function post data to database base on user defined parameter (key-val argument).
+            This function post data to database base on user defined payload to specific endpoints.
 
             Args:
                 data (dict) :  User defined parameters and values for post data in endpoint url.
+                endpoints   :  Endpoint from server
 
             Returns:
                 tuple: response status code and result message of operation.
         """
-        _post_path = self._endpoints_urls['post']
-        _full_post_path = urljoin(self._base_url, _post_path)
-        _payload   = json.dumps(data)
-        _header    = {'content-type': 'application/json',
-                          'Authorization': f'{self._auth_header}'}
-        _response  = requests.post(
-            _full_post_path, data =_payload, headers=_header, timeout=1.0)
-        _result    = self._help_return_response_requests(_response)
-        return _response.status_code, _result
+        _full_post_path = ""
+        _header = {}
+        _payload = {}
+        _file = {}
+        _status_code = None
+        _response = None 
+
+
+        _post_path = self._endpoints_urls[endpoint]
+        #check endpoints
+        if _post_path == 'post.php':    
+            _full_post_path = urljoin(self._base_url, _post_path)
+            _payload   = json.dumps(data)
+            _header    = {'Content-type': 'application/json',
+                            'Authorization': f'{self._auth_header}'}
+            _file      = {}
+        
+        #this endpoint is specific in smart drop app, It uses mutipart-form-data.
+        #so we don't need to make payload as json. We send the photo through FILES and
+        # other data in POST.
+        elif _post_path == 'success_items.php':
+            #parsing data photo
+            if not 'photo' in data:
+                raise KeyError("Photo data is missing!")
+            
+            _file      = {"photo" : data['photo']}
+            # Payload should not contain photo bin data!
+            del data['photo']
+            _full_post_path = urljoin(self._base_url, _post_path)
+            _payload   = data
+            _header    = {'Authorization': f'{self._auth_header}'}
+
+        try:    
+            _response  = requests.post(
+                _full_post_path, data =_payload, headers=_header, files=_file, timeout=1.0)
+            _result    = self._help_return_response_requests(_response)
+        except requests.exceptions.ConnectionError:
+            _status_code = 503
+            _result = "Server Unavailable"
+        return _status_code, _result
+
 
     def update_data(self, data:dict) -> tuple:
         '''
@@ -141,6 +210,8 @@ class DatabaseConnector:
             Returns:
                 tuple: response status code and result message of operation.
         '''
+        _status_code = None 
+        _response = None
         # Create full path url for update data
         _update_path = self._endpoints_urls['update']
         _full_update_path = urljoin(self._base_url, _update_path)
@@ -150,10 +221,15 @@ class DatabaseConnector:
         _header = {'content-type': 'application/json',
                    'Authorization': f'{self._auth_header}'}
         # Make update request to server
-        _response = requests.patch(
-            _full_update_path, data=_payload, headers=_header, timeout=1.0)
-        _result = self._help_return_response_requests(_response)
-        return _response.status_code, _result
+        try:
+            _response = requests.patch(
+                _full_update_path, data=_payload, headers=_header, timeout=1.0)
+            _result = self._help_return_response_requests(_response)
+        except requests.exceptions.ConnectionError:
+            _status_code = 503
+            _result = "Server Unavailable"
+        return _status_code, _result
+    
 
     def delete_data(self, param: str, value: str) -> tuple:
         """
@@ -166,6 +242,8 @@ class DatabaseConnector:
             Returns:
                 tuple: response status code and result message of operation.
         """
+        _status_code = None 
+        _response = None
 
         if not isinstance(param, str) and not isinstance(value, str):
             raise ValueError('Parameters must be String!')
@@ -174,12 +252,18 @@ class DatabaseConnector:
         _payload = {param: value}
         _headers = {'content-type': 'application/json',
                     'Authorization': f'{self._auth_header}'}
-        _response = requests.delete(
-            _full_delete_path, params=_payload, headers=_headers, timeout=1.0)
-        _result = self._help_return_response_requests(_response)
-        return _response.status_code, _result
+        
+        try:
+            _response = requests.delete(
+                _full_delete_path, params=_payload, headers=_headers, timeout=1.0)
+            _result = self._help_return_response_requests(_response)
+        except requests.exceptions.ConnectionError:
+            _status_code = 503
+            _result = "Server Unavailable"
+        return _status_code, _result
 
-    def encode(self, payload_data: dict) -> str:
+
+    def encode(self, payload_data: dict = {}) -> str:
         """
             This function encodes data as JWT token. The encoded data  from
             JWT. Encoding produces a byte-string data, so we need decode it.
@@ -196,11 +280,20 @@ class DatabaseConnector:
             algorithm=self._algo,
             headers={'typ': 'JWT'}
         )
-        _decoded_to_utf8 = _encoded_data.decode('utf-8')
-        _tokenized = f"{self._token_type} {_decoded_to_utf8}"
+
+        # only decode when python version is below 3.8.10
+        python_version = sys.version_info
+        if python_version <= (3, 8, 10):
+            _decoded_to_utf8 = _encoded_data.decode("utf-8") 
+            _tokenized = f"{self._token_type} {_decoded_to_utf8}"
+        else:
+            _tokenized = f"{self._token_type} {_encoded_data}"
+            
+            
         # set auth_header class attribute
         self._auth_header = _tokenized
         return _tokenized
+    
 
     def set_encode(self, secret: str, algo: str, token_type: str) -> None:
         """

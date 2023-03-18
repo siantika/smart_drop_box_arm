@@ -4,8 +4,10 @@
     Year           : Feb, 2023
     Description    : 
     
-    This code just modification from "the ref" below. Basically, i just changed the RPi library
-    to wiringOP. It can read a single char input from keypad 4x4. 
+   This code helps to comunicate between keypad and orange pi. I use serial communication
+   for this protocol between keypad and orange pi. The keypad will send a char (in truth is string) 
+   with special chars "/r/n". So, we need to decode and strip that data and simply return it as str
+   in Python.
 
     * Prerequisites *
     1. Download or put this library in your working directory project.
@@ -22,8 +24,10 @@
 '''
  
 import sys
-import time
-if '--hw-orpi' in sys.argv:
+import serial
+import platform
+
+if platform.machine() == 'armv7l':
     import wiringpi 
     from wiringpi import GPIO
     
@@ -34,65 +38,31 @@ else:
 
 
 class Keypad:
-    def __init__(self, row_pin_array, column_pin_array):
-        self._row_pin_array = row_pin_array
-        self._column_pin_array = column_pin_array
-
-       
-        if not(len(self._row_pin_array) == 4 and len(self._column_pin_array) == 4):
-            raise ValueError('the length of each arrays items should be 4 items')
-        else:
-            wiringpi.wiringPiSetup()
-
-            wiringpi.pinMode(self._row_pin_array[0], GPIO.OUTPUT)
-            wiringpi.pinMode(self._row_pin_array[1], GPIO.OUTPUT)
-            wiringpi.pinMode(self._row_pin_array[2], GPIO.OUTPUT)
-            wiringpi.pinMode(self._row_pin_array[3], GPIO.OUTPUT)
-
-            wiringpi.pinMode(self._column_pin_array[0], GPIO.INPUT)
-            wiringpi.pinMode(self._column_pin_array[1], GPIO.INPUT)
-            wiringpi.pinMode(self._column_pin_array[2], GPIO.INPUT)
-            wiringpi.pinMode(self._column_pin_array[3], GPIO.INPUT)
-
-            wiringpi.pullUpDnControl(self._column_pin_array[0], GPIO.PUD_DOWN)
-            wiringpi.pullUpDnControl(self._column_pin_array[1], GPIO.PUD_DOWN)
-            wiringpi.pullUpDnControl(self._column_pin_array[2], GPIO.PUD_DOWN)
-            wiringpi.pullUpDnControl(self._column_pin_array[3], GPIO.PUD_DOWN)
-
-   
-    def _read_line(self, line, chars):
-        self._chars = chars
-        self._line = line
-        self._selected_char = None
-        
-
-        wiringpi.digitalWrite(self._line, GPIO.HIGH)
-
-        if wiringpi.digitalRead(self._column_pin_array[0]) == 1:
-            self._selected_char = self._chars[0]
-        
-        if wiringpi.digitalRead(self._column_pin_array[1]) == 1:
-            self._selected_char = self._chars[1]
-
-        if wiringpi.digitalRead(self._column_pin_array[2]) == 1:
-            self._selected_char = self._chars[2]
-
-        if wiringpi.digitalRead(self._column_pin_array[3]) == 1:
-            self._selected_char = self._chars[3]
-        
-        wiringpi.digitalWrite(self._line, GPIO.LOW)
-
-        return self._selected_char
+    def __init__(self,):
+        self.ser = serial.Serial(
+        port='/dev/ttyS1',  # UART1 on Orange Pi
+        baudrate=9600,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        bytesize=serial.EIGHTBITS,
+        timeout=1
+        )       
     
     def reading_input_char(self):
-        self._selected_char = None
-        while self._selected_char == None:
-            self._selected_char = self._read_line(self._row_pin_array[0], ['1', '4', '7', '*'])
-            self._selected_char = self._read_line(self._row_pin_array[1], ['2', '5', '8', '0'])
-            self._selected_char = self._read_line(self._row_pin_array[2], ['3', '6', '9', '#'])
-            self._selected_char = self._read_line(self._row_pin_array[3], ['A', 'B', 'C', 'D'])            
-            time.sleep(0.2)
-        return self._selected_char
+        '''
+            Reading input char from keypad. It uses serial com between keypad and this device
+            (red: orange pi zero lts).
+        
+        '''
+        char_data = None
+        try:
+            char_data = self.ser.readline().decode('utf-8').strip() 
+        except UnicodeDecodeError as msg_error:
+            print(f"Error keypad: {msg_error}")
+        finally:
+            if len(char_data) == 0:   
+                char_data = None
+            return char_data
     
     
 

@@ -71,8 +71,34 @@ class UsbCamera:
                 os.remove(self._full_path_file)
         except FileNotFoundError as e:
             raise FileNotFoundError('No file was found!')
+        
 
-            
+    def delete_all_photos_in_folder(self):
+        '''
+            desc    : Deleting all photos in the chosen directory. 
+            params  : -
+            ret     : -
+        '''
+        try:             
+            files = os.listdir(self.get_dir_saved_photo())
+            for file in files:
+                os.remove(os.path.join(self.get_dir_saved_photo(), file))
+        except FileNotFoundError as e:
+            raise FileNotFoundError('No such directory was found!')
+        
+    
+    def get_photo_name(self)-> list:
+        '''
+            desc    : Deleting all photos in the chosen directory. 
+            params  : -
+            ret     : list[str] files name
+        '''
+        files = os.listdir(self.get_dir_saved_photo())
+
+        # print out the file names
+        return files
+
+                
 
 
 

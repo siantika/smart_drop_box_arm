@@ -1,8 +1,7 @@
 import sys
-import queue
 import threading
 import configparser
-import time
+import multiprocessing as mp
 import pytest
 from unittest.mock import Mock, call, patch
 
@@ -46,12 +45,12 @@ class TestSetQueueData:
                 patch.object(Lcd, 'write_text') as mock_write_text:
             
             mock_lcd.return_value = None
-            test_data = queue.Queue(5)
+            test_data = mp.Queue(5)
             lcd_t = LcdThread()
             lcd_t.set_queue_data(test_data)
            
             assert lcd_t.queue_data_read == test_data
-            assert isinstance(lcd_t.queue_data_read, queue.Queue)
+            assert isinstance(type(lcd_t.queue_data_read), type(mp.Queue))
 
 class TestReadQueueData:
     def _help_mock_lcd_driver(self):
@@ -76,7 +75,7 @@ class TestReadQueueData:
     
     def test_read_queue_data_should_return_none_if_queue_data_read_contains_empty_payload(self):
         self._help_mock_lcd_driver()
-        q_data = queue.Queue(2)
+        q_data = mp.Queue(2)
         lcd_t = LcdThread()
         lcd_t.set_queue_data(q_data)
         ret = lcd_t.read_queue_data()
@@ -88,7 +87,7 @@ class TestReadQueueData:
         
     def test_read_queue_data_should_return_data_if_queue_data_read_is_assigned_payload(self):
         self._help_mock_lcd_driver()
-        q_data = queue.Queue(2)
+        q_data = mp.Queue(2)
         q_data.put({
             "cmd"     : "routine",
             "payload" : ["Masukan no resi:", "0596"]
@@ -233,7 +232,7 @@ class TestDriverClass:
 
     def test_print_data_method_should_be_exist(self):
         self._help_mock_lcd_driver()
-        q_data = queue.Queue(2)
+        q_data = mp.Queue(2)
         
         lcd_t = LcdThread()
         lcd_t.set_queue_data(q_data)

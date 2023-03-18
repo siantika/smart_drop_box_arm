@@ -5,9 +5,7 @@
     file and save it as .py . 
     modified:
         1. Changed rpi library to wiringpi library and its methods
-
-    NOTE: Please install wiringOP lib before use this!
-          Don't forget to put '--hw-orpi' when run this code!, see example.py in github repo!
+        2. Added timeout in readRawByte function (preventing program stuck forever!)
 
     see: 'example/hx711_ex.py' file
 
@@ -18,9 +16,10 @@
 import sys
 import time
 import threading
+import platform 
 
 ### real hardware
-if '--hw-orpi' in sys.argv:
+if platform.machine() == "armv7l":
     import wiringpi 
 
 ### mock for testing in native pc
@@ -29,7 +28,7 @@ else:
     from mock_wiringpi import MockWiringPi 
     wiringpi = MockWiringPi()
 
-
+TIMEOUT_READ_RAW = 5 # secs
 
 class Hx711:
 
@@ -134,8 +133,14 @@ class Hx711:
         self.readLock.acquire()
 
         # Wait until HX711 is ready for us to read a sample.
+        # Edit by sian: I added timeout for this proccess. I dont want other processes 
+        # stuck in this proccess.
+        start_time = time.time()
         while not self.is_ready():
-           pass
+           current_time = time.time()
+
+           if current_time - start_time > TIMEOUT_READ_RAW:
+               raise TimeoutError("No response from HX711 hardware!")
 
         # Read three bytes of data from the HX711.
         firstByte  = self.readNextByte()

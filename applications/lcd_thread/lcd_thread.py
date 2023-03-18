@@ -13,7 +13,7 @@
     we have to put threading.Lock to avoid race condition between threads. 
     
         Attributes:
-            queue_data_read (queue.Queue)  : Queue data to read from other thread.
+            queue_data_read (mp.Queue)  : Queue data to read from other thread.
                                              Queue data content is dict objec.
                                              eg. {'cmd': 'routine' or 'keypad', 
                                             'payload'=[firstline_data, secondline_data]}
@@ -36,7 +36,7 @@
 
     License: see 'licenses.txt' file in the root of project
 '''
-import queue
+import multiprocessing as mp
 import configparser
 import sys
 import threading
@@ -93,7 +93,7 @@ class LcdThread:
         return device_version
 
 
-    def read_queue_data(self)-> queue.Queue:
+    def read_queue_data(self)-> mp.Queue:
         '''
             Read queue from shared resource. It uses lock method to prevent race
             conditions between threads accessing the same resource.
@@ -102,14 +102,14 @@ class LcdThread:
                 the queue data if exists, else return None.
 
         '''
-        if not isinstance(self.queue_data_read, queue.Queue):
-            raise AttributeError('queue_data_read attribute had not been setted!')
+        # if not isinstance(self.queue_data_read, type(mp.Queue)):
+        #     raise AttributeError('queue_data_read attribute had not been setted!')
         with self._lock:
             return None if self.queue_data_read.empty() \
                 else self.queue_data_read.get(timeout=1)
 
 
-    def set_queue_data(self, queue_data :queue.Queue):
+    def set_queue_data(self, queue_data :mp.Queue):
         '''
             Set queue data from shared resource to be read.
         '''

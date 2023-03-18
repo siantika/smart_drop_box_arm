@@ -9,7 +9,9 @@
 '''
 from unittest.mock import patch
 import sys
+import pytest
 sys.path.append('drivers/database_connector')
+
 from database_connector import DatabaseConnector
 
 TEST_URL        = 'http://localhost.com/smart_drop_box/'
@@ -20,8 +22,9 @@ TEST_DELETE_URL = 'http://localhost.com/smart_drop_box/delete.php'
 
 SECRET_KEY_LOCAL = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1'
 
-test_header_const = {'content-type':'application/json', 'Authorization':'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw'}
-test_endpoint_paths = {'get':'get.php','update':'update.php','delete':'delete.php','post':'post.php'}
+test_header_const = {'Content-type':'application/json', 'Authorization':'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw'}
+test_endpoint_paths = {'get':'get.php','update':'update.php','delete':'delete.php','post':'post.php',
+                       'success_items' : 'success_items.php'}
 
 ### Test Group init method
 class TestDatabaseConInit:
@@ -94,7 +97,7 @@ class TestDatabaseConGetData:
         db = DatabaseConnector(TEST_URL, test_endpoint_paths)
         db.get_data(param = 'id', value = '1')
 
-        self.mock_requests_get.assert_called_once_with(TEST_GET_URL, params={'id' : '1'}, headers={'content-type':'application/json'}, timeout=1.0)
+        self.mock_requests_get.assert_called_once_with(TEST_GET_URL, params={'id' : '1'}, headers={'Content-type':'application/json'}, timeout=1.0)
 
         self.stop_all_patch()
 
@@ -198,10 +201,10 @@ class TestDatabaseConPostData:
             db = DatabaseConnector(TEST_URL, test_endpoint_paths)
             db._auth_header =  "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"    
             mock_dumps.return_value ={"name": "sd card", "no_resi": "4931"}
-            db.post_data({'name' : 'sd card',  'no_resi' : '4931'})
+            db.post_data({'name' : 'sd card',  'no_resi' : '4931'}, endpoint= 'post')
 
             mock_dumps.assert_called_once_with({"name": "sd card", "no_resi": "4931"})
-            self.mock_requests_post.assert_called_once_with(TEST_URL_POST, data={"name": "sd card", "no_resi": "4931"}, headers=test_header_const, timeout=1.0)
+            self.mock_requests_post.assert_called_once_with(TEST_URL_POST, data={"name": "sd card", "no_resi": "4931"}, headers=test_header_const, files = {}, timeout=1.0)
             
         self.stop_all_patch()
 
@@ -211,7 +214,7 @@ class TestDatabaseConPostData:
         with patch('json.dumps') as mock_dumps:
             mock_dumps.return_value ={"name": "sd card", "no_resi": "4931"}
             db = DatabaseConnector(TEST_URL, test_endpoint_paths)
-            _result = db.post_data({"name": "sd card", "no_resi": "4931"})
+            _result = db.post_data({"name": "sd card", "no_resi": "4931"}, endpoint= 'post')
 
             assert isinstance(_result, tuple)
         
@@ -225,8 +228,8 @@ class TestDatabaseConPostData:
             mock_dumps.return_value = '{"name"="sd card", "no_resi"="4931", "image"="sd_card_img.jpg"}'
             db = DatabaseConnector(TEST_URL, test_endpoint_paths)
             db._auth_header =  "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"    
-            db.post_data({'name':'sd card', 'no_resi':'4931', 'image':'sd_card_img.jpg'})
-            self.mock_requests_post.assert_called_with(TEST_URL_POST, data = '{"name"="sd card", "no_resi"="4931", "image"="sd_card_img.jpg"}', headers=test_header_const, timeout=1.0)
+            db.post_data({'name':'sd card', 'no_resi':'4931', 'image':'sd_card_img.jpg'}, endpoint= 'post')
+            self.mock_requests_post.assert_called_with(TEST_URL_POST, data = '{"name"="sd card", "no_resi"="4931", "image"="sd_card_img.jpg"}', headers=test_header_const, files={}, timeout=1.0)
         
         self.stop_all_patch()
 
@@ -235,11 +238,12 @@ class TestDatabaseConPostData:
         self.help_mock_requests_methods()
         self.mock_requests_post.return_value.status_code = 200
         self.mock_requests_post.return_value.text = "Data Posted Successfully"
-        with patch('json.dumps') as mock_dumps:
+        with patch('json.dumps') as mock_dumps, patch('json.loads') as mock_loads:
             mock_dumps.return_value ='{"name": "sd card", "no_resi": "4931"}'
+            mock_loads.return_value = {'data' :'Data Posted Successfully'}
             db = DatabaseConnector(TEST_URL, test_endpoint_paths)
 
-            _response, _result  = db.post_data('{"name": "sd card", "no_resi": "4931"}')
+            _response, _result  = db.post_data('{"name": "sd card", "no_resi": "4931"}', endpoint= 'post')
 
         assert _response == 200
         assert _result   == "Data Posted Successfully"
@@ -255,7 +259,7 @@ class TestDatabaseConPostData:
             mock_dumps.return_value ='{"name": "sd card", "no_resi": "4931"}'
             db = DatabaseConnector(TEST_URL, test_endpoint_paths)
 
-            _response, _result  = db.post_data({"name": "sd card", "no_resi": "4931"})
+            _response, _result  = db.post_data({"name": "sd card", "no_resi": "4931"}, endpoint= 'post')
 
         assert  _response == 400
         assert  _result   == "The request was invalid or cannot be otherwise served."
@@ -271,12 +275,47 @@ class TestDatabaseConPostData:
             mock_dumps.return_value ='{"name": "sd card", "no_resi": "4931"}'
             db = DatabaseConnector(TEST_URL, test_endpoint_paths)
 
-            _response, _result  = db.post_data({"name": "sd card", "no_resi": "4931"})
+            _response, _result  = db.post_data({"name": "sd card", "no_resi": "4931"}, endpoint= 'post')
 
         assert _response == 500
         assert _result  == "Internal server error."
         
         self.stop_all_patch()
+
+
+    def test_post_data_should_handle_post_data_without_photo_correctly(self):
+        self.help_mock_requests_methods()
+        test_data = {"name" : "Arduino", "no_resi" : "2256", "photo" : "asdsadsa"}
+        with patch('json.dumps') as mock_dumps:
+            mock_dumps.return_value = test_data
+            db = DatabaseConnector(TEST_URL, test_endpoint_paths)
+            db.post_data(test_data, endpoint='post')
+
+            self.mock_requests_post.assert_called_once_with(
+                (TEST_URL+ "post.php"), data = test_data, headers = {'Content-type':'application/json', 'Authorization' : ''}, files = {}, timeout = 1.0 
+            )
+
+    
+    def test_post_shoukd_handle_post_data_with_payload_photo_correctly(self):
+        self.help_mock_requests_methods()
+        test_data = {"name" : "Arduino", "no_resi" : "2256", "photo" : ('kurir_image.jpg', 0x5f)}
+        expected_payload = {"name" : "Arduino", "no_resi" : "2256"}
+        with patch('json.dumps') as mock_dumps:
+            mock_dumps.return_value = test_data
+            db = DatabaseConnector(TEST_URL, test_endpoint_paths)
+            db.post_data(test_data, endpoint='success_items')
+
+            self.mock_requests_post.assert_called_once_with(
+                (TEST_URL+ "success_items.php"), data = expected_payload, headers = {'Authorization' : ''}, files = {"photo" : ('kurir_image.jpg', 0x5f)}, timeout = 1.0 
+            )
+    
+    def test_post_should_raise_key_error_when_endpoints_is_success_items_and_key_photo_is_not_available(self):
+        self.help_mock_requests_methods()
+        test_data = {"name" : "Arduino", "no_resi" : "2256"}
+        with patch('json.dumps') as mock_dumps, pytest.raises(KeyError, match = "Photo data is missing!"):
+            mock_dumps.return_value = test_data
+            db = DatabaseConnector(TEST_URL, test_endpoint_paths)
+            db.post_data(test_data, endpoint='success_items')
 
 
 ### Test Group Update_Data method
