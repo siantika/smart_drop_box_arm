@@ -60,7 +60,7 @@ class Keypad:
         except UnicodeDecodeError as msg_error:
             print(f"Error keypad: {msg_error}")
         finally:
-            if not isinstance(char_data, None):
+            if char_data != None:
                 if len(char_data) == 0:   
                     char_data = None
             return char_data
