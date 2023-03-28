@@ -9,7 +9,6 @@
     License: see 'licenses.txt' file in the root of project
 """
 import configparser
-import json
 import sys
 sys.path.append('drivers/database_connector')
 from database_connector import DatabaseConnector

@@ -1,4 +1,5 @@
 import configparser
+import json
 import sys
 import time
 import queue
@@ -11,6 +12,7 @@ sys.path.append('utils')
 from network import Network
 from peripheral_operations import PeripheralOperations
 from media_data import LcdData, SoundData
+import log
 
 # TIMEOUT in secs
 KEYPAD_TIMEOUT = 15  
@@ -32,6 +34,7 @@ class ThreadOperation:
         self.item_is_stored = False
         self.keypad_session_ok = False
         self.taking_item_ok = False  # state for user taking the item inside the box
+        self.latest_items_data = self.temp_storage_data
         self.lock = threading.Lock()
         self.periph = PeripheralOperations()
         self.network = Network()
@@ -146,6 +149,7 @@ class ThreadOperation:
             # send data to lcd
             self._send_data_queue(self.queue_data_to_lcd,
                                   LcdData.ERROR_UNIVERSAL_PASSWORD)
+            log.logger.error("Universal password is filled with more than 4 chars!")
             raise ValueError("Universal password should not exceed 4 chars!")
 
 
@@ -181,10 +185,18 @@ class ThreadOperation:
         status_code, self.temp_storage_data = self._request_data_to_server(
             {'method': 'GET', 'payload': {'no_resi': '0'}})
         self.initial_data = self._make_initial_data(self.temp_storage_data)
-
         self.st_msg_has_not_displayed = True
-        # debug
-        print(self.temp_storage_data)
+
+        # only log once
+        if self.latest_items_data != self.temp_storage_data:
+            self.latest_items_data = self.temp_storage_data
+            items_stored = None
+            if self.latest_items_data != None:
+                items_stored = json.dumps(self.latest_items_data)
+            else:
+                items_stored = "Empty"
+            log.logger.info("Items tersimpan: " + items_stored)
+
 
 
     def keypad_routine(self, universal_password):
@@ -238,7 +250,7 @@ class ThreadOperation:
         self._send_data_queue(self.queue_data_to_lcd, LcdData.TAKING_ITEM)
         self.periph.play_sound(SoundData.TAKING_ITEM)
         start_time_door_session = time.time()
-
+        door_pos = self.periph.sense_door()
         while door_pos != 1:
             current_time = time.time()
             door_pos = self.periph.sense_door()
@@ -254,6 +266,7 @@ class ThreadOperation:
         self._send_data_queue(self.queue_data_to_lcd,
                               LcdData.AFTER_TAKING_ITEM)
         self.periph.play_sound(SoundData.INSTRUCTION_DEL_ITEM)
+        log.logger.info("Barang telah diambil pemilik")
 
 
     def door_session(self):
@@ -275,16 +288,13 @@ class ThreadOperation:
             read_weight = self.periph.get_weight()
             door_pos = self.periph.sense_door()
 
-            # debug
-            print(f" weight: {read_weight}")
-            print(f" door position: {door_pos}")
-
-            # only stop when door is closed
+            # only stop when door is 
             if current_time - start_time_door_session > DOOR_TIMEOUT:
                 self.item_is_stored = False
                 self._send_data_queue(
                     self.queue_data_to_lcd, LcdData.DOOR_ERROR)
                 self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
+                log.logger.critical("Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
                 time.sleep(1.0)
 
             # Item received
@@ -292,6 +302,8 @@ class ThreadOperation:
                 self.item_is_stored = True
                 # update latest weight when item is stored
                 self.latest_weight = read_weight
+                log.logger.info("Barang dengan no resi " + self.keypad_buffer + " telah disimpan \
+                                di dalam box.")
                 break
 
             # No item received
@@ -301,6 +313,8 @@ class ThreadOperation:
                 self._send_data_queue(
                     self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
                 time.sleep(2.0)  # make LCD data display visible message for user
+                log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan \
+                                di dalam box!!!")
                 break
 
         self.st_msg_has_not_displayed = True
@@ -324,11 +338,10 @@ class ThreadOperation:
         # it will send data in FILES (uploaded file) not in data body (HTTP).
         payload_photo = {'photo': (photo_file_name, bin_photo)}
 
-        status_code, resp = self._request_data_to_server(
+        status_code, resp_delete = self._request_data_to_server(
             {'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}})
 
-        print(f"response from server [DELETE]: {resp}")
-        print(f"keypad buffer : {self.keypad_buffer}")
+        log.logger.info("Response dari request DELETE dengan no resi " + self.keypad_buffer + ": " + resp_delete)
 
         # Get data stored in this session.
         index = self.initial_data[self.keypad_buffer]
@@ -342,10 +355,12 @@ class ThreadOperation:
             'network', method='success_items', is_data_object=True, data_object=payload)
         
         # send request to 'success_items' API.
-        status_code, response = self._request_data_to_server(
+        status_code, resp_success_items = self._request_data_to_server(
             payload_success_item)
-        print(response)
-
+        
+        log.logger.info("Response dari request 'success_item' dengan no resi " + self.keypad_buffer + ": " \
+                        + str(resp_success_items))
+        
         self.st_msg_has_not_displayed = True
 
 
@@ -355,8 +370,11 @@ class ThreadOperation:
         self.item_is_stored = None
         self.taking_item_ok = None
 
-        if self.periph.get_photo_name() is not None:
+        #only delete when photo is  exist
+        len_photo_file_name = len(self.periph.get_photo_name())
+        if len_photo_file_name != 0:
             self.periph.delete_photo()
+            log.logger.info("Foto berhasil dihapus!")
 
 
     def run(self):

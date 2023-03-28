@@ -197,7 +197,8 @@ class DatabaseConnector:
         except requests.exceptions.ConnectionError:
             _status_code = 503
             _result = "Server Unavailable"
-        return _status_code, _result
+        finally:
+            return _status_code, _result
 
 
     def update_data(self, data:dict) -> tuple:
@@ -283,7 +284,7 @@ class DatabaseConnector:
 
         # only decode when python version is below 3.8.10
         python_version = sys.version_info
-        if python_version <= (3, 8, 10):
+        if python_version <= (3, 9, 0):
             _decoded_to_utf8 = _encoded_data.decode("utf-8") 
             _tokenized = f"{self._token_type} {_decoded_to_utf8}"
         else:

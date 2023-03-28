@@ -1,5 +1,4 @@
 '''
- # Disable auth
 
 '''
 
@@ -31,7 +30,7 @@ db.set_encode(
     token_type= "Bearer"
 )
 
-db.encode()
+print(db.encode())
 
   
 print('Post data to database:')
