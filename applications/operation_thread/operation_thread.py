@@ -198,7 +198,6 @@ class ThreadOperation:
             log.logger.info("Items tersimpan: " + items_stored)
 
 
-
     def keypad_routine(self, universal_password):
         self._send_data_queue(self.queue_data_to_lcd,
                               LcdData.FISRT_INPUT_KEYPAD)

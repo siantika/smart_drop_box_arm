@@ -1,8 +1,10 @@
+import platform
 import sys
 sys.path.append('drivers/keypad')
-import time
-if '--hw-orpi' in sys.argv:
+
+if platform.machine() == 'armv7l':
     import wiringpi 
+    from wiringpi import GPIO
     
 else:
     sys.path.append('drivers/mock_wiringpi')
@@ -11,12 +13,9 @@ else:
 
 from keypad import Keypad
 
-### var
-PINS_ROW_KEYPAD = [2,3,4,6]
-PINS_COLUMN_KEYPAD = [8,11,12,14]
-
-keypad = Keypad(PINS_ROW_KEYPAD, PINS_COLUMN_KEYPAD)
+keypad = Keypad()
 
 print("please touch the keypad once (single char)")
-read_input_char = keypad.reading_input_char()
-print(read_input_char)
+while True:
+    read_input_char = keypad.reading_input_char()
+    print(read_input_char)
