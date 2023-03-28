@@ -18,6 +18,7 @@ import requests
 
 # Please refers to json data from server and see the key contains the data intended!
 KEY_DATA_IN_GET_METHOD = 'data'
+REQUEST_TIMEOUT = 60.0 # secs
 
 class DatabaseConnector:
     """
@@ -138,7 +139,7 @@ class DatabaseConnector:
         
         try:
             _response = requests.get(
-                _full_get_path, params=_parameters, headers=_header, timeout=1.0)
+                _full_get_path, params=_parameters, headers=_header, timeout=REQUEST_TIMEOUT)
             _status_code = _response.status_code
             _result = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
@@ -192,7 +193,7 @@ class DatabaseConnector:
 
         try:    
             _response  = requests.post(
-                _full_post_path, data =_payload, headers=_header, files=_file, timeout=1.0)
+                _full_post_path, data =_payload, headers=_header, files=_file, timeout=REQUEST_TIMEOUT)
             _result    = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
             _status_code = 503
@@ -224,7 +225,7 @@ class DatabaseConnector:
         # Make update request to server
         try:
             _response = requests.patch(
-                _full_update_path, data=_payload, headers=_header, timeout=1.0)
+                _full_update_path, data=_payload, headers=_header, timeout=REQUEST_TIMEOUT)
             _result = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
             _status_code = 503
@@ -256,7 +257,7 @@ class DatabaseConnector:
         
         try:
             _response = requests.delete(
-                _full_delete_path, params=_payload, headers=_headers, timeout=1.0)
+                _full_delete_path, params=_payload, headers=_headers, timeout=REQUEST_TIMEOUT)
             _result = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
             _status_code = 503

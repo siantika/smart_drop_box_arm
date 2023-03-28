@@ -91,7 +91,7 @@ class UsbCamera:
         '''
             desc    : Deleting all photos in the chosen directory. 
             params  : -
-            ret     : list[str] files name
+            ret     : list[str] files name or empty list
         '''
         files = os.listdir(self.get_dir_saved_photo())
 
