@@ -4,9 +4,9 @@ import threading
 import pytest
 import multiprocessing as mp
 from unittest.mock import patch
-sys.path.append('applications/opt_thread')
+sys.path.append('applications/operation_thread')
 sys.path.append('applications/network')
-from opt_thread import ThreadOperation
+from operation_thread import ThreadOperation
 from network import Network
 
 

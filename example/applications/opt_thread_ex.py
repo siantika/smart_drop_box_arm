@@ -1,10 +1,9 @@
 import sys
-sys.path.append('applications/opt_thread')
+sys.path.append('applications/operation_thread')
 sys.path.append('applications/lcd_thread')
-from opt_thread import ThreadOperation
+from operation_thread import ThreadOperation
 from lcd_thread import LcdThread
 
-from queue import Queue
 import multiprocessing as mp
 
 q_data_to_lcd = mp.Queue(10)
