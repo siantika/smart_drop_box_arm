@@ -14,7 +14,6 @@
     1. wiringOP lib.
     2. Download or put this library in your working directory project.
     3. Import it to your project file (eg. main.py)
-    4. When try to run in orange pi, don't forget to put '--hw-orpu'. eg. python3 main.py --hw-orpi
 
     Example code:
         see: './example/door_ex.py' file!
@@ -23,7 +22,9 @@
 '''
 
 import sys
-if '--hw-orpi' in sys.argv:
+import platform
+
+if platform.machine() == "armv7l":
     import wiringpi 
     from wiringpi import GPIO
     
@@ -31,6 +32,7 @@ else:
     sys.path.append('drivers/mock_wiringpi')
     from mock_wiringpi import MockWiringPi, GPIO
     wiringpi = MockWiringPi()
+
 
 class Door:
     def __init__(self, pin_door_lock, pin_sense_door):
@@ -41,6 +43,7 @@ class Door:
         wiringpi.wiringPiSetup()
         wiringpi.pinMode(self._pin_door_solenoid, GPIO.OUTPUT)
         wiringpi.pinMode(self._pin_sense_door, GPIO.INPUT)
+        wiringpi.pullUpDnControl(self._pin_sense_door, GPIO.PUD_UP)
         self.lock_door()
 
     def lock_door(self):
