@@ -13,7 +13,7 @@ space = lambda:print()
 splitter = lambda sym, iter :print(f"{sym}" * iter)
 
 # endpoints
-URL = 'http://192.168.1.64/smart_drop_box/' ### remeber to put backslash in end of url!
+URL = 'https://dropbox.smart-monitoring.my.id/' ### remeber to put backslash in end of url!
 endpoint_paths = {'get':'get.php','update':'update.php','delete':'delete.php','post':'post.php', 'success_items' : 'success_items.php'}
 secret_key  = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1'
 
@@ -54,7 +54,7 @@ print(
 print ("Post database with picture")
 test_data = {
     'name' : 'mouse',
-    'no_resi' : '9638',
+    'no_resi' : '0321',
     'date_ordered' : '2023-03-23 14:39:01'
 }
 

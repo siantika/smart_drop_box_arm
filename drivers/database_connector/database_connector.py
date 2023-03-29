@@ -19,6 +19,8 @@ import requests
 # Please refers to json data from server and see the key contains the data intended!
 KEY_DATA_IN_GET_METHOD = 'data'
 REQUEST_TIMEOUT = 60.0 # secs
+#Added user-agent header (MUST)
+user_agent = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
 
 class DatabaseConnector:
     """
@@ -136,6 +138,8 @@ class DatabaseConnector:
         _parameters = {param: value}
         _header = {'content-type': 'application/json',
                    'Authorization': f'{self._auth_header}'}
+        #Update with user agent for make device able connect to server!
+        _header.update(user_agent)
         
         try:
             _response = requests.get(
@@ -165,7 +169,7 @@ class DatabaseConnector:
         _file = {}
         _status_code = None
         _response = None 
-
+        _header.update(user_agent)
 
         _post_path = self._endpoints_urls[endpoint]
         #check endpoints
@@ -174,6 +178,7 @@ class DatabaseConnector:
             _payload   = json.dumps(data)
             _header    = {'Content-type': 'application/json',
                             'Authorization': f'{self._auth_header}'}
+            _header.update(user_agent)
             _file      = {}
         
         #this endpoint is specific in smart drop app, It uses mutipart-form-data.
@@ -190,10 +195,12 @@ class DatabaseConnector:
             _full_post_path = urljoin(self._base_url, _post_path)
             _payload   = data
             _header    = {'Authorization': f'{self._auth_header}'}
+            _header.update(user_agent)
 
         try:    
             _response  = requests.post(
                 _full_post_path, data =_payload, headers=_header, files=_file, timeout=REQUEST_TIMEOUT)
+            _status_code = _response.status_code
             _result    = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
             _status_code = 503
@@ -222,15 +229,17 @@ class DatabaseConnector:
         # create auth header
         _header = {'content-type': 'application/json',
                    'Authorization': f'{self._auth_header}'}
-        # Make update request to server
+        _header.update(user_agent)
         try:
             _response = requests.patch(
                 _full_update_path, data=_payload, headers=_header, timeout=REQUEST_TIMEOUT)
+            _status_code = _response.status_code
             _result = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
             _status_code = 503
             _result = "Server Unavailable"
-        return _status_code, _result
+        finally:
+            return _status_code, _result
     
 
     def delete_data(self, param: str, value: str) -> tuple:
@@ -252,17 +261,19 @@ class DatabaseConnector:
         _delete_path = self._endpoints_urls['delete']
         _full_delete_path = urljoin(self._base_url, _delete_path)
         _payload = {param: value}
-        _headers = {'content-type': 'application/json',
+        _header = {'content-type': 'application/json',
                     'Authorization': f'{self._auth_header}'}
-        
+        _header.update(user_agent)
         try:
             _response = requests.delete(
-                _full_delete_path, params=_payload, headers=_headers, timeout=REQUEST_TIMEOUT)
+                _full_delete_path, params=_payload, headers=_header, timeout=REQUEST_TIMEOUT)
+            _status_code = _response.status_code
             _result = self._help_return_response_requests(_response)
         except requests.exceptions.ConnectionError:
             _status_code = 503
             _result = "Server Unavailable"
-        return _status_code, _result
+        finally:
+            return _status_code, _result
 
 
     def encode(self, payload_data: dict = {}) -> str:
