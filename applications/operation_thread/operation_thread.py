@@ -322,25 +322,28 @@ class ThreadOperation:
 
 
     def final_session(self):
+        bin_photo = None
+        photo_file_name = None
+
         self._send_data_queue(self.queue_data_to_lcd, LcdData.THANKYOU)
         self.periph.play_sound(SoundData.ACCEPTED_ITEM)
 
         # get all photos file names
         list_of_photos_file_name = self.periph.get_photo_name()
-        # get first name from first image-file in photos directory
-        oldest_photo_file_name = list_of_photos_file_name[0]
         # check if photo is exist
-        if len(oldest_photo_file_name) != 0:
+        if len(list_of_photos_file_name) != 0:
+            photo_file_name = list_of_photos_file_name[0]
             # data photo has to be in binary type
-            last_foto_path = "./assets/photos/" + oldest_photo_file_name
+            last_foto_path = "./assets/photos/" + photo_file_name
             with open(last_foto_path, 'rb') as f:
                 bin_photo = f.read()
         else:
             bin_photo = ""
+            photo_file_name = "tidak ada photo"
         
         # create photo payload with param 'photo' and value are file name and photo bin.
         # it will send data in FILES (uploaded file) not in data body (HTTP).
-        payload_photo = {'photo': (oldest_photo_file_name, bin_photo)}
+        payload_photo = {'photo': (photo_file_name, bin_photo)}
 
         status_code, resp_delete = self._request_data_to_server(
             {'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}})
