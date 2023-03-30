@@ -324,9 +324,11 @@ class ThreadOperation:
                 log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan \
                                 di dalam box!!!")
                 break
-        
+
         # put down sensor weight
         self.periph.set_power_down_weight()
+        log.logger.info("Berat barang : " + str(self.latest_weight))
+        
         self.st_msg_has_not_displayed = True
         # whatever the situation occured, after the door is closed, lock the door!
         self.periph.lock_door()
@@ -415,6 +417,7 @@ class ThreadOperation:
         time.sleep(0.1)
         self.latest_weight = self.periph.get_weight()
         self.periph.set_power_down_weight() # make weight sensor sleep!
+        log.logger.info("Berat barang : " + str(self.latest_weight))
 
         start_time_network = time.time()
 
