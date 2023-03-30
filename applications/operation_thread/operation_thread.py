@@ -211,7 +211,7 @@ class ThreadOperation:
             if current_time - start_time_keypad_session > KEYPAD_TIMEOUT:
                 self.st_msg_has_not_displayed = True
                 self._send_data_queue(self.queue_data_to_lcd, LcdData.TIMEOUT)
-                time.sleep(2.0)  # make LCD data display visible message for user
+                time.sleep(2.0)  # make LCD data display visible for user
                 break
 
             # read keypad input from user
@@ -238,7 +238,7 @@ class ThreadOperation:
                     self._send_data_queue(
                         self.queue_data_to_lcd, LcdData.RESI_FAILED)
                     self.keypad_session_ok = False
-                    time.sleep(2.0) # make LCD data display visible message for user
+                    time.sleep(2.0) # make LCD data display visible for user
                     break
 
             self.st_msg_has_not_displayed = True
@@ -261,7 +261,12 @@ class ThreadOperation:
                 time.sleep(1.0)
 
         self.periph.lock_door()
-        self.latest_weight = self.periph.get_weight()  # get the latest wweight of empty box.
+        
+        self.periph.set_power_up_weight()
+        time.sleep(0.1)
+        self.latest_weight = self.periph.get_weight()  # get the latest weight of empty box.
+        self.periph.set_power_down_weight()
+
         self._send_data_queue(self.queue_data_to_lcd,
                               LcdData.AFTER_TAKING_ITEM)
         self.periph.play_sound(SoundData.INSTRUCTION_DEL_ITEM)
@@ -278,6 +283,10 @@ class ThreadOperation:
 
         self.periph.unlock_door()
         self.periph.play_sound(SoundData.PUT_ITEM)
+
+        # wake up sensor weight
+        self.periph.set_power_up_weight()
+        time.sleep(0.1)
 
         start_time_door_session = time.time()
 
@@ -311,11 +320,13 @@ class ThreadOperation:
                 self.periph.lock_door()  # suddenly lock the door.
                 self._send_data_queue(
                     self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
-                time.sleep(2.0)  # make LCD data display visible message for user
+                time.sleep(2.0)  # make LCD data display visible  for user
                 log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan \
                                 di dalam box!!!")
                 break
-
+        
+        # put down sensor weight
+        self.periph.set_power_down_weight()
         self.st_msg_has_not_displayed = True
         # whatever the situation occured, after the door is closed, lock the door!
         self.periph.lock_door()
@@ -387,9 +398,7 @@ class ThreadOperation:
     def run(self):
         '''
             Driver code
-
         '''
-
         keypad_is_pressed = None
         # get and check universal password
         UNIVERSAL_PASSWORD = self.get_data_from_config(
@@ -400,7 +409,12 @@ class ThreadOperation:
             {'method': 'GET', 'payload': {'no_resi': '0'}})
 
         self.initial_data = self._make_initial_data(self.temp_storage_data)
+
+        # get the first weight read
+        self.periph.set_power_up_weight()
+        time.sleep(0.1)
         self.latest_weight = self.periph.get_weight()
+        self.periph.set_power_down_weight() # make weight sensor sleep!
 
         start_time_network = time.time()
 
