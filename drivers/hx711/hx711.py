@@ -16,7 +16,10 @@
 import sys
 import time
 import threading
-import platform 
+import platform
+
+sys.path.append("utils")
+import log
 
 ### real hardware
 if platform.machine() == "armv7l":
@@ -140,7 +143,10 @@ class Hx711:
            current_time = time.time()
 
            if current_time - start_time > TIMEOUT_READ_RAW:
-               raise TimeoutError("No response from HX711 hardware!")
+               log.logger.error("No response from HX711 hardware!")
+               # wait for 3 secs
+               time.sleep(3.0)
+    
 
         # Read three bytes of data from the HX711.
         firstByte  = self.readNextByte()
