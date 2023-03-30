@@ -267,6 +267,8 @@ class ThreadOperation:
         self.latest_weight = self.periph.get_weight()  # get the latest weight of empty box.
         self.periph.set_power_down_weight()
 
+        log.logger.info("Berat barang : " + str(self.latest_weight))
+        
         self._send_data_queue(self.queue_data_to_lcd,
                               LcdData.AFTER_TAKING_ITEM)
         self.periph.play_sound(SoundData.INSTRUCTION_DEL_ITEM)

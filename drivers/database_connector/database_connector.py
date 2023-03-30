@@ -82,6 +82,8 @@ class DatabaseConnector:
         _status_code = response.status_code
         if _status_code == 500:
             _message = "Internal server error."
+        elif _status_code == 444:
+            _message = "Server block the request"
         elif _status_code == 404:
             _message = "The requested resource could not be found."
         elif _status_code == 400:
