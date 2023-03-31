@@ -1,13 +1,17 @@
+import os
 import platform
 import sys
-sys.path.append('drivers/keypad')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/keypad'))
 
 if platform.machine() == 'armv7l':
     import wiringpi 
     from wiringpi import GPIO
     
 else:
-    sys.path.append('drivers/mock_wiringpi')
+    parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    sys.path.append(os.path.join(parent_dir, 'drivers/mock_wiringpi'))
     from mock_wiringpi import MockWiringPi, GPIO
     wiringpi = MockWiringPi()
 

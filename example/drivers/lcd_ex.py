@@ -1,6 +1,9 @@
+import os
 import sys
 import time
-sys.path.append('drivers/lcd')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/lcd'))
 from lcd import Lcd
 
 

@@ -9,8 +9,12 @@
     License: see 'licenses.txt' file in the root of project
 """
 import configparser
+import os
 import sys
-sys.path.append('drivers/database_connector')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/database_connector'))
+
 from database_connector import DatabaseConnector
 
 # Endpoints url of API

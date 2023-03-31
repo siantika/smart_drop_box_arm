@@ -1,6 +1,8 @@
+import os
 import sys
-import time
-sys.path.append('applications/lcd_thread')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
 from lcd_thread import LcdThread
 import queue
 import threading
@@ -76,4 +78,4 @@ test_thread_lcd = threading.Thread(target=test_lcd_process, args= (queue_data_th
 if __name__ == '__main__':
    thread_input.start()
    thread_lcd.start()
-#    test_thread_lcd.start()
+   test_thread_lcd.start()

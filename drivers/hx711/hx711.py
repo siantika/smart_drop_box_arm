@@ -13,6 +13,7 @@
 
 
 '''
+import os
 import sys
 import time
 import threading
@@ -27,7 +28,8 @@ if platform.machine() == "armv7l":
 
 ### mock for testing in native pc
 else:
-    sys.path.append('drivers/mock_wiringpi')
+    parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    sys.path.append(os.path.join(parent_dir,'drivers/mock_wiringpi'))
     from mock_wiringpi import MockWiringPi 
     wiringpi = MockWiringPi()
 

@@ -1,6 +1,10 @@
+import os
 import time
 import sys
-sys.path.append('drivers/hx711')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/hx711'))
+
 ### real hardware
 if '--hw-orpi' in sys.argv:
     import wiringpi 
@@ -8,7 +12,8 @@ if '--hw-orpi' in sys.argv:
 
 ### mock for testing in native pc (arch-linux)
 else:
-    sys.path.append('drivers/mock_wiringpi')
+    parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    sys.path.append(os.path.join(parent_dir, 'drivers/mock_wiringpi'))
     from mock_wiringpi import MockWiringPi 
     wiringpi = MockWiringPi()
 

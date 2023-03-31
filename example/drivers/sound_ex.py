@@ -1,5 +1,8 @@
+import os
 import sys
-sys.path.append('drivers/sound')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/sound'))
 from sound import Sound
 
 DIR_OF_SOUND_FILES = './assets/sounds'

@@ -22,6 +22,7 @@
 '''
 
 import sys
+import os 
 import platform
 
 if platform.machine() == "armv7l":
@@ -29,7 +30,8 @@ if platform.machine() == "armv7l":
     from wiringpi import GPIO
     
 else:
-    sys.path.append('drivers/mock_wiringpi')
+    parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    sys.path.append(os.path.join(parent_dir, 'drivers/mock_wiringpi'))
     from mock_wiringpi import MockWiringPi, GPIO
     wiringpi = MockWiringPi()
 

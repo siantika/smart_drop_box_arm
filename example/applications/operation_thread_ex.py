@@ -1,6 +1,10 @@
+import os
 import sys
-sys.path.append('applications/operation_thread')
-sys.path.append('applications/lcd_thread')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'applications/operation_thread'))
+sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
+
 from operation_thread import ThreadOperation
 from lcd_thread import LcdThread
 

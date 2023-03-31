@@ -1,6 +1,10 @@
+import os
 import sys
 import time
-sys.path.append('drivers/usb_camera')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/usb_camera'))
+
 from usb_camera import UsbCamera
 
 ### var

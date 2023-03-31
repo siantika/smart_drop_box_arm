@@ -1,11 +1,15 @@
 import configparser
+import os
 import sys
-sys.path.append('drivers/keypad')
-sys.path.append('drivers/hx711')
-sys.path.append('drivers/door')
-sys.path.append('drivers/usb_camera')
-sys.path.append('drivers/sound')
-sys.path.append('utils')
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+sys.path.append(os.path.join(parent_dir, 'drivers/keypad'))
+sys.path.append(os.path.join(parent_dir, 'drivers/hx711'))
+sys.path.append(os.path.join(parent_dir, 'drivers/door'))
+sys.path.append(os.path.join(parent_dir, 'drivers/usb_camera'))
+sys.path.append(os.path.join(parent_dir, 'drivers/sound'))
+sys.path.append(os.path.join(parent_dir, 'utils'))
 
 from pins_config import PinsConfig
 from keypad import Keypad

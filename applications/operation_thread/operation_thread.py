@@ -1,13 +1,16 @@
 import configparser
 import json
+import os
 import sys
 import time
 import queue
 import threading
 
-sys.path.append('applications/peripheral_operations')
-sys.path.append('applications/network')
-sys.path.append('utils')
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
+sys.path.append(os.path.join(parent_dir, 'applications/network'))
+sys.path.append(os.path.join(parent_dir, 'utils'))
 
 from network import Network
 from peripheral_operations import PeripheralOperations

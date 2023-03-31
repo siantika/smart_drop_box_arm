@@ -1,11 +1,15 @@
+import os
 import sys
-sys.path.append('applications/operation_thread')
-sys.path.append('applications/lcd_thread')
+import multiprocessing as mp
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(parent_dir, 'applications/operation_thread'))
+sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
+
 from operation_thread import ThreadOperation
 from lcd_thread import LcdThread
 
-import multiprocessing as mp
-
+# shared exchange data from operation tread to lcd thread.
 q_data_to_lcd = mp.Queue(10)
 
 # create functions
@@ -23,6 +27,11 @@ def lcd_routine(q_data_to_lcd):
 process_lcd = mp.Process(target=lcd_routine, args=(q_data_to_lcd,))
 process_opt = mp.Process(target=opt_routine, args=(q_data_to_lcd,))
 
+#driver code
 if __name__ == '__main__':
    process_opt.start()
    process_lcd.start()
+   
+   process_opt.join()
+   process_lcd.join()
+
