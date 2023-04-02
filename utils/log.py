@@ -1,11 +1,14 @@
 '''
-    It is functional program
+    This code is used for logging specific information and store it in 
+    /log/logger_device.txt 
 
 '''
-
+import os
 import logging
 
-LOG_DIR = "./log/logger_device.txt"
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+LOG_DIR = os.path.join(parent_dir, "log/logger_device.txt")
 
 # Create a logger object
 logger = logging.getLogger(__name__)
