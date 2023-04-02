@@ -1,13 +1,15 @@
-"""
-    File           : network.py
+'''
+    File           : network_thread.py
     Author         : I Putu Pawesi Siantika, S.T.
-    Year           : Mar, 2023
+    Year           : Apr, 2023
     Description    : 
 
-        This code handles requests to API Server. 
+        This code handles requests to API Server from operation thread.
+    Data transfer (red: payload) between two threads are mp.Queue 's.   
     
     License: see 'licenses.txt' file in the root of project
-"""
+'''
+
 import configparser
 import os
 import sys
@@ -19,24 +21,30 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(parent_dir, 'drivers/database_connector'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
-import log
+# should put here due to DIY libs.
 from database_connector import DatabaseConnector
+import log
 
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 
 # Endpoints url of API
-endpoint_paths = {'get':'get.php','update':'update.php','delete':'delete.php','post':'post.php', 'success_items' : 'success_items.php'}
+endpoint_paths = {
+    'get': 'get.php', 'update': 'update.php',
+    'delete': 'delete.php', 'post': 'post.php',
+    'success_items': 'success_items.php'}
 
 # We don't send data in http header, so keep it empty.
 # It exists only for content of auth requests.
-DEFAULT_PAYLOAD_HEADER = {} 
+DEFAULT_PAYLOAD_HEADER = {}
 PAYLOAD_GET_DATA = {'method': 'GET', 'payload': {'no_resi': '0'}}
+
+NETWORK_TIMEOUT = 5  # secs
+
 
 class NetworkThread:
     '''
-        Class Storagethread is the class that handle local storage operation. It receives
-    data from thread operation and thread network. It uses mysql DBMS and XAMPP. Server
-    is written by PHP native.
+        Class Network Thread is class that contains methods to run a network thread (make
+    request to server).
           It uses database_connector driver lib to perform database transaction. Queue data
     contain payload as dictionary will be parse as 'method' [post, update, delete, get] and
     'payload' contains dictionary data. Method will be used as parameter to perform specific
@@ -44,54 +52,67 @@ class NetworkThread:
     as tuple type (then we convert it to dict). We send data to other threads using queue data
     type. The format is {'status_code' : 200/401/404 etc, 'response', server response}.
         Authorization only applied in Post, Update, and delete using 'auth_con' method. Please
-    see 'set_security' method. The secret key is stored in another dir and it will be invoked
-    by '_get_secret_key' method.
+    see 'set_security' method. The secret key is stored in 'conf/config.ini' and it will be 
+    invoked by '_get_secret_key' method.
         Running this thread by invoking 'run' method.
 
     Attributes:
-        secret_key_local      (str)                 : Local secret key for auth local connections
-        db_connection         (databaseConnector)   : Object for perfoming database transactions
+        queue_to_operation (Queue)  : Queue data intended to be sent to operation thread. 
+                                      It contains dict type.
+        queue_from_operation (Queue) : Queue data intended to be received by network thread.
+        secret_key_local   (str)                 : Local secret key for auth local connections
+        db_connection      (databaseConnector)   : Object for perfoming database transactions
 
     '''
+
     def __init__(self) -> None:
         self.queue_to_operation = mp.Queue()
         self.queue_from_operation = mp.Queue()
         SERVER_ADDRESS = self._read_config_file('server', 'address')
-        self.secret_key= self._read_config_file('server', 'secret_key')
+        self.secret_key = self._read_config_file('server', 'secret_key')
         self.db_connection = DatabaseConnector(SERVER_ADDRESS, endpoint_paths)
-
         self.lock = threading.Lock()
-    
 
-    def _read_queue_from_operation(self)->mp.Queue:
+    def _read_queue_from_operation(self) -> mp.Queue:
+        '''
+            Read shared data which is queue data type. It uses
+            lock mechanism to prevent race condition.
+
+            Returns:
+                data in queue : None if empty and queue data if exists.
+        '''
         with self.lock:
             return None if self.queue_from_operation.empty() \
                 else self.queue_from_operation.get(timeout=1)
-        
-
 
     def set_queue_to_operation(self, queue_to_operation: mp.Queue):
+        '''
+            This method holds shared queue data with operation thread. It
+            uses as queue to send response data to operation thread.
+        '''
         self.queue_to_operation = queue_to_operation
 
-
-    def set_queue_from_operation(self, queue_from_operation:mp.Queue):
+    def set_queue_from_operation(self, queue_from_operation: mp.Queue):
+        '''
+            This method holds shared queue data with operation thread. It
+            uses as queue to store requests data from operation thread
+        '''
         self.queue_to_operation = queue_from_operation
 
+    def _read_config_file(self, section: str, param: str) -> str:
+        '''
+            This method helps to read configuration data in 'config.ini'.
 
-    def _read_config_file(self, section:str, param:str) -> str:
-        """
-        This function helps to read configuration data in 'config.ini'.
+            Args:
+                section (str)     : The section in config file.
+                param (str)       : The parameter in config file
 
-        Args:
-            section (str)     : The section in config file.
-            param (str)       : The parameter in config file
+            Returns:
+                parsed_config_data (str)  : Parsed config data.
 
-        Returns:
-            parsed_config_data (str)  : Parsed config data.
-
-        Raises:
-            configparser.Error: If there is an error reading the configuration file 
-        """
+            Raises:
+                configparser.Error: If there is an error reading the configuration file 
+        '''
         parser_secret = configparser.ConfigParser()
         try:
             parser_secret.read(full_path_config_file)
@@ -99,116 +120,109 @@ class NetworkThread:
 
         except configparser.NoOptionError as error_message:
             raise configparser.Error('Parameters not found in section')\
-                  from error_message
+                from error_message
         except configparser.NoSectionError as error_message:
             raise configparser.Error('Section not found in configuration file') \
                 from error_message
         except configparser.Error as error_message:
-            raise configparser.Error(f'Error reading configuration file: {error_message}')
+            raise configparser.Error(
+                f'Error reading configuration file: {error_message}')
 
         return parsed_config_data
 
-
-    def _parse_dict(self, data:dict)->tuple:
-        """
-            This function helps to parse data comming from other process
+    def _parse_dict(self, data: dict) -> tuple:
+        '''
+            This method helps to parse data comming from other process
             to a tuple contains 'method' and 'payload'.
-            
+
             Args:
                 data   (dict)  : Data from other process
 
             Returns:
                 method, payload (tuple) : Parsed data from 'method' and 'payload'
-                
-        """
-        method      = data['method']
-        payload     = data['payload']
+
+        '''
+        method = data['method']
+        payload = data['payload']
         return method, payload
 
-
-    def _set_security(self, secret_key, algorithm, token_type, payload_header = None):
-        """
-            This function helps to set security for auth. It uses 'encode' method 
+    def _set_security(self, secret_key, algorithm, token_type, payload_header=None):
+        '''
+            This method helps to set security for auth. It uses 'encode' method 
             in database_connector driver lib.
-            
+
             Args:
                 secret_key   (str)  : Secret key for local connection
                 algorithm    (str)  : Algorithm for encryption.
                 token_type   (str)  : Token type for encryption. 
                 payload_header(dict): Payload will be sent in header http.
                                       (default is {})
-
-        """
+        '''
         if payload_header is None:
             payload_header = DEFAULT_PAYLOAD_HEADER
 
         self.db_connection.set_encode(secret_key, algorithm, token_type)
         self.db_connection.encode(payload_header)
 
-
     def _get_key_value(self, payload: dict) -> tuple:
-        """
-            This function helps to get a pair of key-val dict and 
+        '''
+            This method helps to get a pair of key-val dict and 
             convert it to tuple.
-            
+
             Args:
-                payload   : Data contains params eg. (id:10). It only used
-                            for get method and delete method (those use
-                            params in api, those don't use json)
+                payload (dict)  : Data contains params eg. (id:10). It only used
+                                  for get method and delete method (those use
+                                  params in api, those don't use json)
 
             Returns:
-                key, value (tuple)  : Params pair ('id':25).
-                
-        """
+                key, value (tuple)  : Params pair ([str]:[int]).
+
+        '''
         key = list(payload.keys())[0]
         value = payload[key]
         return key, value
 
-
     def _auth_con(self):
-        """
-            This function helps to auth the connection to server.
-            By invoking this function, the connection will be encoded.
-                
-        """
+        '''
+            This method helps for authorize the connection between server. 
+            By invoking this method, the connection will be encoded.
+
+        '''
         self._set_security(
-            secret_key = self.secret_key,
+            secret_key=self.secret_key,
             algorithm='HS256',
             token_type='Bearer'
         )
 
-
     def _turn_off_auth(self):
-        """
-            This function helps to turn off auth in connection to server.                
-        """
+        '''
+            This method helps to turn off authorization in connection between server.                
+        '''
         self.db_connection.reset_encode()
 
-    
+    def handle_commands(self, data: dict, auth_turn_on: bool = True) -> tuple:
+        '''
+            This method helps for performing database transactions with server.
+            It will perform specific transaction base on 'method' variable (GET/DEL/ETC).
 
-    def handle_commands(self, data:dict, auth_turn_on:bool = True)->tuple:
-        """
-            This function helps to performing database transaction to server.
-            It will perform specific transaction base on 'method' variable.
-            
             Args:
-                data (dict)         : Payload from incoming another queue data thread.
-                auth_turn_on (bool) : Put authorization in connection. Default is On.
+                data (dict)         : Payload from operation thread.
+                auth_turn_on (bool) : Authorization in connection. Default is ON !.
 
             Returns:
                 http_code, 
-                fin_resp (tuple) : http code and response from local server 
-                                   
-        """
+                fin_resp (tuple[int][str]) : http code (int) and response from local server (str) 
+
+        '''
         http_code = None
         response = None
-        
-        #parsing data from other process
-        method, payload = self._parse_dict(data) 
+
+        # parsing data from other process
+        method, payload = self._parse_dict(data)
         lowercase_method = str(method).lower()
 
-        # set authorization option 
-        # default is True
+        # set authorization option.
+        # default is ON / True
         if auth_turn_on:
             self._auth_con()
         else:
@@ -217,41 +231,58 @@ class NetworkThread:
         # check the method from other process payload
         if lowercase_method == "get":
             key, value = self._get_key_value(payload)
-            http_code, response = self.db_connection.get_data(param=key, value=value)
+            http_code, response = self.db_connection.get_data(
+                param=key, value=value)
 
         elif lowercase_method == "post":
-            http_code, response = self.db_connection.post_data(payload, endpoint='post')
+            http_code, response = self.db_connection.post_data(
+                payload, endpoint='post')
 
         elif lowercase_method == "delete":
             key, value = self._get_key_value(payload)
-            http_code, response = self.db_connection.delete_data(param=key, value=value)
+            http_code, response = self.db_connection.delete_data(
+                param=key, value=value)
 
         elif lowercase_method == "update":
             http_code, response = self.db_connection.update_data(payload)
 
         elif lowercase_method == "success_items":
-            http_code, response = self.db_connection.post_data(payload, endpoint='success_items')
+            http_code, response = self.db_connection.post_data(
+                payload, endpoint='success_items')
 
-        return http_code, response 
-    
+        return http_code, response
 
     def run(self) -> None:
+        '''
+            There are 2 conditions for this code flows, first is daily routine 
+            task 'request GET data from server' every 5 secs and put it on queue
+            to operation. The second is listening request data from operation thread
+            by read queue_data_from_operation always.
+
+            By performing this, we help operation thread focuses on the operation tasks
+            only (let this thread requests data to server). It also prevent operation thread
+            from blocking process (especially in send requests with photo)
+
+        '''
         prev_time = time.time()
+
         while True:
             current_time = time.time()
-            if current_time - prev_time >= 5:
+
+            if current_time - prev_time >= NETWORK_TIMEOUT:
                 prev_time = current_time
-                status, response = self.handle_commands(PAYLOAD_GET_DATA, auth_turn_on=True)
-                # send data to queue_to_operation
+                responses = self.handle_commands(
+                    PAYLOAD_GET_DATA, auth_turn_on=True)
+                # only get the response text, index 0 is representing status code in interger
+                response_text = responses[1]
                 with self.lock:
-                    self.queue_to_operation.put(response, timeout = 1)
+                    self.queue_to_operation.put(response_text, timeout=1)
 
             queue_data_from_operation = self._read_queue_from_operation()
-            if queue_data_from_operation != None:
+
+            if queue_data_from_operation is not None:
                 payload = queue_data_from_operation
-                status, response = self.handle_commands(payload, auth_turn_on=True)
-                log.logger.info("Response dari request : " + str(response))
-                
-            
-
-
+                responses = self.handle_commands(payload, auth_turn_on=True)
+                response_text = responses[1]
+                log.logger.info("Response dari request : " +
+                                str(response_text))
