@@ -12,6 +12,9 @@ sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
 sys.path.append(os.path.join(parent_dir, 'applications/network'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
+full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
+full_photo_folder = os.path.join(parent_dir, 'assets/photos/')
+
 from network import Network
 from peripheral_operations import PeripheralOperations
 from media_data import LcdData, SoundData
@@ -101,8 +104,9 @@ class ThreadOperation:
         return status, get_response
 
 
-    def _get_image_as_binary(self, file_name: str):
-        photo_path = './assets/photos/' + str(file_name)
+    def _get_image_as_binary(self, file_name: str): 
+        photo_path = os.path.join(full_photo_folder, str(file_name))
+
         with open(photo_path, 'rb') as f:
             bin_photo = f
         return bin_photo
@@ -140,7 +144,7 @@ class ThreadOperation:
 
     def get_data_from_config(self, section: str, param: str):
         parser_ver = configparser.ConfigParser()
-        parser_ver.read('./conf/config.ini')
+        parser_ver.read(full_path_config_file)
         data = parser_ver.get(section, param)
         return data
 
@@ -352,7 +356,7 @@ class ThreadOperation:
         if len(list_of_photos_file_name) != 0:
             photo_file_name = list_of_photos_file_name[0]
             # data photo has to be in binary type
-            last_foto_path = "./assets/photos/" + photo_file_name
+            last_foto_path = os.path.join(full_photo_folder, photo_file_name)
             with open(last_foto_path, 'rb') as f:
                 bin_photo = f.read()
         else:

@@ -45,6 +45,8 @@ import threading
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(parent_dir,'drivers/lcd'))
 
+full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
+
 from lcd import Lcd
 
 DEV_ADDR = 0x27
@@ -86,7 +88,7 @@ class LcdThread:
 
         '''
         parser_ver = configparser.ConfigParser()
-        parser_ver.read('./conf/config.ini')
+        parser_ver.read(full_path_config_file)
         device_version = parser_ver.get('version', 'dev_version')
         len_dev_ver = len(device_version)
 

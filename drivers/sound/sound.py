@@ -36,7 +36,8 @@ import os
 import subprocess
 import logging
 
-_SOUND_CONF_FILE_PATH = './conf/config.ini'
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 _SOUND_CONF_FILE_PATH_FALSE = './conf/confiasdg.ini' ### only for testing
 
 class Sound:
@@ -44,7 +45,7 @@ class Sound:
         self._now = datetime.datetime.now()
         self._file = configparser.ConfigParser()
         try:
-            self._file.read(_SOUND_CONF_FILE_PATH)
+            self._file.read(full_path_config_file)
             self._volume = self._file.getfloat('setting', 'volume')
             self._sound_card = self._file.get('setting', 'sound_card')
 
@@ -61,7 +62,7 @@ class Sound:
     def play(self, sound_dir, sound_file_name):
         self._sound_dir = sound_dir
         self._sound_file_name = sound_file_name
-        subprocess.run(['aplay', str(self._sound_dir + "/" + self._sound_file_name)])
+        subprocess.run(['aplay', os.path.join(self._sound_dir, self._sound_file_name)])
 
     def stop(Self):
         try:                

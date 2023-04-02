@@ -21,6 +21,7 @@ from usb_camera import UsbCamera
 REFERENCE_UNIT_WEIGHT = 142 ### need to calibrate
 SAMPLES = 9 # qty of data read by weight sensor at once operation.
 
+full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 
 class PeripheralOperations:
     def __init__(self ) -> None:
@@ -51,15 +52,16 @@ class PeripheralOperations:
 
     def _get_data_from_config_file(self, section:str, var : str) -> str:
         parser_data  = configparser.ConfigParser()
-        parser_data.read('./conf/config.ini')
+        parser_data.read(full_path_config_file)
         data = parser_data.get(section, var)
         return data
 
 
     def _set_dir_saved_photo(self):
         # get from config.ini
-        parsed_config = self._get_data_from_config_file('usb_camera', 'photo_dir')
-        self.dir_saved_photo = parsed_config
+        relative_photos_folder = self._get_data_from_config_file('usb_camera', 'photo_dir')
+        full_path_photos_dir = os.path.join(parent_dir, relative_photos_folder)
+        self.dir_saved_photo = full_path_photos_dir
 
 
     def _set_hw_usb_camera(self):
@@ -68,7 +70,8 @@ class PeripheralOperations:
 
 
     def _get_dir_sound_files(self):
-        self.sound_files_dir = self._get_data_from_config_file('dir', 'files_sound')
+        relative_sound_folder = self._get_data_from_config_file('dir', 'files_sound')
+        self.sound_files_dir = os.path.join(parent_dir, relative_sound_folder)
 
     
     def play_sound(self, file_name:str):

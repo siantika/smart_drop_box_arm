@@ -24,6 +24,8 @@ import os
 
 '''
 
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
 class UsbCamera:
     def __init__(self, dir_hw_addr):
         '''
@@ -79,10 +81,12 @@ class UsbCamera:
             params  : -
             ret     : -
         '''
+        relative_dir_photos = self.get_dir_saved_photo()
+        full_path_photo = os.path.join(parent_dir, relative_dir_photos)
         try:             
-            files = os.listdir(self.get_dir_saved_photo())
+            files = os.listdir(full_path_photo)
             for file in files:
-                os.remove(os.path.join(self.get_dir_saved_photo(), file))
+                os.remove(os.path.join(full_path_photo, file))
         except FileNotFoundError as e:
             raise FileNotFoundError('No such directory was found!')
         
@@ -93,7 +97,9 @@ class UsbCamera:
             params  : -
             ret     : list[str] files name or empty list
         '''
-        files = os.listdir(self.get_dir_saved_photo())
+        relative_dir_photos = self.get_dir_saved_photo()
+        full_path_photo = os.path.join(parent_dir, relative_dir_photos)
+        files = os.listdir(full_path_photo)
 
         # print out the file names
         return files

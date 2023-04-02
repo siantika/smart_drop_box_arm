@@ -17,6 +17,8 @@ sys.path.append(os.path.join(parent_dir, 'drivers/database_connector'))
 
 from database_connector import DatabaseConnector
 
+full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
+
 # Endpoints url of API
 endpoint_paths = {'get':'get.php','update':'update.php','delete':'delete.php','post':'post.php', 'success_items' : 'success_items.php'}
 
@@ -67,7 +69,7 @@ class Network:
         """
         parser_secret = configparser.ConfigParser()
         try:
-            parser_secret.read('./conf/config.ini')
+            parser_secret.read(full_path_config_file)
             parsed_config_data = parser_secret.get(section, param)
 
         except configparser.NoOptionError as error_message:
