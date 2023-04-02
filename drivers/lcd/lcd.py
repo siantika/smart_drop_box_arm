@@ -14,7 +14,7 @@
     3. Import it to your project file (eg. main.py)
 
     Example code:
-        see: './example/lcd_ex.py' file!
+        see: './example/drivers/lcd_ex.py' file!
 
     License: see 'licenses.txt' file in the root of project
 '''
@@ -109,6 +109,9 @@ class Lcd:
     def init_lcd(self):
         '''
             Don't change the hierrachy of methods!
+            NOTE: After tested so many times, I found the set 4 byte mode
+                occured error in LCD display (When we run the program twice or repeats
+                in event, it displays weird characters!). So I removed it.
         '''
         time.sleep(0.0005)
         self.set_display_control_default()

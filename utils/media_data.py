@@ -1,3 +1,9 @@
+'''
+    This class is storing LCD payload for lcd thread and sound files name
+    for playing sound.
+
+'''
+
 class LcdData:
     TIMEOUT = {
     'cmd': 'keypad',

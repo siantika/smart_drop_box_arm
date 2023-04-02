@@ -5,12 +5,12 @@
     file and save it as .py . 
     modified:
         1. Changed rpi library to wiringpi library and its methods
-        2. Added timeout in readRawByte function (preventing program stuck forever!)
+        2. Added timeout in readRawByte function (preventing program stuck forever waiting
+           DOUT until LOW (_isReady() method)
 
-    see: 'example/hx711_ex.py' file
+    see: 'example/drivers/hx711_ex.py' file
 
-    GPL 2.0 Licenses. 
-
+    GPL 2.0 Licenses (inherence from code source) 
 
 '''
 import os

@@ -1,9 +1,19 @@
+"""
+    File           : operation_thread.py
+    Author         : I Putu Pawesi Siantika, S.T.
+    Year           : Mar, 2023
+    Description    : 
+
+        Main thread for orechestrating other threads.
+
+    License: see 'licenses.txt' file in the root of project
+"""
+
 import configparser
 import json
 import os
 import sys
 import time
-import queue
 import threading
 import multiprocessing as mp
 
@@ -13,20 +23,22 @@ sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
 sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
+# Should put here due to DIY libs (we built it and it locates in our project dirs.) 
+import log
+from media_data import LcdData, SoundData
+from peripheral_operations import PeripheralOperations
+from network_thread import NetworkThread
+
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 full_photo_folder = os.path.join(parent_dir, 'assets/photos/')
 
-from network_thread import NetworkThread
-from peripheral_operations import PeripheralOperations
-from media_data import LcdData, SoundData
-import log
-
 # TIMEOUT in secs
-KEYPAD_TIMEOUT = 15  
+KEYPAD_TIMEOUT = 15
 DOOR_TIMEOUT = 15
 NETWORK_TIMEOUT = 5
+# Compesate error read by weight sensor due to electrical issue
+WEIGHT_OFFSET = 1.0  
 
-WEIGHT_OFFSET = 1.0  # Added for prevent sensor from read fluctuation value.
 
 class ThreadOperation:
     def __init__(self) -> None:
@@ -34,7 +46,7 @@ class ThreadOperation:
         self.queue_data_to_net = mp.Queue()
         self.queue_data_from_net = mp.Queue()
         self.keypad_buffer = ''
-        # store data from network   
+        # store data from network
         self.temp_storage_data = []
         # concise data from temp_storage_data ('no_resi' : no_index_of_temp_storage)
         self.initial_data = {}
@@ -47,25 +59,24 @@ class ThreadOperation:
         self.lock = threading.Lock()
         self.periph = PeripheralOperations()
         self.network = NetworkThread()
-
         self.periph.init_all()
 
 
-    def _read_queue_from_net(self)->mp.Queue:
+    def _read_queue_from_net(self) -> mp.Queue:
         with self.lock:
             return None if self.queue_data_from_net.empty() \
                 else self.queue_data_from_net.get(timeout=1)
-        
-    
-    def set_queue_to_lcd_thread(self, q_to_lcd:mp.Queue):
+
+
+    def set_queue_to_lcd_thread(self, q_to_lcd: mp.Queue):
         self.queue_data_to_lcd = q_to_lcd
 
 
-    def set_queue_from_net_thread(self, q_from_net:mp.Queue):
+    def set_queue_from_net_thread(self, q_from_net: mp.Queue):
         self.queue_data_from_net = q_from_net
 
 
-    def set_queue_to_net_thread(self, q_to_net:mp.Queue):
+    def set_queue_to_net_thread(self, q_to_net: mp.Queue):
         self.queue_data_to_net = q_to_net
 
 
@@ -110,7 +121,7 @@ class ThreadOperation:
         with self.lock:
             return "full" if queue_thread.full() else \
                 queue_thread.put(data, timeout=1.0)
-        
+
 
     def _request_data_to_server(self, payload: dict):
         get_response = None
@@ -121,13 +132,12 @@ class ThreadOperation:
         return status, get_response
 
 
-    def _get_image_as_binary(self, file_name: str): 
+    def _get_image_as_binary(self, file_name: str):
         photo_path = os.path.join(full_photo_folder, str(file_name))
 
         with open(photo_path, 'rb') as f:
             bin_photo = f
         return bin_photo
-
 
     def _make_initial_data(self, data: list) -> dict:
         '''
@@ -151,20 +161,18 @@ class ThreadOperation:
             is_dict = False
 
         # If data is correct, update with new data from server
-        if is_dict and data != None:
+        if is_dict and data is not None:
             for index, data in enumerate(data):
                 temp_data_initial = {data['no_resi']: index}
                 data_initial.update(temp_data_initial)
 
         return data_initial
 
-
     def get_data_from_config(self, section: str, param: str):
         parser_ver = configparser.ConfigParser()
         parser_ver.read(full_path_config_file)
         data = parser_ver.get(section, param)
         return data
-
 
     def check_universal_password(self, universal_password):
         # universal password should not exceed 4 chars!
@@ -173,12 +181,15 @@ class ThreadOperation:
             # send data to lcd
             self._send_data_queue(self.queue_data_to_lcd,
                                   LcdData.ERROR_UNIVERSAL_PASSWORD)
-            log.logger.error("Universal password is filled with more than 4 chars!")
+            log.logger.error(
+                "Universal password is filled with more than 4 chars!")
             raise ValueError("Universal password should not exceed 4 chars!")
 
 
-#######################################  * HIGHER METHODS*  ##################################################
     '''
+
+    HIGHER METHODS
+
         These methods consist for perform routines in operation thread. There are 4 routines
         .
             1. Network routine
@@ -207,7 +218,7 @@ class ThreadOperation:
 
     def network_routine(self):
         queue_from_net = self._read_queue_from_net()
-        if queue_from_net != None:
+        if queue_from_net is not None:
             self.temp_storage_data = queue_from_net
             self.initial_data = self._make_initial_data(self.temp_storage_data)
 
@@ -220,7 +231,6 @@ class ThreadOperation:
             else:
                 items_stored = "Empty"
             log.logger.info("Items tersimpan: " + items_stored)
-
 
     def keypad_routine(self, universal_password):
         self._send_data_queue(self.queue_data_to_lcd,
@@ -239,7 +249,7 @@ class ThreadOperation:
                 break
 
             # read keypad input from user
-            if keypad_data_input != None:
+            if keypad_data_input is not None:
                 self.keypad_buffer = self.keypad_buffer + \
                     str(keypad_data_input)
                 data_lcd = self._create_payload(
@@ -262,7 +272,7 @@ class ThreadOperation:
                     self._send_data_queue(
                         self.queue_data_to_lcd, LcdData.RESI_FAILED)
                     self.keypad_session_ok = False
-                    time.sleep(2.0) # make LCD data display visible for user
+                    time.sleep(2.0)  # make LCD data display visible for user
                     break
 
             self.st_msg_has_not_displayed = True
@@ -285,17 +295,17 @@ class ThreadOperation:
                 time.sleep(1.0)
 
         self.periph.lock_door()
-        
+
         self.periph.set_power_up_weight()
         time.sleep(0.1)
-        self.latest_weight = self.periph.get_weight()  # get the latest weight of empty box.
+        # get the latest weight of empty box.
+        self.latest_weight = self.periph.get_weight()
         self.periph.set_power_down_weight()
 
-        log.logger.info("Berat barang : " + str(self.latest_weight))
-        
-        self._send_data_queue(self.queue_data_to_lcd,
-                              LcdData.AFTER_TAKING_ITEM)
+        self._send_data_queue(self.queue_data_to_lcd,LcdData.AFTER_TAKING_ITEM)
         self.periph.play_sound(SoundData.INSTRUCTION_DEL_ITEM)
+
+        log.logger.info("Berat barang : " + str(self.latest_weight))
         log.logger.info("Barang telah diambil pemilik")
 
 
@@ -322,13 +332,14 @@ class ThreadOperation:
             read_weight = self.periph.get_weight()
             door_pos = self.periph.sense_door()
 
-            # only stop when door is 
+            # only stop when door is
             if current_time - start_time_door_session > DOOR_TIMEOUT:
                 self.item_is_stored = False
                 self._send_data_queue(
                     self.queue_data_to_lcd, LcdData.DOOR_ERROR)
                 self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
-                log.logger.critical("Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
+                log.logger.critical(
+                    "Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
                 time.sleep(1.0)
 
             # Item received
@@ -344,17 +355,15 @@ class ThreadOperation:
             elif read_weight < self.latest_weight + WEIGHT_OFFSET and door_pos == 1:
                 self.item_is_stored = False
                 self.periph.lock_door()  # suddenly lock the door.
-                self._send_data_queue(
-                    self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
+                self._send_data_queue(self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
                 time.sleep(2.0)  # make LCD data display visible  for user
-                log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan \
-                                di dalam box!!!")
+                log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan di dalam box!!!")
                 break
 
         # put down sensor weight
         self.periph.set_power_down_weight()
         log.logger.info("Berat barang : " + str(self.latest_weight))
-        
+
         self.st_msg_has_not_displayed = True
         # whatever the situation occured, after the door is closed, lock the door!
         self.periph.lock_door()
@@ -379,14 +388,16 @@ class ThreadOperation:
         else:
             bin_photo = ""
             photo_file_name = "tidak ada photo"
-        
+
         # create photo payload with param 'photo' and value are file name and photo bin.
         # it will send data in FILES (uploaded file) not in data body (HTTP).
         payload_photo = {'photo': (photo_file_name, bin_photo)}
 
-        payload_delete_finished_resi = {'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}}
+        payload_delete_finished_resi = {
+            'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}}
 
-        self._send_data_queue(self.queue_data_to_net, payload_delete_finished_resi)
+        self._send_data_queue(self.queue_data_to_net,
+                              payload_delete_finished_resi)
 
         # Get data stored in this session.
         index = self.initial_data[self.keypad_buffer]
@@ -398,10 +409,10 @@ class ThreadOperation:
         # create full payload for success_item API
         payload_success_item = self._create_payload(
             'network', method='success_items', is_data_object=True, data_object=payload)
-        
+
         # send to net thread
         self._send_data_queue(self.queue_data_to_net, payload_success_item)
-        
+
         self.st_msg_has_not_displayed = True
 
 
@@ -411,7 +422,7 @@ class ThreadOperation:
         self.item_is_stored = None
         self.taking_item_ok = None
 
-        #only delete when photo is  exist
+        # only delete when photo is  exist
         len_photo_file_name = len(self.periph.get_photo_name())
         if len_photo_file_name != 0:
             self.periph.delete_photo()
@@ -428,8 +439,8 @@ class ThreadOperation:
             'pass', 'universal_password')
         self.check_universal_password(UNIVERSAL_PASSWORD)
 
-        #get data from network thread
-        if self._read_queue_from_net() != None:
+        # get data from network thread
+        if self._read_queue_from_net() is not None:
             self.temp_storage_data = self._read_queue_from_net()
             self.initial_data = self._make_initial_data(self.temp_storage_data)
 
@@ -437,7 +448,7 @@ class ThreadOperation:
         self.periph.set_power_up_weight()
         time.sleep(0.1)
         self.latest_weight = self.periph.get_weight()
-        self.periph.set_power_down_weight() # make weight sensor sleep!
+        self.periph.set_power_down_weight()  # make weight sensor sleep!
         log.logger.info("Berat barang : " + str(self.latest_weight))
 
         while True:
@@ -449,7 +460,7 @@ class ThreadOperation:
                 self.st_msg_has_not_displayed = False
                 self._send_data_queue(self.queue_data_to_lcd, LcdData.ST_MSG)
 
-            if keypad_is_pressed != None:
+            if keypad_is_pressed is not None:
                 self.keypad_routine(UNIVERSAL_PASSWORD)
 
             # These processes is determined by keypad_routine !

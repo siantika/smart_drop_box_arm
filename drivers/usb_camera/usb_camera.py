@@ -18,7 +18,7 @@ import os
     3. Import it to your project file (eg. main.py)
 
     Example code:
-        see: './example/camera.py' file!
+        see: './example/drivers/camera_ex.py' file!
 
     License: see 'licenses.txt' file in the root of project
 
@@ -101,7 +101,6 @@ class UsbCamera:
         full_path_photo = os.path.join(parent_dir, relative_dir_photos)
         files = os.listdir(full_path_photo)
 
-        # print out the file names
         return files
 
                 

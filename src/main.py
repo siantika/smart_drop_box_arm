@@ -1,3 +1,15 @@
+"""
+    File           : main.py
+    Author         : I Putu Pawesi Siantika, S.T.
+    Year           : Apr, 2023
+    Description    : 
+
+        Driver of core application. It creates functions from 3 threads, run it, and
+        assigned queue data for shared resources between threads.
+
+    License: see 'licenses.txt' file in the root of project
+"""
+
 import os
 import sys
 import multiprocessing as mp
@@ -43,7 +55,7 @@ process_lcd = mp.Process(target=lcd_routine, args=(q_data_to_lcd,))
 process_opt = mp.Process(target=opt_routine, args=(q_data_to_lcd, q_data_from_net, q_data_to_net,))
 process_net = mp.Process(target=net_routine, args=(q_data_to_net, q_data_from_net,))
 
-#driver code
+#driver function
 if __name__ == '__main__':
    process_opt.start()
    process_lcd.start()

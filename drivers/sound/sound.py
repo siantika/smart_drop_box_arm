@@ -25,7 +25,7 @@
     3. Import it to your project file (eg. main.py)
 
     Example code:
-        see: './example/sound_ex.py' file!
+        see: './example/drivers/sound_ex.py' file!
 
     License: see 'licenses.txt' file in the root of project
 

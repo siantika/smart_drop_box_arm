@@ -4,10 +4,11 @@
     Year           : Feb, 2023
     Description    : 
     
-    This code helps to control or accessing to the door (solenoid_door and sense_state_door)
+    This code helps for controling peripherals regards to door (solenoid_door and sense_state_door)
     . It can unlock the door, lock the door, and sense_state_door (0 or 1). lock the door means
     the PIN is LOW state and unlock the door means pin is HIGH state. For sensing the state of 
-    door, we need sensor detects HIGH or LOW (digital data). The design is CLOSE is HIGH and vice versa (depend on hardware). 
+    door, we need the sensor detects HIGH or LOW (digital data). The design for sensing state is 
+    HIGH means DOOR IS CLOSED and vice versa (depend on door sense hardware). 
     For more information, see 'test_door.py' file!
 
     * Prerequisites *
@@ -16,7 +17,7 @@
     3. Import it to your project file (eg. main.py)
 
     Example code:
-        see: './example/door_ex.py' file!
+        see: './example/drivers/door_ex.py' file!
 
     License: see 'licenses.txt' file in the root of project
 '''
@@ -56,5 +57,3 @@ class Door:
 
     def sense_door_state(self):
         return wiringpi.digitalRead(self._pin_sense_door)
-
-    
