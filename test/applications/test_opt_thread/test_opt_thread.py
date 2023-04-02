@@ -7,7 +7,7 @@ from unittest.mock import patch
 sys.path.append('applications/operation_thread')
 sys.path.append('applications/network')
 from operation_thread import ThreadOperation
-from network import Network
+from network_thread import Network
 
 
 class TestThreadOperation:

@@ -10,11 +10,16 @@
 """
 import configparser
 import os
+import queue
 import sys
+import threading
+import time
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(parent_dir, 'drivers/database_connector'))
+sys.path.append(os.path.join(parent_dir, 'utils'))
 
+import log
 from database_connector import DatabaseConnector
 
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
@@ -25,8 +30,9 @@ endpoint_paths = {'get':'get.php','update':'update.php','delete':'delete.php','p
 # We don't send data in http header, so keep it empty.
 # It exists only for content of auth requests.
 DEFAULT_PAYLOAD_HEADER = {} 
+PAYLOAD_GET_DATA = {'method': 'GET', 'payload': {'no_resi': '0'}}
 
-class Network:
+class NetworkThread:
     '''
         Class Storagethread is the class that handle local storage operation. It receives
     data from thread operation and thread network. It uses mysql DBMS and XAMPP. Server
@@ -51,6 +57,23 @@ class Network:
         SERVER_ADDRESS = self._read_config_file('server', 'address')
         self.secret_key= self._read_config_file('server', 'secret_key')
         self.db_connection = DatabaseConnector(SERVER_ADDRESS, endpoint_paths)
+        self.queue_from_operation = None 
+        self.queue_to_operation = None 
+        self.lock = threading.Lock()
+
+
+    def _set_queue_to_operation(self, queue_to_operation: queue.Queue):
+        self.queue_to_operation = queue_to_operation
+
+
+    def _set_queue_from_operation(self, queue_from_operation:queue.Queue):
+        self.queue_to_operation = queue_from_operation
+    
+
+    def _read_queue_from_operation(self):
+        with self._lock:
+            return None if self.queue_from_operation.empty() \
+                else self.queue_from_operation.get(timeout=1)
 
 
     def _read_config_file(self, section:str, param:str) -> str:
@@ -208,4 +231,26 @@ class Network:
             http_code, response = self.db_connection.post_data(payload, endpoint='success_items')
 
         return http_code, response 
+    
+
+    def run(self) -> None:
+        prev_time = time.time()
+        while True:
+            current_time = time.time()
+
+            if current_time - prev_time >= 5:
+                prev_time = current_time
+                status, response = self.handle_commands(PAYLOAD_GET_DATA, auth_turn_on=True)
+                # send data to queue_to_operation
+                with self.lock:
+                    self.queue_to_operation.put(response, timeout = 1)
+
+            queue_data_from_operation = self._read_queue_from_operation()
+            if self.queue_from_operation != None:
+                payload = queue_data_from_operation
+                status, response = self.handle_commands(payload, auth_turn_on=True)
+                log.logger.info("Response dari request : " + str(response))
+                
+            
+
 

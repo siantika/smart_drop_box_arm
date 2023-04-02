@@ -9,13 +9,13 @@ import threading
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
-sys.path.append(os.path.join(parent_dir, 'applications/network'))
+sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 full_photo_folder = os.path.join(parent_dir, 'assets/photos/')
 
-from network import Network
+from network_thread import NetworkThread
 from peripheral_operations import PeripheralOperations
 from media_data import LcdData, SoundData
 import log
@@ -30,6 +30,8 @@ WEIGHT_OFFSET = 1.0  # Added for prevent sensor from read fluctuation value.
 class ThreadOperation:
     def __init__(self) -> None:
         self.queue_data_to_lcd = ''
+        self.queue_data_to_net = None
+        self.queue_data_from_net = None
         self.keypad_buffer = ''
         # store data from network   
         self.temp_storage_data = []
@@ -43,12 +45,20 @@ class ThreadOperation:
         self.latest_items_data = self.temp_storage_data
         self.lock = threading.Lock()
         self.periph = PeripheralOperations()
-        self.network = Network()
+        self.network = NetworkThread()
 
         self.periph.init_all()
 
 
-    def set_queue_to_lcd_thread(self, q_to_send):
+    def set_queue_to_lcd_thread(self, q_to_send:queue.Queue):
+        self.queue_data_to_lcd = q_to_send
+
+
+    def set_queue_from_net_thread(self, q_to_send:queue.Queue):
+        self.queue_data_to_lcd = q_to_send
+
+
+    def set_queue_to_net_thread(self, q_to_send:queue.Queue):
         self.queue_data_to_lcd = q_to_send
 
 
@@ -93,6 +103,12 @@ class ThreadOperation:
         with self.lock:
             return "full" if queue_thread.full() else \
                 queue_thread.put(data, timeout=1.0)
+        
+
+    def _read_queue_from_net(self):
+        with self._lock:
+            return None if self.queue_from_net.empty() \
+                else self.queue_from_net.get(timeout=1)
 
 
     def _request_data_to_server(self, payload: dict):
@@ -189,10 +205,9 @@ class ThreadOperation:
     '''
 
     def network_routine(self):
-        status_code, self.temp_storage_data = self._request_data_to_server(
-            {'method': 'GET', 'payload': {'no_resi': '0'}})
-        self.initial_data = self._make_initial_data(self.temp_storage_data)
-        self.st_msg_has_not_displayed = True
+        if self._read_queue_from_net() != None:
+            self.temp_storage_data = self._read_queue_from_net()
+            self.initial_data = self._make_initial_data(self.temp_storage_data)
 
         # only log once
         if self.latest_items_data != self.temp_storage_data:
@@ -367,10 +382,9 @@ class ThreadOperation:
         # it will send data in FILES (uploaded file) not in data body (HTTP).
         payload_photo = {'photo': (photo_file_name, bin_photo)}
 
-        status_code, resp_delete = self._request_data_to_server(
-            {'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}})
+        payload_delete_finished_resi = {'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}}
 
-        log.logger.info("Response dari request DELETE dengan no resi " + self.keypad_buffer + ": " + resp_delete)
+        self._send_data_queue(self.queue_data_to_net, payload_delete_finished_resi)
 
         # Get data stored in this session.
         index = self.initial_data[self.keypad_buffer]
@@ -383,12 +397,8 @@ class ThreadOperation:
         payload_success_item = self._create_payload(
             'network', method='success_items', is_data_object=True, data_object=payload)
         
-        # send request to 'success_items' API.
-        status_code, resp_success_items = self._request_data_to_server(
-            payload_success_item)
-        
-        log.logger.info("Response dari request 'success_item' dengan no resi " + self.keypad_buffer + ": " \
-                        + str(resp_success_items))
+        # send to net thread
+        self._send_data_queue(self.queue_data_to_net, payload_success_item)
         
         self.st_msg_has_not_displayed = True
 
@@ -416,10 +426,10 @@ class ThreadOperation:
             'pass', 'universal_password')
         self.check_universal_password(UNIVERSAL_PASSWORD)
 
-        status_code, self.temp_storage_data = self._request_data_to_server(
-            {'method': 'GET', 'payload': {'no_resi': '0'}})
-
-        self.initial_data = self._make_initial_data(self.temp_storage_data)
+        #get data from network thread
+        if self._read_queue_from_net() != None:
+            self.temp_storage_data = self._read_queue_from_net()
+            self.initial_data = self._make_initial_data(self.temp_storage_data)
 
         # get the first weight read
         self.periph.set_power_up_weight()
@@ -428,15 +438,10 @@ class ThreadOperation:
         self.periph.set_power_down_weight() # make weight sensor sleep!
         log.logger.info("Berat barang : " + str(self.latest_weight))
 
-        start_time_network = time.time()
-
         while True:
-            current_time_network = time.time()
             keypad_is_pressed = self.periph.read_input_keypad()
-
-            if current_time_network - start_time_network > NETWORK_TIMEOUT:
-                start_time_network = current_time_network
-                self.network_routine()
+            # listening to network thread
+            self.network_routine()
 
             if self.st_msg_has_not_displayed:
                 self.st_msg_has_not_displayed = False

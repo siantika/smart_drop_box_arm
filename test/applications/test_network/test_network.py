@@ -17,7 +17,7 @@ import unittest
 from unittest.mock import call, patch
 sys.path.append('applications/network')
 sys.path.append('drivers/database_connector')
-from network import Network
+from network_thread import Network
 from database_connector import DatabaseConnector
 
 TEST_LOCALHOST_ADDR = 'http://127.0.0.1/smart_drop_box/'
