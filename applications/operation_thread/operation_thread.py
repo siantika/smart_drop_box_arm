@@ -5,6 +5,7 @@ import sys
 import time
 import queue
 import threading
+import multiprocessing as mp
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
@@ -29,9 +30,9 @@ WEIGHT_OFFSET = 1.0  # Added for prevent sensor from read fluctuation value.
 
 class ThreadOperation:
     def __init__(self) -> None:
-        self.queue_data_to_lcd = ''
-        self.queue_data_to_net = None
-        self.queue_data_from_net = None
+        self.queue_data_to_lcd = mp.Queue()
+        self.queue_data_to_net = mp.Queue()
+        self.queue_data_from_net = mp.Queue()
         self.keypad_buffer = ''
         # store data from network   
         self.temp_storage_data = []
@@ -50,16 +51,22 @@ class ThreadOperation:
         self.periph.init_all()
 
 
-    def set_queue_to_lcd_thread(self, q_to_send:queue.Queue):
-        self.queue_data_to_lcd = q_to_send
+    def _read_queue_from_net(self)->mp.Queue:
+        with self.lock:
+            return None if self.queue_data_from_net.empty() \
+                else self.queue_data_from_net.get(timeout=1)
+        
+    
+    def set_queue_to_lcd_thread(self, q_to_lcd:mp.Queue):
+        self.queue_data_to_lcd = q_to_lcd
 
 
-    def set_queue_from_net_thread(self, q_to_send:queue.Queue):
-        self.queue_data_to_lcd = q_to_send
+    def set_queue_from_net_thread(self, q_from_net:mp.Queue):
+        self.queue_data_from_net = q_from_net
 
 
-    def set_queue_to_net_thread(self, q_to_send:queue.Queue):
-        self.queue_data_to_lcd = q_to_send
+    def set_queue_to_net_thread(self, q_to_net:mp.Queue):
+        self.queue_data_to_net = q_to_net
 
 
     def _create_payload(self, app_name: str, method, is_data_object=False, **kwargs) -> dict:
@@ -99,17 +106,11 @@ class ThreadOperation:
         return data_object
 
 
-    def _send_data_queue(self, queue_thread: queue.Queue, data: dict):
+    def _send_data_queue(self, queue_thread: mp.Queue, data: dict):
         with self.lock:
             return "full" if queue_thread.full() else \
                 queue_thread.put(data, timeout=1.0)
         
-
-    def _read_queue_from_net(self):
-        with self._lock:
-            return None if self.queue_from_net.empty() \
-                else self.queue_from_net.get(timeout=1)
-
 
     def _request_data_to_server(self, payload: dict):
         get_response = None
@@ -205,8 +206,9 @@ class ThreadOperation:
     '''
 
     def network_routine(self):
-        if self._read_queue_from_net() != None:
-            self.temp_storage_data = self._read_queue_from_net()
+        queue_from_net = self._read_queue_from_net()
+        if queue_from_net != None:
+            self.temp_storage_data = queue_from_net
             self.initial_data = self._make_initial_data(self.temp_storage_data)
 
         # only log once

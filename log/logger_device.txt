@@ -1,0 +1,42 @@
+2023-04-02 22:21:03,493 - log - INFO - Berat barang : 0.0
+2023-04-02 22:21:03,498 - log - INFO - Foto berhasil dihapus!
+2023-04-02 22:26:51,781 - log - INFO - Berat barang : 0.0
+2023-04-02 22:30:02,858 - log - INFO - Berat barang : 0.0
+2023-04-02 22:30:39,566 - log - INFO - Berat barang : 0.0
+2023-04-02 22:30:39,571 - log - INFO - Items tersimpan: "arak"
+2023-04-02 22:31:32,578 - log - INFO - Berat barang : 0.0
+2023-04-02 22:31:35,585 - log - INFO - Items tersimpan: "arak"
+2023-04-02 22:32:08,343 - log - INFO - Berat barang : 0.0
+2023-04-02 22:32:45,345 - log - INFO - Berat barang : 0.0
+2023-04-02 22:39:19,003 - log - INFO - Berat barang : 0.0
+2023-04-02 22:39:26,018 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:40:30,387 - log - INFO - Berat barang : 0.0
+2023-04-02 22:40:35,399 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:41:45,700 - log - INFO - Berat barang : 0.0
+2023-04-02 22:42:00,729 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:45:05,955 - log - INFO - Berat barang : 0.0
+2023-04-02 22:45:16,980 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:49:09,470 - log - INFO - Berat barang : 0.0
+2023-04-02 22:49:16,485 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:50:28,228 - log - INFO - Berat barang : 0.0
+2023-04-02 22:51:18,467 - log - INFO - Berat barang : 0.0
+2023-04-02 22:51:23,482 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:53:44,967 - log - INFO - Berat barang : 0.0
+2023-04-02 22:53:50,982 - log - INFO - Items tersimpan: Empty
+2023-04-02 22:56:21,059 - log - INFO - Berat barang : 0.0
+2023-04-02 22:57:44,459 - log - INFO - Berat barang : 0.0
+2023-04-02 22:57:50,473 - log - INFO - Items tersimpan: Empty
+2023-04-02 23:06:24,318 - log - INFO - Berat barang : 0.0
+2023-04-02 23:06:31,333 - log - INFO - Items tersimpan: Empty
+2023-04-02 23:08:30,307 - log - INFO - Berat barang : 0.0
+2023-04-02 23:08:36,322 - log - INFO - Items tersimpan: Empty
+2023-04-02 23:09:54,224 - log - INFO - Berat barang : 0.0
+2023-04-02 23:09:59,235 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}]
+2023-04-02 23:10:48,301 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}]
+2023-04-02 23:11:52,426 - log - INFO - Berat barang : 0.0
+2023-04-02 23:11:57,440 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}]
+2023-04-02 23:13:41,938 - log - INFO - Berat barang : 0.0
+2023-04-02 23:13:46,649 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}]
+2023-04-02 23:14:11,171 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}, {"no_resi": "6666", "name": "Salep", "date_ordered": "2023-04-02 22:14:08"}]
+2023-04-02 23:17:06,601 - log - INFO - Berat barang : 0.0
+2023-04-02 23:17:11,063 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}, {"no_resi": "6666", "name": "Salep", "date_ordered": "2023-04-02 22:14:08"}]

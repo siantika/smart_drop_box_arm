@@ -18,9 +18,11 @@ q_data_to_net = mp.Queue(10)
 q_data_from_net = mp.Queue(10)
 
 # create functions
-def opt_routine(q_data_to_lcd):
+def opt_routine(q_data_to_lcd, q_data_from_net, q_data_to_net):
    opt_t = ThreadOperation()
    opt_t.set_queue_to_lcd_thread(q_data_to_lcd)
+   opt_t.set_queue_from_net_thread (q_data_from_net)
+   opt_t.set_queue_to_net_thread (q_data_to_net)
    opt_t.run()
 
 
@@ -32,13 +34,13 @@ def lcd_routine(q_data_to_lcd):
 
 def net_routine(q_data_to_net, q_data_from_net):
    net_t = NetworkThread()
-   net_t._set_queue_from_operation(q_data_to_net)
-   net_t._set_queue_to_operation(q_data_from_net)
+   net_t.set_queue_from_operation(q_data_to_net)
+   net_t.set_queue_to_operation(q_data_from_net)
    net_t.run()
 
 
 process_lcd = mp.Process(target=lcd_routine, args=(q_data_to_lcd,))
-process_opt = mp.Process(target=opt_routine, args=(q_data_to_lcd,))
+process_opt = mp.Process(target=opt_routine, args=(q_data_to_lcd, q_data_from_net, q_data_to_net,))
 process_net = mp.Process(target=net_routine, args=(q_data_to_net, q_data_from_net,))
 
 #driver code

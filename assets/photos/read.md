@@ -1,1 +1,0 @@
-this folder contains photos captrued from USB Camera.

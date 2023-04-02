@@ -58,7 +58,7 @@ class LcdThread:
     
     '''
     def __init__(self)-> None:
-        self.queue_data_read = ''
+        self.queue_data_read = mp.Queue()
         self._lcd = Lcd(DEV_ADDR, DEV_BUS)
         self._lock = threading.Lock()
         self._lcd.init_lcd()
@@ -99,7 +99,7 @@ class LcdThread:
         return device_version
 
 
-    def read_queue_data(self)-> mp.Queue:
+    def _read_queue_data(self)-> mp.Queue:
         '''
             Read queue from shared resource. It uses lock method to prevent race
             conditions between threads accessing the same resource.
@@ -150,7 +150,7 @@ class LcdThread:
         # default value:
         cmd = None
         # read queue data from thread opt
-        queue_data = self.read_queue_data()
+        queue_data = self._read_queue_data()
         #if queue data exist, parse it
         if queue_data is not None:
             cmd, display_data = self.parse_dict_data(queue_data)
