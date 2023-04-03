@@ -15,9 +15,9 @@ import pytest
 import sys
 import unittest
 from unittest.mock import call, patch
-sys.path.append('applications/network')
+sys.path.append('applications/network_thread')
 sys.path.append('drivers/database_connector')
-from network_thread import Network
+from network_thread import NetworkThread
 from database_connector import DatabaseConnector
 
 TEST_LOCALHOST_ADDR = 'http://127.0.0.1/smart_drop_box/'
@@ -26,7 +26,7 @@ TEST_SECRET_KEY_LOCAL = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716ec
 
 class TestInitNetwork:
     def test_class_should_have_correct_attrib(self):
-        net = Network()
+        net = NetworkThread()
         
         assert net.secret_key == TEST_SECRET_KEY_LOCAL
         assert isinstance (net.db_connection, DatabaseConnector)
@@ -44,7 +44,7 @@ class TestDecodeJsonMethod:
         test_json_data = json.dumps(test_data)
         with patch('json.loads') as mock_loads:
             mock_loads.return_value = test_data
-            net = Network()
+            net = NetworkThread()
             ret = net._decode_json_to_dict(test_json_data)
 
             mock_loads.assert_called_once_with(test_json_data)
@@ -60,7 +60,7 @@ class TestParseDataMethod:
             "name"    : "LCD",
             "no_resi" : "0023"
         }
-        net = Network()
+        net = NetworkThread()
 
         ret = net._parse_dict(test_data)
         
@@ -78,7 +78,7 @@ class TestParseDataMethod:
             "no_resi" : "0023",
             "date_created" : "29-02-2023"
         }
-        net = Network()
+        net = NetworkThread()
 
         ret = net._parse_dict(test_data)
         
@@ -96,7 +96,7 @@ class TestParseDataMethod:
         test_data = \
         {   "method"  : "DELETE",
         }
-        net = Network()
+        net = NetworkThread()
 
         ret = net._parse_dict(test_data)
         
@@ -106,7 +106,7 @@ class TestParseDataMethod:
 
 class TestSetSecurityLocalServer:
     def test_set_security_should_be_invoked_correctly(self):
-        net = Network()
+        net = NetworkThread()
         net._set_security(
             TEST_SECRET_KEY_LOCAL,
             'HS256',
@@ -128,7 +128,7 @@ class TestRequestMethod:
         test_data = {"method" : "GET",
                       "id" : "50"
                       }
-        net = Network()
+        net = NetworkThread()
 
         ret = net.handle_commands(test_data)
 
@@ -147,7 +147,7 @@ class TestRequestMethod:
                       "name" : "breadboard",
                       "no_resi" : "6005"
                       }
-        net = Network()
+        net = NetworkThread()
         net._set_security(
            secret_key=TEST_SECRET_KEY_LOCAL,
            algorithm='HS256',
@@ -161,14 +161,14 @@ class TestRequestMethod:
 
 class TestConfigParserSecretCorrect ():
     def test_read_config_parser_should_get_secret_key(self):
-        net = Network()
+        net = NetworkThread()
         ret = net._read_config_file('server', 'secret_key')
 
         assert ret == TEST_SECRET_KEY_LOCAL
 
 
     def test_read_config_parser_should_get_server_address(self):
-        net = Network()
+        net = NetworkThread()
         ret = net._read_config_file('server', 'address')
 
         assert ret == TEST_LOCALHOST_ADDR
@@ -180,7 +180,7 @@ class TestConfigParserSecretError (unittest.TestCase):
     '''
     def test_config_parser_secret_should_raise_an_error_when_exception_no_section_occured(self):
         with pytest.raises(configparser.Error, match = "Section not found in configuration file"):
-            net = Network()
+            net = NetworkThread()
             net._read_config_file( '', 'data_diri')
             
 

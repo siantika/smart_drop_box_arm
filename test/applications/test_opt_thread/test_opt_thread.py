@@ -5,9 +5,9 @@ import pytest
 import multiprocessing as mp
 from unittest.mock import patch
 sys.path.append('applications/operation_thread')
-sys.path.append('applications/network')
+sys.path.append('applications/network_thread')
 from operation_thread import ThreadOperation
-from network_thread import Network
+from network_thread import NetworkThread
 
 
 class TestThreadOperation:
@@ -104,7 +104,7 @@ class TestDataConvertion:
 class TestNetworkMethod:
     def test_network_should_initialize_correctly(self):
         opt_t = ThreadOperation()
-        assert isinstance(opt_t.network, Network)
+        assert isinstance(opt_t.network, NetworkThread)
 
 
 class TestPrivateMethods:

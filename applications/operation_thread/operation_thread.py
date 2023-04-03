@@ -372,6 +372,7 @@ class ThreadOperation:
     def final_session(self):
         bin_photo = None
         photo_file_name = None
+        payload = {}
 
         self._send_data_queue(self.queue_data_to_lcd, LcdData.THANKYOU)
         self.periph.play_sound(SoundData.ACCEPTED_ITEM)
@@ -389,10 +390,6 @@ class ThreadOperation:
             bin_photo = ""
             photo_file_name = "tidak ada photo"
 
-        # create photo payload with param 'photo' and value are file name and photo bin.
-        # it will send data in FILES (uploaded file) not in data body (HTTP).
-        payload_photo = {'photo': (photo_file_name, bin_photo)}
-
         payload_delete_finished_resi = {
             'method': 'DELETE', 'payload': {'no_resi': self.keypad_buffer}}
 
@@ -403,16 +400,19 @@ class ThreadOperation:
         index = self.initial_data[self.keypad_buffer]
         payload = self.temp_storage_data[index]
 
-        # update payload data with photo in bin format.
+        # create photo payload with param 'photo' and value are file name and photo in bin format.
+        # it will send data in FILES (uploaded file) HTTPS.
+        payload_photo = {'photo': (photo_file_name, bin_photo)}
+        # update payload data with data photo in bin format.
         payload.update(payload_photo)
-
         # create full payload for success_item API
         payload_success_item = self._create_payload(
             'network', method='success_items', is_data_object=True, data_object=payload)
 
-        # send to net thread
+        # send to net thread (avoid blocking process for requests to server)
         self._send_data_queue(self.queue_data_to_net, payload_success_item)
 
+        # make lcd dispaly first message (Tekan keypad ...)
         self.st_msg_has_not_displayed = True
 
 
@@ -422,7 +422,7 @@ class ThreadOperation:
         self.item_is_stored = None
         self.taking_item_ok = None
 
-        # only delete when photo is  exist
+        # only delete when photo is exist in 'photos' folder
         len_photo_file_name = len(self.periph.get_photo_name())
         if len_photo_file_name != 0:
             self.periph.delete_photo()

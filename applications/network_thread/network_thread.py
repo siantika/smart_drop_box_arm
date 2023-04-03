@@ -5,7 +5,10 @@
     Description    : 
 
         This code handles requests to API Server from operation thread.
-    Data transfer (red: payload) between two threads are mp.Queue 's.   
+    Data transfer (red: payload) between two threads are mp.Queue 's. 
+    It has 2 child classes, GetRequest is for request GET data in server
+    (no_resi etc) periodically amd PostRequest is for requests DELETE and POST
+    data to server (Delete stored item no_resi and upload success items + photo)   
     
     License: see 'licenses.txt' file in the root of project
 '''
@@ -66,14 +69,14 @@ class NetworkThread:
     '''
 
     def __init__(self) -> None:
-        self.queue_to_operation = mp.Queue()
-        self.queue_from_operation = mp.Queue()
+        self.queue_data = mp.Queue()
         SERVER_ADDRESS = self._read_config_file('server', 'address')
         self.secret_key = self._read_config_file('server', 'secret_key')
         self.db_connection = DatabaseConnector(SERVER_ADDRESS, endpoint_paths)
         self.lock = threading.Lock()
 
-    def _read_queue_from_operation(self) -> mp.Queue:
+
+    def _read_queue_data(self) -> mp.Queue:
         '''
             Read shared data which is queue data type. It uses
             lock mechanism to prevent race condition.
@@ -82,22 +85,16 @@ class NetworkThread:
                 data in queue : None if empty and queue data if exists.
         '''
         with self.lock:
-            return None if self.queue_from_operation.empty() \
-                else self.queue_from_operation.get(timeout=1)
+            return None if self.queue_data.empty() \
+                else self.queue_data.get(timeout=1)
 
-    def set_queue_to_operation(self, queue_to_operation: mp.Queue):
-        '''
-            This method holds shared queue data with operation thread. It
-            uses as queue to send response data to operation thread.
-        '''
-        self.queue_to_operation = queue_to_operation
 
-    def set_queue_from_operation(self, queue_from_operation: mp.Queue):
+    def set_queue_data(self, queue_data: mp.Queue):
         '''
-            This method holds shared queue data with operation thread. It
-            uses as queue to store requests data from operation thread
+            This method set variable for shared queue data. 
         '''
-        self.queue_to_operation = queue_from_operation
+        self.queue_data = queue_data
+
 
     def _read_config_file(self, section: str, param: str) -> str:
         '''
@@ -252,37 +249,64 @@ class NetworkThread:
 
         return http_code, response
 
+
+
+class GetRequest (NetworkThread):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+    def set_queue_data_to_operation(self, queue_data):
+        super().set_queue_data(queue_data)
+
+
     def run(self) -> None:
         '''
-            There are 2 conditions for this code flows, first is daily routine 
-            task 'request GET data from server' every 5 secs and put it on queue
-            to operation. The second is listening request data from operation thread
-            by read queue_data_from_operation always.
-
+            Request GET data from server every 5 secs and put it on queue to operation.
             By performing this, we help operation thread focuses on the operation tasks
-            only (let this thread requests data to server). It also prevent operation thread
-            from blocking process (especially in send requests with photo)
+            only (let this thread requests data to server). 
 
         '''
         prev_time = time.time()
-
         while True:
             current_time = time.time()
 
             if current_time - prev_time >= NETWORK_TIMEOUT:
                 prev_time = current_time
-                responses = self.handle_commands(
+                responses = super().handle_commands(
                     PAYLOAD_GET_DATA, auth_turn_on=True)
                 # only get the response text, index 0 is representing status code in interger
                 response_text = responses[1]
                 with self.lock:
-                    self.queue_to_operation.put(response_text, timeout=1)
+                    # It is inherited from class NetworkThread
+                    self.queue_data.put(response_text, timeout=1)
 
-            queue_data_from_operation = self._read_queue_from_operation()
 
+
+class PostRequest (NetworkThread):
+    '''
+        Listening request data from operation thread by reading queue_data_from_operation 
+        always. It sends requests Delete No_resi and POST No_resi + photos in success items
+        database in server. By performing this, we help operation thread focuses on the operation 
+        tasks only (let this thread requests data to server). 
+    '''
+    def __init__(self) -> None:
+        super().__init__()
+
+    def set_queue_data_from_operation(self, queue_data):
+        super().set_queue_data(queue_data)
+
+    def run(self) -> None:
+        while True:
+            queue_data_from_operation = super()._read_queue_data()
             if queue_data_from_operation is not None:
                 payload = queue_data_from_operation
-                responses = self.handle_commands(payload, auth_turn_on=True)
+                responses = super().handle_commands(payload, auth_turn_on=True)
                 response_text = responses[1]
-                log.logger.info("Response dari request : " +
+                with self.lock:
+                    log.logger.info("Response dari request : " +
                                 str(response_text))
+                
+            
+
+
