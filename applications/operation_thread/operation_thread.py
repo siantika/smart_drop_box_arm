@@ -356,6 +356,7 @@ class ThreadOperation:
                 self.item_is_stored = False
                 self.periph.lock_door()  # suddenly lock the door.
                 self._send_data_queue(self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
+                self.periph.play_sound(SoundData.BARANG_BELUM_DITERIMA)
                 time.sleep(2.0)  # make LCD data display visible  for user
                 log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan di dalam box!!!")
                 break

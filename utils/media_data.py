@@ -74,3 +74,4 @@ class SoundData:
     ACCEPTED_ITEM = 'diterima.wav'
     TAKING_ITEM = 'ambil_barang.wav'
     INSTRUCTION_DEL_ITEM = 'instruksi_hapus_item_di_app.wav'
+    BARANG_BELUM_DITERIMA = 'belum_diterima.wav'
