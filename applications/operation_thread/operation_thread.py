@@ -332,16 +332,6 @@ class ThreadOperation:
             read_weight = self.periph.get_weight()
             door_pos = self.periph.sense_door()
 
-            # only stop when door is
-            if current_time - start_time_door_session > DOOR_TIMEOUT:
-                self.item_is_stored = False
-                self._send_data_queue(
-                    self.queue_data_to_lcd, LcdData.DOOR_ERROR)
-                self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
-                log.logger.critical(
-                    "Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
-                time.sleep(1.0)
-
             # Item received
             if read_weight > self.latest_weight + WEIGHT_OFFSET and door_pos == 1:
                 self.item_is_stored = True
@@ -360,6 +350,16 @@ class ThreadOperation:
                 time.sleep(2.0)  # make LCD data display visible  for user
                 log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan di dalam box!!!")
                 break
+
+            # only stop when door is closed
+            if current_time - start_time_door_session > DOOR_TIMEOUT:
+                self.item_is_stored = False
+                self._send_data_queue(
+                    self.queue_data_to_lcd, LcdData.DOOR_ERROR)
+                self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
+                log.logger.critical(
+                    "Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
+                time.sleep(1.0)
 
         # put down sensor weight
         self.periph.set_power_down_weight()
