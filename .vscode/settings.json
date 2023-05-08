@@ -22,6 +22,7 @@
         "./utils",
         "./applications/sound_thread",
         "./applications/peripheral_operations",
-        "./applications/network"
+        "./applications/network",
+        "./applications/telegram_app"
     ]
 }

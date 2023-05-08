@@ -40,3 +40,159 @@
 2023-04-02 23:14:11,171 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}, {"no_resi": "6666", "name": "Salep", "date_ordered": "2023-04-02 22:14:08"}]
 2023-04-02 23:17:06,601 - log - INFO - Berat barang : 0.0
 2023-04-02 23:17:11,063 - log - INFO - Items tersimpan: [{"no_resi": "4444", "name": "Hoodie", "date_ordered": "2023-04-02 21:27:15"}, {"no_resi": "8089", "name": "Pulpen standard", "date_ordered": "2023-04-02 21:15:15"}, {"no_resi": "0000", "name": "Kartu", "date_ordered": "2023-04-02 21:21:56"}, {"no_resi": "6567", "name": "Hhh", "date_ordered": "2023-04-02 22:06:56"}, {"no_resi": "2314", "name": "Bendera", "date_ordered": "2023-04-02 22:10:48"}, {"no_resi": "6666", "name": "Salep", "date_ordered": "2023-04-02 22:14:08"}]
+2023-05-08 23:33:35,990 - log - ERROR - HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f886dd94790>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+Traceback (most recent call last):
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/usr/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7f886dd94790>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f886dd94790>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/PROJECTS/smart_drop_box/software/drop_box/applications/telegram_app/telegram_app.py", line 43, in send_notification
+    resp = requests.post(self.api_url,
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/oem/.platformio/penv/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f886dd94790>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+2023-05-08 23:43:05,727 - log - ERROR - HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7f42993f4520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+Traceback (most recent call last):
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connection.py", line 141, in _new_conn
+    conn = connection.create_connection(
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/util/connection.py", line 75, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/usr/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 592, in urlopen
+    httplib_response = self._make_request(conn, method, url,
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 352, in _make_request
+    self._validate_conn(conn)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 831, in _validate_conn
+    conn.connect()
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connection.py", line 254, in connect
+    conn = self._new_conn()
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connection.py", line 150, in _new_conn
+    raise NewConnectionError(
+requests.packages.urllib3.exceptions.NewConnectionError: <requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7f42993f4520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/adapters.py", line 413, in send
+    resp = conn.urlopen(
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 639, in urlopen
+    retries = retries.increment(method, url, error=e, _pool=self,
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/util/retry.py", line 287, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+requests.packages.urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7f42993f4520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/PROJECTS/smart_drop_box/software/drop_box/applications/telegram_app/telegram_app.py", line 43, in send_notification
+    resp = requests.post(self.api_url,
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/api.py", line 110, in post
+    return request('post', url, data=data, json=json, **kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/api.py", line 56, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/sessions.py", line 475, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/sessions.py", line 596, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/adapters.py", line 487, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7f42993f4520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+2023-05-08 23:43:39,604 - log - ERROR - HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7fabf1e85520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+Traceback (most recent call last):
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connection.py", line 141, in _new_conn
+    conn = connection.create_connection(
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/util/connection.py", line 75, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/usr/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 592, in urlopen
+    httplib_response = self._make_request(conn, method, url,
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 352, in _make_request
+    self._validate_conn(conn)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 831, in _validate_conn
+    conn.connect()
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connection.py", line 254, in connect
+    conn = self._new_conn()
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connection.py", line 150, in _new_conn
+    raise NewConnectionError(
+requests.packages.urllib3.exceptions.NewConnectionError: <requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7fabf1e85520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/adapters.py", line 413, in send
+    resp = conn.urlopen(
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/connectionpool.py", line 639, in urlopen
+    retries = retries.increment(method, url, error=e, _pool=self,
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/packages/urllib3/util/retry.py", line 287, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+requests.packages.urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7fabf1e85520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/oem/PROJECTS/smart_drop_box/software/drop_box/applications/telegram_app/telegram_app.py", line 43, in send_notification
+    resp = requests.post(self.api_url,
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/api.py", line 110, in post
+    return request('post', url, data=data, json=json, **kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/api.py", line 56, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/sessions.py", line 475, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/sessions.py", line 596, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/oem/.local/lib/python3.8/site-packages/requests/adapters.py", line 487, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7fabf1e85520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))

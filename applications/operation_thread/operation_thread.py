@@ -21,6 +21,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
 sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
+sys.path.append(os.path.join(parent_dir, 'applications/telegram_app'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
 # Should put here due to DIY libs (we built it and it locates in our project dirs.) 
@@ -28,6 +29,10 @@ import log
 from media_data import LcdData, SoundData
 from peripheral_operations import PeripheralOperations
 from network_thread import NetworkThread
+from telegram_app import TelegramApp
+
+# telegram app object
+Telegram = TelegramApp()
 
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 full_photo_folder = os.path.join(parent_dir, 'assets/photos/')
@@ -361,7 +366,7 @@ class ThreadOperation:
                     "Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
                 time.sleep(1.0)
 
-        # put down sensor weight
+        # put the sensor weight sleep
         self.periph.set_power_down_weight()
         log.logger.info("Berat barang : " + str(self.latest_weight))
 
@@ -412,6 +417,11 @@ class ThreadOperation:
 
         # send to net thread (avoid blocking process for requests to server)
         self._send_data_queue(self.queue_data_to_net, payload_success_item)
+
+        # send notification to telegram bot
+        status_telegram = Telegram.send_notification(payload, bin_photo)
+
+        print("status code telegram: " + str(status_telegram))
 
         # make lcd dispaly first message (Tekan keypad ...)
         self.st_msg_has_not_displayed = True
