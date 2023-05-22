@@ -208,7 +208,7 @@ class NetworkThread:
 
             Returns:
                 http_code, 
-                fin_resp (tuple[int][str]) : http code (int) and response from local server (str) 
+                fin_resp (tuple[int][str]) : http code (int) and response from server (str) 
 
         '''
         http_code = None
