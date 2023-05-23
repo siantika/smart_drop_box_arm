@@ -4,14 +4,11 @@
     Year           : Mar, 2023
     Description    : 
     
-        This code helps to create an thread for lcd operation. It will print data
+        This code helps to create a thread for lcd operation. It will print data
     if queue_data_read attribute is exist with correct data ({'cmd': 'routine' or 
     'keypad', 'payload'=[firstline_data, secondline_data]}) else it will print the 
     lastest data from queue_data_read attribute.
-    
-        Since this code needs to access shared resource (queue_data_read attribute), 
-    we have to put threading.Lock to avoid race condition between threads. 
-    
+        
         Attributes:
             queue_data_read (mp.Queue)  : Queue data to read from other thread.
                                              Queue data content is dict objec.
@@ -71,7 +68,7 @@ class LcdThread:
         '''
         version = self._get_device_version()
         self._lcd.write_text(0, "*Smart Drop Box*")
-        self._lcd.write_text(1, f"----{version}----") # version content must contains 8 chars
+        self._lcd.write_text(1, f"----{version}----") 
 
 
     def _get_device_version(self)-> str:
@@ -96,23 +93,20 @@ class LcdThread:
             self._lcd.write_text(0, 'Error Info:')
             self._lcd.write_text(1, 'Check Ver str!')
             raise ValueError ("Version's length should not exceeded 8 chars or empty!")
+        
         return device_version
 
 
     def _read_queue_data(self)-> mp.Queue:
         '''
-            Read queue from shared resource. It uses lock method to prevent race
-            conditions between threads accessing the same resource.
+            Read queue from shared resource. It uses block mechanism, so this method
+            will wait if no new data in queue (shared resource). Saving CPU usage.
 
             Returns:
-                the queue data if exists, else return None.
+                payload data from thread operation. The data type is dict{tuple(cmd,payload)}
 
         '''
-        # if not isinstance(self.queue_data_read, type(mp.Queue)):
-        #     raise AttributeError('queue_data_read attribute had not been setted!')
-        with self._lock:
-            return None if self.queue_data_read.empty() \
-                else self.queue_data_read.get(timeout=1)
+        return self.queue_data_read.get()
 
 
     def set_queue_data(self, queue_data :mp.Queue):
@@ -144,17 +138,16 @@ class LcdThread:
 
     def print_data(self)-> None:
         '''
-            Function that handle all the need of lcd tasks.
+            Function that control behaviour of lcd tasks.
                     
         '''
-        # default value:
+        # default value of cmd
         cmd = None
         # read queue data from thread opt
         queue_data = self._read_queue_data()
-        #if queue data exist, parse it
-        if queue_data is not None:
-            cmd, display_data = self.parse_dict_data(queue_data)
-        # print data to lcd if cmds are match
+        cmd, display_data = self.parse_dict_data(queue_data)
+
+        # print data to lcd if cmd is match
         if cmd in ('routine', 'keypad'):
             first_line   = display_data[0]
             second_line = display_data[1]
@@ -165,7 +158,7 @@ class LcdThread:
 
     def run(self)->None:
         '''
-            Driver function to run the task in inifinity looping 
+            Driver function to run the task in infinite loop 
         '''
         while True:
             self.print_data()

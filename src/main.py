@@ -32,7 +32,7 @@ q_data_from_net = mp.Queue(10)
 # create functions for running each thread
 def opt_routine(q_data_to_lcd, q_data_from_net, q_data_to_net):
    '''
-      Controls all threads.
+      Control all threads.
    
    '''
    opt_t = ThreadOperation()
