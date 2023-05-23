@@ -78,15 +78,13 @@ class NetworkThread:
 
     def _read_queue_data(self) -> mp.Queue:
         '''
-            Read shared data which is queue data type. It uses
-            lock mechanism to prevent race condition.
+            Read shared data which is queue data type. No need lock method.
+            queue is implementing safe-thread mechanism.
 
             Returns:
-                data in queue : None if empty and queue data if exists.
+                queue data from thread operation
         '''
-        with self.lock:
-            return None if self.queue_data.empty() \
-                else self.queue_data.get(timeout=1)
+        return self.queue_data.get()
 
 
     def set_queue_data(self, queue_data: mp.Queue):
@@ -262,11 +260,12 @@ class GetRequest (NetworkThread):
 
     def run(self) -> None:
         '''
-            Request GET data from server every 5 secs and put it on queue to operation.
+            Request GET method from server every 5 secs and put it on queue to operation.
             By performing this, we help operation thread focuses on the operation tasks
-            only (let this thread requests data to server). 
+            only (let this thread only requests data to server). 
 
         '''
+        oldest_response_text = None
         prev_time = time.time()
         while True:
             current_time = time.time()
@@ -276,18 +275,25 @@ class GetRequest (NetworkThread):
                 responses = super().handle_commands(
                     PAYLOAD_GET_DATA, auth_turn_on=True)
                 # only get the response text, index 0 is representing status code in interger
-                response_text = responses[1]
-                with self.lock:
-                    # It is inherited from class NetworkThread
-                    self.queue_data.put(response_text, timeout=1)
+                # index 1 is representing the content/data from API.
+                new_response_text = responses[1]
+                '''
+                    We have to store the latest data from server then compare them to
+                    the newest data. If the newest data same as the oldest data, don't
+                    send data to queue, else send it.
+                
+                '''
+                if oldest_response_text != new_response_text: 
+                    oldest_response_text = new_response_text   
+                    self.queue_data.put(new_response_text)
 
 
 
 class PostRequest (NetworkThread):
     '''
-        Listening request data from operation thread by reading queue_data_from_operation 
-        always. It sends requests Delete No_resi and POST No_resi + photos in success items
-        database in server. By performing this, we help operation thread focuses on the operation 
+        Listening request method from operation thread by reading queue_data_from_operation.
+        It sends method DELETE No_resi and POST No_resi + photos in success items  database in server. 
+        By performing this, we help operation thread focuses on the operation 
         tasks only (let this thread requests data to server). 
     '''
     def __init__(self) -> None:
