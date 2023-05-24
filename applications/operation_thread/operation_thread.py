@@ -8,7 +8,6 @@
 
     License: see 'licenses.txt' file in the root of project
 """
-
 import configparser
 import json
 import os
@@ -24,12 +23,12 @@ sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
 sys.path.append(os.path.join(parent_dir, 'applications/telegram_app'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
-# Should put here due to DIY libs (we built it and it locates in our project dirs.) 
-import log
-from media_data import LcdData, SoundData
-from peripheral_operations import PeripheralOperations
-from network_thread import NetworkThread
+# Should put here due to DIY libs (we built it and it locates in our project dirs.)
 from telegram_app import TelegramApp
+from network_thread import NetworkThread
+from peripheral_operations import PeripheralOperations
+from media_data import LcdData, SoundData
+import log
 
 # telegram app object
 Telegram = TelegramApp()
@@ -42,7 +41,7 @@ KEYPAD_TIMEOUT = 15
 DOOR_TIMEOUT = 15
 NETWORK_TIMEOUT = 5
 # Compesate error read by weight sensor due to electrical issue
-WEIGHT_OFFSET = 1.0  
+WEIGHT_OFFSET = 1.0
 
 
 class ThreadOperation:
@@ -66,24 +65,19 @@ class ThreadOperation:
         self.network = NetworkThread()
         self.periph.init_all()
 
-
     def _read_queue_from_net(self) -> mp.Queue:
         with self.lock:
             return None if self.queue_data_from_net.empty() \
                 else self.queue_data_from_net.get(timeout=1)
 
-
     def set_queue_to_lcd_thread(self, q_to_lcd: mp.Queue):
         self.queue_data_to_lcd = q_to_lcd
-
 
     def set_queue_from_net_thread(self, q_from_net: mp.Queue):
         self.queue_data_from_net = q_from_net
 
-
     def set_queue_to_net_thread(self, q_to_net: mp.Queue):
         self.queue_data_to_net = q_to_net
-
 
     def _create_payload(self, app_name: str, method, is_data_object=False, **kwargs) -> dict:
         lines = None
@@ -121,12 +115,10 @@ class ThreadOperation:
 
         return data_object
 
-
     def _send_data_queue(self, queue_thread: mp.Queue, data: dict):
         with self.lock:
             return "full" if queue_thread.full() else \
                 queue_thread.put(data, timeout=1.0)
-
 
     def _request_data_to_server(self, payload: dict):
         get_response = None
@@ -135,7 +127,6 @@ class ThreadOperation:
             payload, auth_turn_on=True)
         get_response = response  # should return list contains no_resi
         return status, get_response
-
 
     def _get_image_as_binary(self, file_name: str):
         photo_path = os.path.join(full_photo_folder, str(file_name))
@@ -190,6 +181,10 @@ class ThreadOperation:
                 "Universal password is filled with more than 4 chars!")
             raise ValueError("Universal password should not exceed 4 chars!")
 
+    # sound function to become a thread
+    def sound_warning_thd(self):
+        while True:
+            self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
 
     '''
 
@@ -282,37 +277,44 @@ class ThreadOperation:
 
             self.st_msg_has_not_displayed = True
 
-
     def taking_item_routine(self):
         self.periph.unlock_door()
         self._send_data_queue(self.queue_data_to_lcd, LcdData.TAKING_ITEM)
         self.periph.play_sound(SoundData.TAKING_ITEM)
         start_time_door_session = time.time()
         door_pos = self.periph.sense_door()
+        is_warned = False
+        #create a sound warning thread
+        sound_warning_thread = mp.Process(target= self.sound_warning_thd,)
         while door_pos != 1:
             current_time = time.time()
             door_pos = self.periph.sense_door()
 
-            if current_time - start_time_door_session > DOOR_TIMEOUT:
+            if current_time - start_time_door_session > DOOR_TIMEOUT and is_warned == False:
+                is_warned = True
                 self._send_data_queue(
                     self.queue_data_to_lcd, LcdData.DOOR_ERROR)
-                self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
-                time.sleep(1.0)
+                sound_warning_thread.start()
 
         self.periph.lock_door()
+        # kill the sound warning thread 
+        if sound_warning_thread.is_alive() == True:
+            sound_warning_thread.kill()
 
+        is_warned = False
+        
+        # get the latest weight of empty box.
         self.periph.set_power_up_weight()
         time.sleep(0.1)
-        # get the latest weight of empty box.
         self.latest_weight = self.periph.get_weight()
         self.periph.set_power_down_weight()
 
-        self._send_data_queue(self.queue_data_to_lcd,LcdData.AFTER_TAKING_ITEM)
+        self._send_data_queue(self.queue_data_to_lcd,
+                              LcdData.AFTER_TAKING_ITEM)
         self.periph.play_sound(SoundData.INSTRUCTION_DEL_ITEM)
 
         log.logger.info("Berat barang : " + str(self.latest_weight))
         log.logger.info("Barang telah diambil pemilik")
-
 
     def door_session(self):
         self.periph.play_sound(SoundData.POSE_COURIRER)
@@ -329,6 +331,12 @@ class ThreadOperation:
         self.periph.set_power_up_weight()
         time.sleep(0.1)
 
+        # warning signs flag
+        is_warned = False
+
+        # create a sound warning thread
+        process_sound_warning = mp.Process(target=self.sound_warning_thd, )
+
         start_time_door_session = time.time()
 
         while True:
@@ -339,40 +347,52 @@ class ThreadOperation:
 
             # Item received
             if read_weight > self.latest_weight + WEIGHT_OFFSET and door_pos == 1:
+                self.periph.lock_door()
+                # we should kill (brute force) the thread not terminate it !
+                if process_sound_warning.is_alive() == True:
+                    process_sound_warning.kill()
+                
                 self.item_is_stored = True
+
                 # update latest weight when item is stored
                 self.latest_weight = read_weight
                 log.logger.info("Barang dengan no resi " + self.keypad_buffer + " telah disimpan \
-                                di dalam box.")
+                                    di dalam box.")
                 break
 
             # No item received
             elif read_weight < self.latest_weight + WEIGHT_OFFSET and door_pos == 1:
-                self.item_is_stored = False
+                self.periph.lock_door()
+                # we should kill (brute force) the thread not terminate it !
+                if process_sound_warning.is_alive() == True:
+                    process_sound_warning.kill()
+                
+                self.item_is_stored = False    
                 self.periph.lock_door()  # suddenly lock the door.
-                self._send_data_queue(self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
+                self._send_data_queue(
+                    self.queue_data_to_lcd, LcdData.NO_ITEM_RECEIVED)
+                time.sleep(2.0)  # make LCD data display visible  for user and give sound to play again
                 self.periph.play_sound(SoundData.BARANG_BELUM_DITERIMA)
-                time.sleep(2.0)  # make LCD data display visible  for user
-                log.logger.warning("Barang dengan no resi " + self.keypad_buffer + " tidak disimpan di dalam box!!!")
+                log.logger.warning(
+                    "Barang dengan no resi " + self.keypad_buffer + " tidak disimpan di dalam box!!!")
                 break
 
-            # only stop when door is closed
-            if current_time - start_time_door_session > DOOR_TIMEOUT:
+            # warning signs
+            # execute once
+            if current_time - start_time_door_session > DOOR_TIMEOUT and is_warned == False:
+                is_warned = True
+                process_sound_warning.start()
                 self.item_is_stored = False
                 self._send_data_queue(
                     self.queue_data_to_lcd, LcdData.DOOR_ERROR)
-                self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
                 log.logger.critical(
                     "Pintu dibiarkan terbuka untuk no resi " + self.keypad_buffer + ".")
-                time.sleep(1.0)
+        
 
-        # put the sensor weight sleep
+        # put the weight sensor sleep
         self.periph.set_power_down_weight()
         log.logger.info("Berat barang : " + str(self.latest_weight))
-
         self.st_msg_has_not_displayed = True
-        # whatever the situation occured, after the door is closed, lock the door!
-        self.periph.lock_door()
 
 
     def final_session(self):
@@ -381,6 +401,7 @@ class ThreadOperation:
         payload = {}
 
         self._send_data_queue(self.queue_data_to_lcd, LcdData.THANKYOU)
+        time.sleep(2)
         self.periph.play_sound(SoundData.ACCEPTED_ITEM)
 
         # get all photos file names
@@ -426,7 +447,6 @@ class ThreadOperation:
         # make lcd dispaly first message (Tekan keypad ...)
         self.st_msg_has_not_displayed = True
 
-
     def clean_all_global_var_and_photo(self):
         self.keypad_buffer = ''
         self.keypad_session_ok = False
@@ -438,7 +458,6 @@ class ThreadOperation:
         if len_photo_file_name != 0:
             self.periph.delete_photo()
             log.logger.info("Foto berhasil dihapus!")
-
 
     def run(self):
         '''
