@@ -140,8 +140,8 @@ class PeripheralOperations:
     def set_power_up_weight(self)-> None:
         self.weight.power_up()
 
-    def capture_photo(self)-> None:
-        self.camera.capture_photo()
+    def capture_photo(self)-> int:
+        return self.camera.capture_photo()
 
     def delete_photo(self)-> None:
         # Actually, we delete all photos in assets/photos folder

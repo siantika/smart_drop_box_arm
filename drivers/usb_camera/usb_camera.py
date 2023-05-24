@@ -53,7 +53,7 @@ class UsbCamera:
         '''
             desc    : Capturing photos and save it to a choosed directory. Resolution of pict is 640x480. Photos name = date time.
             params  : -
-            ret     : return_code (int)--> [succeeded: 0, failed: 1 ]
+            ret     : return_code (int)--> [failed: 0, succeed: 1 ]
         '''
         _ret_code = subprocess.run(self._get_cmd_capture_photo())
         return _ret_code.returncode

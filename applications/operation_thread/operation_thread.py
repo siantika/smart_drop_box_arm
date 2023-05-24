@@ -321,7 +321,11 @@ class ThreadOperation:
         time.sleep(1)
         self.periph.play_sound(SoundData.TAKING_PICTURE)
 
-        self.periph.capture_photo()
+        status_cam = self.periph.capture_photo()
+        # Check if camera isn't working
+        if status_cam == 0:
+            log.logger.error("Camera is error !")
+
         time.sleep(0.8)
 
         self.periph.unlock_door()
