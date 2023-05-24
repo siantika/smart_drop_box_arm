@@ -311,6 +311,9 @@ class ThreadOperation:
 
         self._send_data_queue(self.queue_data_to_lcd,
                               LcdData.AFTER_TAKING_ITEM)
+        
+        #delay for sound operation
+        time.sleep(1.5)
         self.periph.play_sound(SoundData.INSTRUCTION_DEL_ITEM)
 
         log.logger.info("Berat barang : " + str(self.latest_weight))
