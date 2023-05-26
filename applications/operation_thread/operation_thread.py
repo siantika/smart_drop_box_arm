@@ -171,15 +171,15 @@ class ThreadOperation:
         return data
 
     def check_universal_password(self, universal_password):
-        # universal password should not exceed 4 chars!
+        # universal password should not exceed 4 chars and doen't contain 'D' char !
         len_pass = len(universal_password)
-        if len_pass > 4:
+        if len_pass > 4 and 'D' not in universal_password:
             # send data to lcd
             self._send_data_queue(self.queue_data_to_lcd,
                                   LcdData.ERROR_UNIVERSAL_PASSWORD)
             log.logger.error(
-                "Universal password is filled with more than 4 chars!")
-            raise ValueError("Universal password should not exceed 4 chars!")
+                "Universal password is filled with more than 4 chars or contans 'D' char !")
+            raise ValueError("Universal password should not exceed 4 chars or contans 'D' char !")
 
     # sound function to become a thread
     def sound_warning_thd(self):
