@@ -214,6 +214,7 @@ class ThreadOperation:
             5. final session
                Sending data image to server and send request delete for used no_resi to server. If one of them or
                both are fail, we out it on queue data send to network_routine (try again perform)
+               And send notification to telegram bot
     '''
 
     def network_routine(self):
@@ -238,6 +239,9 @@ class ThreadOperation:
         self.st_msg_has_not_displayed = True
 
         start_time_keypad_session = time.time()
+
+        flag_send_to_lcd = 0
+
         while True:
             current_time = time.time()
             keypad_data_input = self.periph.read_input_keypad()
@@ -248,23 +252,38 @@ class ThreadOperation:
                 time.sleep(2.0)  # make LCD data display visible for user
                 break
 
-            # read keypad input from user
-            if keypad_data_input is not None:
+            # Send input user from keypad to LCD thread. Neglect if user input is 'D' char
+            # Because it will be delete-command.
+            if keypad_data_input is not None and keypad_data_input != 'D':
                 self.keypad_buffer = self.keypad_buffer + \
                     str(keypad_data_input)
+                flag_send_to_lcd = 1
+
+            # Delete single char command
+            if keypad_data_input == 'D':
+                self.keypad_buffer = self.keypad_buffer[:-1] 
+                flag_send_to_lcd = 1
+
+            # Send data to LCD thread
+            if flag_send_to_lcd == 1:
                 data_lcd = self._create_payload(
-                    'lcd', method='keypad', first_line='Masukan resi:', second_line=self.keypad_buffer)
+                    'lcd', method='keypad', first_line='Masukan resi:', 
+                    second_line=self.keypad_buffer)
                 self._send_data_queue(self.queue_data_to_lcd, data_lcd)
+                #reset flag
+                flag_send_to_lcd = 0
+
 
             # Perform validation when keypad entered 4 times.
             if len(self.keypad_buffer) == 4:
-                # Check with keys in dict (no_resi = keys, index = values)
+                # Check users no _resi and no_resi stored in database with keys in dict 
+                # (no_resi = keys, index = values)
                 if self.keypad_buffer in self.initial_data.keys():
                     self.keypad_session_ok = True
                     self._send_data_queue(
                         self.queue_data_to_lcd, LcdData.NO_RESI_SUCCESS)
                     break
-                # universal password is correct
+                # User input the universal password instead of valid no_resi and it's correct
                 elif self.keypad_buffer == universal_password:
                     self.taking_item_ok = True
                     break
