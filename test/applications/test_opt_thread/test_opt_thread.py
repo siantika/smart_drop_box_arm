@@ -146,7 +146,7 @@ class TestConfig:
             pytest.raises(ValueError), patch.object(ThreadOperation, '_send_data_queue') as mock_send_queue:   
             mock_init.return_value = None 
             opt_t = ThreadOperation()
-            opt_t.check_universal_password("asdsaasxcaer")
+            opt_t.check_universal_password("DDD*")
 
     
     def test_check_universal_passwrod_should_return_correct_value_when_called_with_correct_value(self):

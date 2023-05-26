@@ -196,3 +196,7 @@ Traceback (most recent call last):
   File "/home/oem/.local/lib/python3.8/site-packages/requests/adapters.py", line 487, in send
     raise ConnectionError(e, request=request)
 requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot6056340407:AAEW9tR5pg7v22B23qMhLi3TVlY5eKly9qg/sendPhoto (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7fabf1e85520>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+2023-05-26 13:00:20,057 - log - ERROR - Universal password is filled with more than 4 chars or contans 'D' char !
+2023-05-26 13:06:40,119 - log - ERROR - Universal password is filled with more than 4 chars or contans 'D' char !
+2023-05-26 13:06:40,121 - log - ERROR - Universal password is filled with more than 4 chars or contans 'D' char !
+2023-05-26 13:09:06,051 - log - ERROR - Universal password is filled with more than 4 chars or contans 'D' char !
