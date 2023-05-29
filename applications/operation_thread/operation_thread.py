@@ -345,10 +345,12 @@ class ThreadOperation:
         time.sleep(1)
         self.periph.play_sound(SoundData.TAKING_PICTURE)
 
-        status_cam = self.periph.capture_photo()
-        # Check if camera isn't working
-        if status_cam == 0:
-            log.logger.error("Camera is error !")
+        #taking a photo
+        self.periph.capture_photo()
+        # check photo, if photo doesn't exist, log it as an error
+        is_photo = len(self.periph.get_photo_name())
+        if is_photo == 0:
+             log.logger.error("Camera is error !")  
 
         time.sleep(0.8)
 
