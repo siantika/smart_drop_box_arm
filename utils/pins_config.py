@@ -8,6 +8,6 @@ class PinsConfig:
     SCK_WEIGHT = 10
 
     # Doors
-    GPIO_DOOR_LOCK = 7
-    GPIO_DOOR_SENSE = 5
+    GPIO_DOOR_LOCK = 5
+    GPIO_DOOR_SENSE = 7
 
