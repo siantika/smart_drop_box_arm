@@ -1,1 +1,0 @@
-This folder contains photos captured from camera.

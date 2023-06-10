@@ -23,6 +23,7 @@
         "./applications/sound_thread",
         "./applications/peripheral_operations",
         "./applications/network",
-        "./applications/telegram_app"
+        "./applications/telegram_app",
+        "./drivers/camera"
     ]
 }
