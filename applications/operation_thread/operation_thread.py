@@ -511,6 +511,11 @@ class ThreadOperation:
         self.periph.set_power_down_weight()  # make weight sensor sleep!
         log.logger.info("Berat barang : " + str(self.latest_weight))
 
+
+        # vars testing
+        start_time = 0
+        end_time = 0
+
         while True:
             keypad_is_pressed = self.periph.read_input_keypad()
             # listening to network thread
@@ -523,15 +528,22 @@ class ThreadOperation:
             if keypad_is_pressed is not None:
                 self.keypad_routine(UNIVERSAL_PASSWORD)
 
-            # These processes is determined by keypad_routine !
+            # These processes are determined by keypad_routine !
             if self.taking_item_ok:
                 self.taking_item_routine()
 
             if self.keypad_session_ok:
+                # Timer start
+                start_time = time.perf_counter()
                 self.door_session()
 
             # This process is determined by door_session!
             if self.item_is_stored:
                 self.final_session()
+                #timer stop 
+                end_time = time.perf_counter()
+                #print time elapased
+                execution_time = end_time - start_time
+                log.logger.info(f"Function  executed in {execution_time:.3f} seconds.")
 
             self.clean_all_global_var_and_photo()
