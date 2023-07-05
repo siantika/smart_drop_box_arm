@@ -23,6 +23,13 @@ from abc import ABC, abstractmethod
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
+
+class SoundProcessing:
+    """ Contains options flag for sound processing used in Aplay"""
+    PCM = 'PCM'
+    DAC = 'DAC'
+
+
 class SoundInterface(ABC):
     """ Represents abstract base class for simple sound operations"""
     @abstractmethod
@@ -32,7 +39,7 @@ class SoundInterface(ABC):
 
     @abstractmethod
     def stop(self, pid:int)-> None:
-        """ stops the ongoing sound"""
+        """ stops the ongoing sound """
         pass
 
     @abstractmethod
@@ -42,7 +49,10 @@ class SoundInterface(ABC):
 
 
 class Aplay(SoundInterface):
-    """ Implementation for non-blocking play in aplay package"""
+    """ 
+        Implementation for media player using aplay package that
+        compatible with linux distros.
+    """
 
     def play(self, file_name:str)-> int:
         """ 
@@ -72,15 +82,19 @@ class Aplay(SoundInterface):
                 ]
             )
 
-    def volume_control(self, level_percent:int)-> None:
+    def volume_control(self, level_percent:int, audio_processing:SoundProcessing)-> None:
         """
             Controls hardware volume level.
                 args:
                     level_percent (int) : 0 (minimum) - 100 (max) (sound level range) 
+                    audio_processing (str): 
         """
         convert_from_persen_to_sound_level = level_percent / 100 * 63
         convert_from_persen_to_sound_level = int(round(convert_from_persen_to_sound_level,0))
-        subprocess.run(['amixer', 'set', 'DAC', str(convert_from_persen_to_sound_level)])
+        subprocess.run(
+            [
+                'amixer','set', audio_processing, str(convert_from_persen_to_sound_level)
+            ], check=True)
 
 
 class NonBlockingPlayInterface(ABC):
