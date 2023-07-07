@@ -25,5 +25,9 @@
         "./applications/network",
         "./applications/telegram_app",
         "./drivers/camera"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "none"
 }
