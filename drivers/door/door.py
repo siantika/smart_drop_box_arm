@@ -1,30 +1,21 @@
-'''
-    File           : door.py
-    Author         : I Putu Pawesi Siantika, S.T.
-    Year           : Feb, 2023
-    Description    : 
-    
-    This code helps for controling peripherals regards to door (solenoid_door and sense_state_door)
-    . It can unlock the door, lock the door, and sense_state_door (0 or 1). lock the door means
-    the PIN is LOW state and unlock the door means pin is HIGH state. For sensing the state of 
-    door, we need the sensor detects HIGH or LOW (digital data). The design for sensing state is 
-    HIGH means DOOR IS CLOSED and vice versa (depend on door sense hardware). 
-    For more information, see 'test_door.py' file!
+"""
+Module: keypad_driver
+author: I Putu Pawesi Siantika, S.T.
+date  : Feb 2023. Refactored in July 2023.
 
-    * Prerequisites *
-    1. wiringOP lib.
-    2. Download or put this library in your working directory project.
-    3. Import it to your project file (eg. main.py)
+This module provides classes for acessing door functions
 
-    Example code:
-        see: './example/drivers/door_ex.py' file!
-
-    License: see 'licenses.txt' file in the root of project
-'''
-
+Classes:
+ - DoorInterface: Common interface for Door
+ - HardwareProtocol: Common interface for Hardware protocol acessing
+                     door hardwares.
+ - Gpio (inherits HardwareProtocol): Implementation for acessing door using GPIO
+ - GpioDoor (inherits DoorInterface):Implementation for door functional (lock, unlok, and sense)
+"""
 import sys
 import os 
 import platform
+from abc import ABC, abstractmethod
 
 if platform.machine() == "armv7l":
     import wiringpi 
@@ -37,23 +28,50 @@ else:
     wiringpi = MockWiringPi()
 
 
-class Door:
-    def __init__(self, pin_door_lock, pin_sense_door):
-        self._pin_door_solenoid = pin_door_lock
-        self._pin_sense_door = pin_sense_door
-        self._state_of_door = 0
+class DoorInterface(ABC):
+    @abstractmethod
+    def lock(self):
+        pass 
 
+    @abstractmethod
+    def unlock(self):
+        pass
+
+    @abstractmethod
+    def sense_door_state(self):
+        pass 
+
+class HardwareProtocol(ABC):
+    @abstractmethod
+    def setup(self):
+        pass 
+
+
+class Gpio(HardwareProtocol):
+    def __init__(self, door_pin:int, sense_pin:int) -> None:
+        if not isinstance(door_pin, int) or not isinstance(sense_pin, int):
+            raise ValueError("pin/s should be interger type!")
+        self._door_pin = door_pin
+        self._sense_door = sense_pin
+
+    def setup(self):
         wiringpi.wiringPiSetup()
-        wiringpi.pinMode(self._pin_door_solenoid, GPIO.OUTPUT)
-        wiringpi.pinMode(self._pin_sense_door, GPIO.INPUT)
-        wiringpi.pullUpDnControl(self._pin_sense_door, GPIO.PUD_UP)
-        self.lock_door()
+        wiringpi.pinMode(self._door_pin, GPIO.OUTPUT)
+        wiringpi.pinMode(self._sense_door, GPIO.INPUT)
+        wiringpi.pullUpDnControl(self._sense_door, GPIO.PUD_UP)
+        
 
-    def lock_door(self):
-        wiringpi.digitalWrite(self._pin_door_solenoid, GPIO.INPUT)
+class GpioDoor(DoorInterface):
+    def __init__(self, door_pin, sense_pin ):
+        self._gpio = Gpio(door_pin, sense_pin)
+        self.lock() 
 
-    def unlock_door(self):
-        wiringpi.digitalWrite(self._pin_door_solenoid, GPIO.HIGH)
+    def lock(self):
+        wiringpi.digitalWrite(self._gpio._door_pin, GPIO.LOW)
+
+    def unlock(self):
+        wiringpi.digitalWrite(self._gpio._door_pin, GPIO.HIGH)
 
     def sense_door_state(self):
-        return wiringpi.digitalRead(self._pin_sense_door)
+        return wiringpi.digitalRead(self._gpio._sense_door)
+    
