@@ -3,7 +3,7 @@ import time
 import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-sys.path.append(os.path.join(parent_dir, 'drivers/hx711'))
+sys.path.append(os.path.join(parent_dir, 'drivers/weight'))
 
 ### real hardware
 if '--hw-orpi' in sys.argv:
@@ -17,7 +17,7 @@ else:
     from mock_wiringpi import MockWiringPi 
     wiringpi = MockWiringPi()
 
-from hx711 import Hx711
+from weight import Hx711
 
 PIN_DOUT = 9
 PIN_PD_SCK = 10

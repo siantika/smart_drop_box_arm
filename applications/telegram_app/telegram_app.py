@@ -10,9 +10,6 @@
 
     License: see 'licenses.txt' file in the root of project
 """
-
-
-
 import configparser
 import datetime
 import os

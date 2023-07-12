@@ -18,7 +18,7 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 sys.path.append(os.path.join(parent_dir, 'drivers/keypad'))
-sys.path.append(os.path.join(parent_dir, 'drivers/hx711'))
+sys.path.append(os.path.join(parent_dir, 'drivers/weight'))
 sys.path.append(os.path.join(parent_dir, 'drivers/door'))
 sys.path.append(os.path.join(parent_dir, 'drivers/usb_camera'))
 sys.path.append(os.path.join(parent_dir, 'drivers/sound'))
@@ -27,7 +27,7 @@ sys.path.append(os.path.join(parent_dir, 'utils'))
 #Should put here
 from usb_camera import UsbCamera
 from sound import Sound
-from hx711 import Hx711
+from weight import Hx711
 from door import Door
 from keypad import Keypad
 from pins_config import PinsConfig

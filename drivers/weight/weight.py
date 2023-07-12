@@ -1,42 +1,95 @@
-'''
-    HX711 library
-    Modified version from src: https://github.com/tatobari/hx711py/blob/master/hx711.py . 
-    For Orange Pi Zero LTS board only. No need to install the setup.py. just copy paste this 
-    file and save it as .py . 
-    modified:
-        1. Changed rpi library to wiringpi library and its methods
-        2. Added timeout in readRawByte function (preventing program stuck forever waiting
-           DOUT until LOW (_isReady() method)
+"""
+Module: weight module
+author: I Putu Pawesi Siantika, S.T.
+date  : Feb 2023 refactored on July 2023
 
-    see: 'example/drivers/hx711_ex.py' file
+This module provides classes for capturing weight of item and managing weight sensor .
 
-    GPL 2.0 Licenses (inherence from code source) 
+Classes:
+- Weight (abstract base class): Defines the common interface for weight sensor.
+- Hx711Driver (inherits Weight): Implementation of a Hx711 sensor.
+- Hx711Lib: Low level driver for accessing hx711 hardware. 
+  (Src: https://github.com/tatobari/hx711py/blob/master/hx711.py)
 
-'''
+"""
 import os
 import sys
 import time
 import threading
 import platform
+from abc import ABC,abstractmethod
 
 sys.path.append("utils")
 import log
 
-### real hardware
+TIMEOUT_READ_RAW = 5 # secs
+
+# Real hardware
 if platform.machine() == "armv7l":
     import wiringpi 
 
-### mock for testing in native pc
+# Mock for testing in native pc
 else:
     parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     sys.path.append(os.path.join(parent_dir,'drivers/mock_wiringpi'))
     from mock_wiringpi import MockWiringPi 
     wiringpi = MockWiringPi()
 
-TIMEOUT_READ_RAW = 5 # secs
 
-class Hx711:
+"""Common interface for weight sensor driver"""
+class Weight(ABC):
+    @abstractmethod
+    def set_reference_unit(self)-> None:
+        pass 
 
+    @abstractmethod
+    def calibrate(self)-> None:
+        pass
+
+    @abstractmethod
+    def get_weight(self)-> None:
+        pass
+
+    @abstractmethod
+    def power_down(self)-> None:
+        pass 
+
+    @abstractmethod
+    def power_up(self)-> None:
+        pass 
+
+
+class HX711Driver(Weight):
+    """ Implementations of HX711 load cell driver for weight sensor """
+    def __init__(self, pin_dout:int, pin_pd_sck:int) -> None:
+        self._pin_dout = pin_dout
+        self._pin_pd_sck = pin_pd_sck
+        self._hx711 = Hx711Lib(self._pin_dout, self._pin_pd_sck)
+
+    def set_reference_unit(self, ref_val:int)-> None:
+        self._hx711.set_reference_unit(ref_val)
+
+    def calibrate(self)-> None:
+        self._hx711.reset()
+        self._hx711.tare()
+    
+    def get_weight(self)-> None:
+        self._hx711.get_weight() 
+    
+    def power_down(self)-> None:
+        self._hx711.power_down()
+    
+    def power_up(self)-> None:
+        self._hx711.power_up()
+
+
+class Hx711Lib:
+    """ 
+        External library for accessing HX711 driver in raspberry pi boards.
+        I modified the version so that it compatible on orange pi boards.
+        It will display an error message in terminal when the hx711 hardware is broken
+        every 5 secs. It uses thread to reading register.
+    """
     def __init__(self, dout, pd_sck, gain=128):
         self.PD_SCK = pd_sck
         self.DOUT = dout

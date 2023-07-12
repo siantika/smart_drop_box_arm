@@ -1,5 +1,5 @@
 '''
-    This is a simple mock for wiringpi library using in native dev
+    This is a simple mock for wiringpi library using on native dev
     (Laptop)
 '''
 

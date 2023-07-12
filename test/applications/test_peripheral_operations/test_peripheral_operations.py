@@ -9,7 +9,7 @@ sys.path.append('drivers/sound')
 
 from keypad import Keypad
 from door import Door
-from hx711 import Hx711
+from weight import Hx711
 from usb_camera import UsbCamera
 from peripheral_operations import PeripheralOperations
 from sound import Sound
