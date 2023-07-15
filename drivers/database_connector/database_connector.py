@@ -13,6 +13,7 @@
 import json
 import sys
 from urllib.parse import urljoin
+from abc import ABC, abstractmethod
 import jwt
 import requests
 
