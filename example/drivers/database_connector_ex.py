@@ -5,7 +5,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(parent_dir, 'drivers/database_connector'))
 sys.path.append(os.path.join(parent_dir, 'example/drivers'))
 
-from database_connector import DatabaseConnector
+from DataAccess import DatabaseConnector
 
 # for spacing line
 space = lambda:print()
