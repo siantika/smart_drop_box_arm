@@ -90,7 +90,7 @@ class KeypadMatrixUart(KeypadInterface):
     """
         Implementation of keypad matrix using uart protocol.
     """
-    def __init__(self, port:Path, baudrate:int):
+    def __init__(self, port:Path, baudrate:int ):
         self._communication = KeypadProtocolUart(port, baudrate)
         self._communication.initialize()
     

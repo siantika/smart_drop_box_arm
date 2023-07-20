@@ -1,9 +1,9 @@
 """
-Module: weight module
+Module: weight driver
 author: I Putu Pawesi Siantika, S.T.
 date  : Feb 2023 refactored on July 2023
 
-This module provides classes for capturing weight of item and managing weight sensor .
+This module provides classes for weighing weight of item and managing weight sensor .
 
 Classes:
 - Weight (abstract base class): Defines the common interface for weight sensor.
@@ -65,6 +65,8 @@ class HX711Driver(Weight):
         self._pin_dout = pin_dout
         self._pin_pd_sck = pin_pd_sck
         self._hx711 = Hx711Lib(self._pin_dout, self._pin_pd_sck)
+        # follows the existing driver steps (ref link is above)
+        self._hx711.set_reading_format("MSB", "MSB")
 
     def set_reference_unit(self, ref_val:int)-> None:
         self._hx711.set_reference_unit(ref_val)
@@ -387,11 +389,8 @@ class Hx711Lib:
         # Restore gain/channel/reference unit settings.
         self.set_gain(backupGain)
         self.set_reference_unit_B(backupReferenceUnit)
-       
         return value
 
-
-    
     def set_reading_format(self, byte_format="LSB", bit_format="MSB"):
         if byte_format == "LSB":
             self.byte_format = byte_format
@@ -399,7 +398,6 @@ class Hx711Lib:
             self.byte_format = byte_format
         else:
             raise ValueError("Unrecognised byte_format: \"%s\"" % byte_format)
-
         if bit_format == "LSB":
             self.bit_format = bit_format
         elif bit_format == "MSB":

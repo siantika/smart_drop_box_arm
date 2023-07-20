@@ -1,7 +1,7 @@
 """
 Module: camera_module
 author: I Putu Pawesi Siantika, S.T.
-date  : 2023
+date  : July 2023
 
 This module provides classes for capturing and managing photos using a camera.
 
