@@ -25,7 +25,7 @@ sys.path.append(os.path.join(parent_dir, 'drivers/database_connector'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
 # should put here due to DIY libs.
-from database_connector import DatabaseConnector
+from DataAccess import DatabaseConnector
 import log
 
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
