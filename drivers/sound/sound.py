@@ -5,7 +5,7 @@ date  : Feb 2023, refactored in Jul 2023
 
 This module provides classes for simple operation that sound usually does
 (play, stop, and volume control).
-It works only for 'wav' file!
+It works only for 'wav' file type!
 
 Classes:
 - SoundInterface (abstract base class) = Represents sound interface.
@@ -114,11 +114,6 @@ class NonBlockingPlayInterface(ABC):
         self._file_name = file_name
 
     @abstractmethod
-    def _play(self)->None:
-        """ Represents private play method """
-        pass
-
-    @abstractmethod
     def play_nonblocking(self)->int:
         """ Represents play sound in non blocking process """
         pass
@@ -131,26 +126,38 @@ class NonBlockingAplay(NonBlockingPlayInterface):
     """
 
     def _play(self)-> None:
-        """ Private method to play sound in aplay package """
+        """ Private method for playing sound in aplay media player """
         subprocess.run([
             'aplay',
             str(self._file_name),
             ],)
+    
+    def _get_pid_aplay(self)-> int:
+        """ Returns pid of current aplay
+            Returns:
+                pid of current aplay (int) : 0 means No aplay is running
+                                        , otherwise it returns the pid of aplay.
+        """
+        process_aplay = subprocess.run([
+            'pidof', 
+            'aplay',
+        ], stdout=subprocess.PIPE)
+        pid = process_aplay.stdout.decode('utf-8')\
+            .strip('\n')
+        return 0 if pid is '' else int(pid)
 
     def play_nonblocking(self)-> int:
         """ 
         Creates separate process to perform non-blocking operation
             returns:
-                pid of aplay (int): 0 means no aplay is running, otherwise
-                                it returns aplay PID.
+                pid of aplay (int): 0 means no aplay is running, 1 means busy,
+                                   otherwise it returns aplay PID.
         """
+        pid = self._get_pid_aplay()
+        if pid != 0:
+            return 1
+
         thread = mp.Process(target=self._play)
         thread.start()
-        process_aplay = subprocess.run([
-            'pidof', 
-            'aplay',
-        ], stdout=subprocess.PIPE)
-        aplay_pid = process_aplay.stdout.decode('utf-8')\
-            .strip('\n')
-        
-        return 0 if aplay_pid == '' else int(aplay_pid)
+        # get a current aplay pid
+        return self._get_pid_aplay()        
