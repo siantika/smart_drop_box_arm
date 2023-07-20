@@ -25,7 +25,7 @@ sys.path.append('drivers/mock_wiringpi')
 
 from door import *
 
-# Constants for testing
+# Constants for testing the hardware
 DOOR_PIN  = 2
 SENSE_PIN = 3
 HIGH = 1
@@ -78,20 +78,34 @@ class TestGpio(Helper):
 
 class TestGpioDoor(Helper):
     def test_init_should_has_correct_attributes(self):
-        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN)
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_LOW)
         assert isinstance(gpio_door._gpio, Gpio)
         gpio_door.lock()
 
-    def test_lock_door_should_correct(self):
+    def test_with_active_low_door_should_lock(self):
         self.mock_wiringpi_methods()
-        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN)
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_LOW)
         gpio_door.lock()
-        self.mock_wiringpi_digitalWrite.assert_called_with(2, 0)
+        self.mock_wiringpi_digitalWrite.assert_called_with(DOOR_PIN, 0)
+        self.tear_down()
+
+    def test_door_lock_with_(self):
+        self.mock_wiringpi_methods()
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_HIGH)
+        gpio_door.lock()
+        self.mock_wiringpi_digitalWrite.assert_called_with(DOOR_PIN, 1)
         self.tear_down()
     
-    def test_unlock_door_should_correct(self):
+    def test_unlock_door_with_active_high(self):
         self.mock_wiringpi_methods()
-        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN)
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_HIGH)
+        gpio_door.unlock()
+        self.mock_wiringpi_digitalWrite.assert_called_with(2, 0)
+        self.tear_down()
+
+    def test_unlock_door_with_active_low(self):
+        self.mock_wiringpi_methods()
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_LOW)
         gpio_door.unlock()
         self.mock_wiringpi_digitalWrite.assert_called_with(2, 1)
         self.tear_down()
@@ -99,7 +113,7 @@ class TestGpioDoor(Helper):
     def test_door_door_state_should_return_high_when_door_is_open(self):
         self.mock_wiringpi_methods()
         self.mock_wiringpi_digitalRead.return_value = HIGH
-        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN)
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_LOW)
         state = gpio_door.sense_door_state()
         self.mock_wiringpi_digitalRead.assert_called_with(3)
         assert state == 1
@@ -108,7 +122,7 @@ class TestGpioDoor(Helper):
     def test_door_door_state_should_return_high_when_door_is_open(self):
         self.mock_wiringpi_methods()
         self.mock_wiringpi_digitalRead.return_value = LOW
-        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN)
+        gpio_door = GpioDoor(DOOR_PIN, SENSE_PIN, GpioType.ACTIVE_LOW)
         state = gpio_door.sense_door_state()
         self.mock_wiringpi_digitalRead.assert_called_once_with(3)
         assert state == 0
