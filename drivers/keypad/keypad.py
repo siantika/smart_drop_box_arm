@@ -1,5 +1,5 @@
 """
-Module: keypad_driver
+Module: keypad driver
 author: I Putu Pawesi Siantika, S.T.
 date  : Feb 2023. Refactored in July 2023.
 
@@ -64,6 +64,7 @@ class KeypadProtocolUart(KeypadProtocolInterface):
         """
         self._port = port 
         self._baudrate = baudrate
+        self._serial = None
     
     def initialize(self) -> None:
         """
@@ -89,8 +90,9 @@ class KeypadMatrixUart(KeypadInterface):
     """
         Implementation of keypad matrix using uart protocol.
     """
-    def __init__(self, communication:KeypadProtocolUart):
-        self._communication = communication
+    def __init__(self, port:Path, baudrate:int):
+        self._communication = KeypadProtocolUart(port, baudrate)
+        self._communication.initialize()
     
     def reading_input_char(self)-> str:
         '''
