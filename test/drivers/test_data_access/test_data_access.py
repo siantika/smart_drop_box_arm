@@ -24,8 +24,7 @@ TEST_UPDATE_URL = 'http://localhost.com/smart_drop_box/update.php'
 TEST_DELETE_URL = 'http://localhost.com/smart_drop_box/delete.php'
 
 SECRET_KEY_LOCAL = '0534f1025fc5b2da9a41be5951116816bedf30f336b65a8905716eccb800b8c1'
-TEST_GENERATED_TOKEN = "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
-test_header_const = {'Content-type':'application/json', 'Authorization':'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw'}
+TEST_GENERATED_TOKEN = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QifQ.eyJuYW1lIjoic2lhbiIsImVtYWlsIjoic2lhbkBtZWRpYXZpbWFuYUBnbWFpbC5jb20ifQ._nDoC3oUmgjzHwg8xpIwMJV2oQFbxWWyQ1inCL6dRrw"
 TEST_ENDPOINT = {'get':'get.php','update':'update.php','delete':'delete.php','post':'post.php',
                        'post-multipart' : 'success_items.php'}
 
@@ -35,7 +34,7 @@ class HelpMockMethod:
         self.mock_request_get.return_value.status_code = status_code
         if is_json is True:
             payload = json.dumps(payload)
-        self.mock_request_get.return_value.json = payload
+        self.mock_request_get.return_value.text = payload
         
 
 class TestHttpRequestData:
@@ -139,7 +138,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
         )
         with pytest.raises(ValueError, match = "Param argument should be dictionary type !"):
             http_header = {'content-type' : 'application/json'}
-            data.get([{'no_resi' : '5563'}], http_header)
+            data.get([{'no_resi' : '5563'}], 'get', http_header)
             
     def test_with_invalid_header_type(self):
         self.help_mock_api_response()
@@ -150,7 +149,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
         )
         with pytest.raises(ValueError, match = "Http header argument should be dictionary type !"):
             http_header = [{'content-type' : 'application/json'}]
-            data.get({'no_resi' : '5563'}, http_header)            
+            data.get({'no_resi' : '5563'}, 'get', http_header)            
 
     def test_with_success_return_data(self):
         test_payload = {
@@ -164,7 +163,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.get({'no_resi' : '0230 '}, http_header)
+        data_retrieved = data.get({'no_resi' : '0230 '}, 'get', http_header)
         assert data_retrieved[0] == 200
         assert data_retrieved[1] == test_payload
 
@@ -190,7 +189,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.get({}, http_header)
+        data_retrieved = data.get({}, 'get', http_header)
         assert data_retrieved[0] == 200
         assert data_retrieved[1] == api_response
 
@@ -202,7 +201,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.get({'no_resi' : '0230 '}, http_header)
+        data_retrieved = data.get({'no_resi' : '0230 '}, 'get', http_header)
         assert data_retrieved[0] == 404
         assert data_retrieved[1] == "The requested resource could not be found."
 
@@ -214,7 +213,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.get({'no_resi' : '0230 '}, http_header)
+        data_retrieved = data.get({'no_resi' : '0230 '}, 'get', http_header)
         # Not in STATUS_MESSAGES Response handler class variable
         assert data_retrieved[0] is not data._http_request._response_handler.STATUS_MESSAGES.keys()
         assert data_retrieved[1] == "999"
@@ -227,7 +226,7 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.get({'no_resi' : '0230 '}, http_header)
+        data_retrieved = data.get({'no_resi' : '0230 '}, 'get', http_header)
         assert data_retrieved[0]  == 500
         assert data_retrieved[1] == "Internal server error"
 
@@ -239,11 +238,20 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.get({'no_resi' : '0230 '}, http_header)
+        data_retrieved = data.get({'no_resi' : '0230 '}, 'get', http_header)
         assert data_retrieved[0]  == 204
         assert data_retrieved[1] == "The request was successful but there is no content to return."
 
-
+    def test_with_no_endpoint(self):
+        data = HttpDataAccess(
+            TEST_URL,
+            TEST_ENDPOINT,
+            TEST_GENERATED_TOKEN
+        )
+        with pytest.raises(TypeError):
+            http_header = {'content-type' : 'application/json'}
+            data.get({'no_resi' : '0230 '}, http_header)
+            
 class TestHttpDataAccessPostMethod(HelpMockMethod):
 
     def test_with_invalid_payload_type(self):
@@ -255,7 +263,7 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
         )
         with pytest.raises(ValueError, match = "Payload argument should be dictionary type !"):
             http_header = {'content-type' : 'application/json'}
-            data.post([{'no_resi' : '5563', 'item' : 'iphone20'}], http_header)
+            data.post([{'no_resi' : '5563', 'item' : 'iphone20'}],'post', http_header)
             
     def test_with_invalid_header_type(self):
         self.help_mock_api_response()
@@ -266,7 +274,7 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
         )
         with pytest.raises(ValueError, match = "Http header argument should be dictionary type !"):
             http_header = [{'content-type' : 'application/json'}]
-            data.post({'no_resi' : '5563', 'item' : 'Iphone 20'}, http_header)
+            data.post({'no_resi' : '5563', 'item' : 'Iphone 20'}, 'post', http_header)
             
     def test_with_success_request(self):
         test_payload = {
@@ -280,7 +288,7 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.post({'no_resi' : '0230', 'item':'Buku tulis Sidu'}, http_header)
+        data_retrieved = data.post({'no_resi' : '0230', 'item':'Buku tulis Sidu'}, 'post', http_header)
         assert data_retrieved[0]  == 201
         assert data_retrieved[1] == test_payload        
 
@@ -292,7 +300,7 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.post({'no_resi' : '0230', 'item':'Buku tulis Sidu'}, http_header)
+        data_retrieved = data.post({'no_resi' : '0230', 'item':'Buku tulis Sidu'}, 'post', http_header)
         assert data_retrieved[0]  == 500
         assert data_retrieved[1] == "Internal server error"
 
@@ -304,7 +312,7 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.post({'no_resasdasi' : '0230', 'iteasm':'Bdduku tulis Sidu'}, http_header)
+        data_retrieved = data.post({'no_resasdasi' : '0230', 'iteasm':'Bdduku tulis Sidu'}, 'post', http_header)
         assert data_retrieved[0]  == 400
         assert data_retrieved[1] == "The request was invalid or cannot be otherwise served."
 
@@ -316,12 +324,12 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
             TEST_GENERATED_TOKEN
         )
         http_header = {'content-type' : 'application/json'}
-        data_retrieved = data.post({'no_resi' : '0230', 'item':'Buku tulis Sidu'}, http_header)
+        data_retrieved = data.post({'no_resi' : '0230', 'item':'Buku tulis Sidu'}, 'post', http_header)
         # Not in STATUS_MESSAGES Response handler class variable
         assert data_retrieved[0] is not data._http_request._response_handler.STATUS_MESSAGES.keys()
         assert data_retrieved[1] == "582"
 
-    def test_with_correct_multipart_data(self):
+    def test_with_correct_file(self):
         # Mock an IO stream for the file
         file_content = b"file content"
         file_stream = IO()
@@ -343,38 +351,49 @@ class TestHttpDataAccessPostMethod(HelpMockMethod):
         data_retrieved = data.post({
             'no_resi' : '5563',
             'item' : 'Casing android phone',
-        }, http_header, photo_payload)
+        }, 'post-multipart', http_header, photo_payload)
         assert data_retrieved[0]  == 201
         assert data_retrieved[1] == api_response 
 
-    def test_should_handle_when_file_is_not_exist_when_use_multipart_data(self):
-        data = HttpDataAccess(
-            TEST_URL,
-            TEST_ENDPOINT,
-            TEST_GENERATED_TOKEN
-        )
-        http_header = {'content-type' : 'multipart/form-data'}
-        with pytest.raises(TypeError):
-            data.post({
-                'no_resi' : '5563',
-                'item' : 'Casing android phone',
-            }, http_header)
+    @patch("data_access.HttpRequestProcessor.request_processor")
+    def test_with_http_header_content_type_when_post_a_file(self, mock_request_processor):
+        """ http header-file [content-type] should be omitted"""
+        # Mock an IO stream for the file
+        file_content = b"file content"
+        file_stream = IO()
+        file_stream.write(file_content)
+        file_stream.seek(0)
+        photo_payload = {'photo' : file_stream}
 
-    def test_with_non_io_file(self):
-        wrong_file_type = {
-            'photo' : 'image-2023-02-21.jpg'
-        }
+        mock_processor = patch('data_access.HttpRequestProcessor.request_processor').start()
         data = HttpDataAccess(
             TEST_URL,
             TEST_ENDPOINT,
             TEST_GENERATED_TOKEN
         )
-        http_header = {'content-type' : 'multipart/form-data'}
-        with pytest.raises(ValueError):
-            data.post({
+        http_header = {'content-type' : 'application/json'}
+        data.post({
                 'no_resi' : '5563',
                 'item' : 'Casing android phone',
-            }, http_header, wrong_file_type)
+            }, 'post-multipart', http_header, photo_payload)
+        mock_processor.assert_called_once_with(HttpRequestData(endpoint_url='http://localhost.com/smart_drop_box/success_items.php', 
+                                                               method='post', 
+                                                               header={}, 
+                                                               data={'no_resi': '5563', 'item': 'Casing android phone'}, 
+                                                               param=None, 
+                                                               file=photo_payload, 
+                                                               time_out=1)
+                                                ,TEST_GENERATED_TOKEN,log)
+
+    def test_with_no_endpoint(self):
+        data = HttpDataAccess(
+            TEST_URL,
+            TEST_ENDPOINT,
+            TEST_GENERATED_TOKEN
+        )
+        with pytest.raises(TypeError):
+            http_header = {'content-type' : 'application/json'}
+            data.post(payload={'no_resi' : '0230 '}, http_header = http_header)
 
 
 class TestHttpDataAccessUpdateMethod(HelpMockMethod):
