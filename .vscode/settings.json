@@ -26,7 +26,8 @@
         "./applications/telegram_app",
         "./drivers/camera",
         "./drivers/weight",
-        "./drivers/data_access"
+        "./drivers/data_access",
+        "./applications/lcd_app"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"

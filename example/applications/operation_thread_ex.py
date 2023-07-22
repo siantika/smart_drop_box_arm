@@ -6,7 +6,7 @@ sys.path.append(os.path.join(parent_dir, 'applications/operation_thread'))
 sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
 
 from operation_thread import ThreadOperation
-from lcd_thread import LcdThread
+from lcd_app import LcdThread
 
 import multiprocessing as mp
 

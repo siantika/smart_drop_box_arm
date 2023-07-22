@@ -21,7 +21,7 @@ sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
 sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
 
 from operation_thread import ThreadOperation
-from lcd_thread import LcdThread
+from lcd_app import LcdThread
 from network_thread import GetRequest, PostRequest
 
 # shared resources, the names are perspective from opeartion thread

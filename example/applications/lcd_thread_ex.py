@@ -3,7 +3,7 @@ import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
-from lcd_thread import LcdThread
+from lcd_app import LcdThread
 import queue
 import threading
 import logging

@@ -112,7 +112,6 @@ class ThreadOperation:
             else:
                 data_object = {'method': method}
                 data_object.update(kwargs)
-
         return data_object
 
     def _send_data_queue(self, queue_thread: mp.Queue, data: dict):
