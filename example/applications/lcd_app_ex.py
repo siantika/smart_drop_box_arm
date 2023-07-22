@@ -1,9 +1,23 @@
+"""
+ File: lcd app example 
+ Author: I Putu Pawesi Siantika, S.T.
+ Date: July 2023
+
+ This file is intended for give an example of how to
+ use lcd app in multithreading. 
+
+ NOTE: It should be tested on Orange Pi board.
+
+ prerequisites:
+    packages:
+        lcd : lcd driver
+"""
 import os
 import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
-from lcd_app import LcdThread
+sys.path.append(os.path.join(parent_dir, 'applications/lcd_app'))
+from lcd_app import LcdApp, LcdMode
 import queue
 import threading
 import logging
@@ -33,21 +47,21 @@ def input_from_user(data_queue: queue.Queue):
 
         if data == 1:
             input_data = {
-                'cmd'     : 'routine',
+                'cmd'     : LcdMode.NORMAL,
                 'payload' : ['itms stored: 12', 'itms waiting: 5']
             }
             with lock:
                 data_queue.put(input_data)
         elif data == 2:
             input_data = {
-                'cmd'     : 'keypad',
+                'cmd'     : LcdMode.NORMAL,
                 'payload' : ['Masukan resi:', '0']
             }
             with lock:
                 data_queue.put(input_data)
         elif data == 3:
             input_data = {
-                'cmd'     : 'keypad',
+                'cmd'     : LcdMode.NORMAL,
                 'payload' : ['Masukan resi:', '0056']
             }
             with lock:
@@ -57,7 +71,7 @@ def input_from_user(data_queue: queue.Queue):
 
 #create function
 def lcd_process(data_queue):
-    lcd_t = LcdThread()
+    lcd_t = LcdApp()
     lcd_t.set_queue_data(data_queue)
     lcd_t.run()
 
