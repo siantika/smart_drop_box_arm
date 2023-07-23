@@ -33,3 +33,41 @@
 2023-07-21 13:14:45,988 - log - WARNING - Your request does not contain any token
 2023-07-21 15:54:31,651 - log - WARNING - Your request does not contain any token
 2023-07-21 15:57:12,056 - log - WARNING - Your request does not contain any token
+2023-07-24 14:47:35,266 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:00:56,278 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:01:54,909 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:01:58,347 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:03:45,348 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:04:28,308 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:04:49,749 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:20:19,321 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:20:47,830 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:21:37,848 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:23:48,631 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:24:13,359 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:24:46,820 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:25:13,853 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:26:20,037 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:31:32,841 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:32:06,394 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:33:11,802 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:39:02,743 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:40:50,821 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:41:30,489 - log - INFO - Response dari request : Success updated data
+2023-07-24 15:45:58,863 - log - INFO - Response dari request : <MagicMock name='post().__getitem__()' id='139780136225712'>
+2023-07-24 15:47:03,434 - log - INFO - Response dari request : Post successfuly
+2023-07-24 15:47:39,281 - log - INFO - Response dari request : Posted successfuly
+2023-07-24 15:47:47,192 - log - INFO - Response dari request : Posted successfully
+2023-07-24 17:11:51,496 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:21:58,784 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:24:56,283 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:45:22,261 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:46:50,520 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:46:59,282 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:49:08,234 - log - INFO - Response dari request : Posted successfully
+2023-07-24 18:50:23,551 - log - INFO - Response dari request : Posted successfully
+2023-07-24 19:03:01,828 - log - INFO - Response dari request : Posted successfully
+2023-07-24 19:03:34,499 - log - INFO - Response dari request : Posted successfully
+2023-07-24 19:04:28,494 - log - INFO - Response dari request : Posted successfully
+2023-07-24 19:05:11,149 - log - INFO - Response dari request : Posted successfully
+2023-07-24 19:05:22,667 - log - INFO - Response dari request : Posted successfully

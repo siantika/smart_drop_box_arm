@@ -38,16 +38,40 @@ For usage and detailed documentation, please refer to the individual class docst
 from dataclasses import dataclass
 import json
 import os
-import sys
 from urllib.parse import urljoin
 from abc import ABC, abstractmethod
 import requests
 from typing import IO
 import logging
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-sys.path.append(os.path.join(parent_dir, 'utils'))
-import log
+parent_dir = os.path.abspath(os.path.join\
+                             (os.path.dirname(__file__), "../.."))
+
+def setup_logger(level:logging):
+    """ Local logger performing log 
+        It uses in HttpRequestsProcessor when auth_header is None.
+        Args:
+            level (logging) : level of logging (
+                              logging.DEBUG or logging.info)
+        Returns:
+            formatted logger object (level name and object).
+            It will be displayed in console.
+    """
+    # Create a logger object
+    logger = logging.getLogger()
+    # Set the logging level to WARNING (or any higher level you want)
+    logger.setLevel(level)
+    # Create a console handler and set its logging level to WARNING
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(level)
+    # Create a formatter and add it to the console handler
+    formatter = logging.Formatter('%(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    # Add the console handler to the logger
+    logger.addHandler(console_handler)
+
+    return logger
+
 
 class DataAccess(ABC):
     """Abstract base class for manipulating data 
@@ -55,25 +79,29 @@ class DataAccess(ABC):
        (database, API, etc).
     """
     @abstractmethod
-    def get(self, param: dict, destination: any) -> tuple[int, dict]:
+    def get(self, param: dict, destination: any) \
+        -> tuple[int, dict]:
         """get(param: dict) -> tuple[int, dict]: 
            Retrieves data based on the provided parameters."""
         pass
 
     @abstractmethod
-    def post(self, payload: dict, destination: any) -> tuple[int, dict]:
+    def post(self, payload: dict, destination: any) \
+        -> tuple[int, dict]:
         """post(payload: dict) -> tuple[int, dict]: 
            Creates new data with the given payload."""
         pass
 
     @abstractmethod
-    def update(self, payload: dict, destination: any) -> tuple[int, dict]:
+    def update(self, payload: dict, destination: any) \
+        -> tuple[int, dict]:
         """ update(payload: dict) -> tuple[int, dict]: 
             Updates existing data using the provided payload."""
         pass
 
     @abstractmethod
-    def delete(self, payload: dict, destination: any) -> tuple[int, dict]:
+    def delete(self, payload: dict, destination: any) \
+        -> tuple[int, dict]:
         """ delete(param: dict) -> tuple[int, dict]: Deletes data based on 
             the specified parameters."""
         pass
@@ -109,25 +137,23 @@ class HttpRequestProcessor:
     def __init__(self) -> None:
         self._response_handler = ResponseHandler()
 
-    def request_processor(self, request: HttpRequestData, log:logging.Logger = None,
+    def request_processor(self, request: HttpRequestData, 
                           auth_header: str = None) -> tuple[int, str]:
         """Makes an HTTP request using the provided HttpRequestData and 
            an optional authorization header.
 
         Args:
         - request (HttpRequestData): Data for the HTTP request.
-        - auth_header (str, optional): Authorization header to be included in the request.
-        - log (log.Logger): provide logging feature for notify the absence of auth token.
-                            Default is None/off
+        - auth_header (str, optional): Authorization header to be 
+          included in the request.
         
         Returns:
-        A tuple containing the HTTP status code and the response data or error message (if any).
+        A tuple containing the HTTP status code and the response data 
+        or error message (if any).
         """
-        if log:
-            request.header['Authorization'] = auth_header if auth_header is not None \
-                else log.warning("Your request is not authorized!")
-        else:
-            request.header['Authorization'] = auth_header
+        if auth_header is None:
+            logger = setup_logger(logging.WARNING)
+            logger.warning("Your request is not authorized!")
         try:
             response = requests.request(
                 method=request.method,
@@ -169,7 +195,8 @@ class ResponseHandler:
         " Handling the server returning data contents"
         return self._decode_json_data(response.text)
 
-    def _handle_status_code_response(self, response: requests.Response) -> str:
+    def _handle_status_code_response(self, response: 
+                                     requests.Response) -> str:
         """ Handling status code from requests based on library maker.
             I created the common status code and it's content. Preventing
             from bad API returns.
@@ -178,20 +205,25 @@ class ResponseHandler:
         status_code = response.status_code
         return self.STATUS_MESSAGES.get(status_code, str(status_code))
 
-    def return_response(self, response: requests.Response) -> tuple[int, any]:
-        """Processes the HTTP response and returns the status code and response data.
+    def return_response(self, response: requests.Response) \
+        -> tuple[int, any]:
+        """Processes the HTTP response and returns the status code 
+           and response data.
 
         Args:
         - response (requests.Response): The HTTP response object.
 
         Returns:
-        A tuple containing the HTTP status code and the processed response data.
+        A tuple containing the HTTP status code and the processed 
+        response data.
         If the status code indicates an error, the response data contains 
         the corresponding error message.
         """
         if response.status_code in self.STATUS_CODE_RETURNING_DATA:
-            return (response.status_code, self._handle_returning_data(response))
-        return (response.status_code, self._handle_status_code_response(response))
+            return (response.status_code, self._handle_returning_data
+                    (response))
+        return (response.status_code, self._handle_status_code_response
+                (response))
 
 
 class HttpDataAccess(DataAccess):
@@ -201,32 +233,31 @@ class HttpDataAccess(DataAccess):
     - base_url (str): The base URL of the API.
     - endpoint_urls (dict): Dictionary containing endpoint names 
       as keys and their corresponding URLs as values.
-    - token (str, optional): Authorization token to be used in the HTTP requests.
+    - token (str, optional): Authorization token to be used 
+      in the HTTP requests.
     """
 
-    def __init__(self, base_url: str, endpoint_urls: dict, token: str = None) -> None:
+    def __init__(self, base_url: str, token: str = None) -> None:
         """Initializes the HttpDataAccess object.
         Args:
         - base_url (str): The base URL of the API.
-        - endpoint_urls (dict): Dictionary containing endpoint names as keys and 
-          their corresponding URLs as values.
-        - token (str, optional): Authorization token to be used in the HTTP requests.
+        - token (str, optional): Authorization token to be used
+          in the HTTP requests.
         """
         if not base_url.endswith('/'):
             raise ValueError("base url should end with '/' !")
 
         self._base_url = base_url
-        self._endpoints_urls = endpoint_urls
         self._token = token
         self._http_request = HttpRequestProcessor()
 
     def _make_full_url_endpoint(self, endpoint: str):
-        """ Make a full url for specific endpoint"""
-        if endpoint not in self._endpoints_urls:
-            raise KeyError(f"{endpoint} is not in endpoint urls dict! ")
-        return urljoin(self._base_url, self._endpoints_urls[endpoint])
+        """ Make a full url for specific endpoint base on inputted 
+            endpoint"""
+        return urljoin(self._base_url, endpoint)
 
-    def _check_arguments_type(self, param=None, payload=None, http_header=None):
+    def _check_arguments_type(self, param=None, payload=None, 
+                              http_header=None):
         " Check the existance of args in CRUD method"
         if param is not None:
             if not isinstance(param, dict):
@@ -242,15 +273,19 @@ class HttpDataAccess(DataAccess):
 
     def get(self, param: dict, endpoint: str, http_header: dict = None,
             time_out: int = 1) -> tuple[int, str]:
-        """Makes a GET request to retrieve data based on the provided parameters.
+        """Makes a GET request to retrieve data based on the provided 
+           parameters.
 
         Args:
-        - param (dict): Dictionary containing parameters for the GET request.
-        - http_header (dict, optional): Dictionary of HTTP headers to be included in the request.
+        - param (dict): Dictionary containing parameters for the GET 
+          request.
+        - http_header (dict, optional): Dictionary of HTTP headers to 
+          be included in the request.
         - endpoint (str) : the endpoint of specific API
 
         Returns:
-        A tuple containing the HTTP status code and the response data or error message (if any).
+        A tuple containing the HTTP status code and the response data 
+        or error message (if any).
         """
         self._check_arguments_type(param=param, http_header=http_header)
         http_data = HttpRequestData(
@@ -260,24 +295,34 @@ class HttpDataAccess(DataAccess):
             param=param,
             time_out=time_out
         )
-        return self._http_request.request_processor(http_data, self._token)
+        return self._http_request.request_processor(http_data, 
+                                                    self._token)
 
-    def post(self, payload: dict, endpoint: str, http_header: dict = None,
-             file: dict[str, IO] = None, time_out: int = 1) -> tuple[int, str]:
-        """Makes a POST request to create new data with the given payload.
+    def post(self, payload: dict, endpoint: str, http_header: 
+             dict = None,
+             file: dict[str, IO] = None, time_out: int = 1) \
+                -> tuple[int, str]:
+        """Makes a POST request to create new data with the given 
+           payload.
 
         Args:
-        - payload (dict): Dictionary containing data to be sent in the request body.
-        - http_header (dict, optional): Dictionary of HTTP headers to be included in the request.
-        - file (dict[str, tuple[any,IO], optional): Dictionary of file data (key-value pairs) 
+        - payload (dict): Dictionary containing data to be sent in the 
+          request body.
+        - http_header (dict, optional): Dictionary of HTTP headers to 
+          be included in the request.
+        - file (dict[str, tuple[any,IO], optional): Dictionary of file 
+          data (key-value pairs) 
           for multipart/form-data requests.
         - endpoint (str) : the endpoint of specific API
 
         Returns:
-        A tuple containing the HTTP status code and the response data or error message (if any).
+        A tuple containing the HTTP status code and the response data 
+        or error message (if any).
         """
-        self._check_arguments_type(payload=payload, http_header=http_header)
-        # We should ommit the header-file (content-type) in http header if we use multipart type.
+        self._check_arguments_type(payload=payload, http_header=
+                                   http_header)
+        # We should ommit the header-file (content-type) in http 
+        # header if we use multipart type.
         # data (payload) should be a dict type.
         if file is not None:
             http_header.pop('content-type', None)
@@ -291,20 +336,27 @@ class HttpDataAccess(DataAccess):
             file=file,
             time_out=time_out
         )
-        return self._http_request.request_processor(http_data, self._token, log)
+        return self._http_request.request_processor(http_data, 
+                                                    self._token)
 
-    def update(self, payload: dict, endpoint: str, http_header: dict = None,
+    def update(self, payload: dict, endpoint: str, 
+               http_header: dict = None,
                time_out: int = 1) -> tuple[int, str]:
-        """Makes a PATCH request to update existing data using the provided payload.
+        """Makes a PATCH request to update existing data using the 
+           provided payload.
         Args:
-        - payload (dict): Dictionary containing data to be sent in the request body for updating.
-        - http_header (dict, optional): Dictionary of HTTP headers to be included in the request.
+        - payload (dict): Dictionary containing data to be sent 
+          in the request body for updating.
+        - http_header (dict, optional): Dictionary of HTTP headers 
+          to be included in the request.
         - endpoint (str) : the endpoint of specific API
 
         Returns:
-        A tuple containing the HTTP status code and the response data or error message (if any).
+        A tuple containing the HTTP status code and the response data
+          or error message (if any).
         """
-        self._check_arguments_type(payload=payload, http_header=http_header)
+        self._check_arguments_type(payload=payload, 
+                                   http_header=http_header)
         json_payload = json.dumps(payload)
         http_data = HttpRequestData(
             endpoint_url=self._make_full_url_endpoint(endpoint),
@@ -313,15 +365,20 @@ class HttpDataAccess(DataAccess):
             data=json_payload,
             time_out=time_out
         )
-        return self._http_request.request_processor(http_data, self._token,log)
+        return self._http_request.request_processor(http_data, 
+                                                    self._token)
 
-    def delete(self, param: dict, endpoint=None, http_header: dict = None,
+    def delete(self, param: dict, endpoint:str, http_header: 
+               dict = None,
                time_out: int = 1) -> tuple[int, str]:
-        """Makes a DELETE request to delete data based on the specified parameters.
+        """Makes a DELETE request to delete data based on the specified 
+           parameters.
 
         Args:
-        - param (dict): Dictionary containing parameters for the DELETE request.
-        - http_header (dict, optional): Dictionary of HTTP headers to be included in the request.
+        - param (dict): Dictionary containing parameters for the DELETE 
+          request.
+        - http_header (dict, optional): Dictionary of HTTP headers to be 
+          included in the request.
         - endpoint (str) : the endpoint of specific API
 
         Returns:
@@ -335,4 +392,5 @@ class HttpDataAccess(DataAccess):
             param=param,
             time_out=time_out
         )
-        return self._http_request.request_processor(http_data, self._token,log)
+        return self._http_request.request_processor(http_data, 
+                                                    self._token)
