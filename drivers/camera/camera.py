@@ -111,7 +111,7 @@ class UsbCamera(Camera):
         """Set the directory where photos are saved."""
         self.dir = directory
 
-    def _generate_file_name(self) -> str:
+    def generate_file_name(self) -> str:
         """Generate date-time format for file name.""" 
         file_name = '%Y-%m-%d_%H-%M-%S.jpg'
         return file_name
@@ -123,7 +123,7 @@ class UsbCamera(Camera):
                    (int)
         """
         # create an absolute path for photo file
-        abs_photo_path = os.path.join(self.dir, self._generate_file_name())
+        abs_photo_path = os.path.join(self.dir, self.generate_file_name())
         ret_opt = subprocess.run([
             'fswebcam',                    # fswebcam package for Linux
             '-d',                          # camera device address
