@@ -1,19 +1,13 @@
 '''
-    Tests:
-    1. Get data
-    2. Post Data
-    3. Update data
-    4. Delete data
-    5. return status code for each methods
+ Test cases for data access driver (unit and integration tests).
 
 '''
-import time
+
 from unittest.mock import patch
 import requests
 import sys
 import pytest
 import os 
-from io import StringIO
 abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(os.path.join(abs_path, 'drivers/data_access'))
 from data_access import *
@@ -40,6 +34,7 @@ class HelpMockMethod:
         
 
 class TestHttpRequestData:
+    """ Tests http requests resposes """
     def test_basic_request(self):
         data = HttpRequestData(endpoint_url="https://api.example.com", method="GET", header={"Content-Type": "application/json"})
         assert  data.endpoint_url == "https://api.example.com"
@@ -82,6 +77,7 @@ class TestHttpRequestData:
 
 
 class TestHttpDataAccessInit:
+    """ Test the constructor of Http data class """
     def test_should_inherit_from_data_access_interface(self):
         assert issubclass(HttpDataAccess, DataAccess)
 
@@ -107,8 +103,9 @@ class TestHttpDataAccessInit:
 
 
 class TestDataAccessPrivateMethod:
-    
+    """ Tests the private methods of data acces class"""
     def test_with_exist_endpoint(self):
+        """ full url get.php-endpoint should correct """
         data = HttpDataAccess(
             TEST_URL,
             TEST_GENERATED_TOKEN
@@ -118,7 +115,7 @@ class TestDataAccessPrivateMethod:
                     
 
 class TestHttpDataAccessGetMethod(HelpMockMethod):
-
+    """ Tests the get method in http data access class in posible scenarios """
     def test_with_invalid_payload_type(self):
         self.help_mock_api_response()
         data = HttpDataAccess(
@@ -236,7 +233,6 @@ class TestHttpDataAccessGetMethod(HelpMockMethod):
 
     def test_with_no_token(self, caplog):
         """ Should log a warning "not authorized !"""
-        stream = StringIO()
         data = HttpDataAccess(
             TEST_URL,
         )
