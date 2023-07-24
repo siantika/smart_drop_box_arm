@@ -9,13 +9,22 @@ Classes:
 - Camera (abstract base class): Defines the common interface for cameras.
 - UsbCamera (inherits Camera): Implementation of a USB camera (GEMBIRD brand).
 - UsbCameraSetting: Settings for a USB camera.
+- CameraResolution (inherits Enum) : Enumeration of camera resolutions
 
 """
 from abc import ABC, abstractmethod
 import subprocess
 import os
+from enum import Enum
 
 abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+
+class CameraResolution(Enum):
+    """ Eumeration of available camera resolutions"""
+    _640x480 = '640x480'
+    _1280x720 = '1280x720'
+    _1920x1080 = '1920x1080'
 
 
 class Camera(ABC):
@@ -71,9 +80,9 @@ class UsbCameraSetting:
         return self.res
 
     @resolution.setter
-    def resolution(self, resolution):
+    def resolution(self, resolution:CameraResolution):
         """Set the resolution setting for the USB camera."""
-        self.res = resolution
+        self.res = resolution.value
 
 
 class UsbCamera(Camera):
@@ -102,7 +111,7 @@ class UsbCamera(Camera):
         """Set the directory where photos are saved."""
         self.dir = directory
 
-    def generate_file_name(self) -> str:
+    def _generate_file_name(self) -> str:
         """Generate date-time format for file name.""" 
         file_name = '%Y-%m-%d_%H-%M-%S.jpg'
         return file_name
@@ -114,7 +123,7 @@ class UsbCamera(Camera):
                    (int)
         """
         # create an absolute path for photo file
-        abs_photo_path = os.path.join(self.dir, self.generate_file_name())
+        abs_photo_path = os.path.join(self.dir, self._generate_file_name())
         ret_opt = subprocess.run([
             'fswebcam',                    # fswebcam package for Linux
             '-d',                          # camera device address

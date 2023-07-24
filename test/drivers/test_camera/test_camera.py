@@ -22,7 +22,7 @@ from camera import *
 class TestUsbCamera:
     def set_up(self):
         self.cam_set = UsbCameraSetting()
-        self.cam_set.resolution = '680x480' 
+        self.cam_set.resolution = CameraResolution._640x480
         self.cam = UsbCamera('/dev/video0', self.cam_set)
 
     def tear_down(self):
@@ -110,7 +110,7 @@ class TestUsbCamera:
 class TestUsbDeletePhoto:
     def set_up(self):
         self.cam_set = UsbCameraSetting()
-        self.cam_set.resolution = '680x480' 
+        self.cam_set.resolution = CameraResolution._640x480
         self.cam = UsbCamera('/dev/video0', self.cam_set)
 
     def tear_down(self):
@@ -159,7 +159,7 @@ class TestUsbDeletePhoto:
 class TestUsbCameraExecution:
     def set_up(self):
         self.cam_set = UsbCameraSetting()
-        self.cam_set.resolution = '680x480' 
+        self.cam_set.resolution = CameraResolution._640x480
 
     def tear_down(self):
         self.cam.delete_all_photos()
@@ -183,5 +183,23 @@ class TestUsbCameraExecution:
         ret = self.cam.capture_photo()
         assert ret == 1
         self.tear_down()
+
+class TestEnumResolution:
+    """ Tests enumeration of resolution for camera"""
+    def test_with_exist_camera_resolution(self):
+        """ Should returns 640x480 in string 
+            (UsbCamera setting attribute)
+        """
+        camera_setting = UsbCameraSetting()
+        camera_setting.resolution = CameraResolution._640x480
+        camera = UsbCamera('/dev/video0', camera_setting)
+        assert camera._setting.resolution == "640x480"
+
+    def test_with_non_exist_camera_resolution(self):
+        """ Should raise an Attribute Error"""
+        with pytest.raises(AttributeError):
+            camera_setting = UsbCameraSetting()
+            camera_setting.resolution = CameraResolution.asdsa
+            camera = UsbCamera('/dev/video0', camera_setting)
 
         
