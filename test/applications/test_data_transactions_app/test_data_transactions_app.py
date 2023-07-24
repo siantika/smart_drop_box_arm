@@ -151,21 +151,7 @@ class TestEndpointProcessor:
             end_processor = EndpointProcessor(self.test_endpoint_metadata,
                                             data_access)
             end_processor.process(test_data)
-
-
-class TestReadQueueNetApp:
-    def test_read_queue_with_dict_type(self):
-        test_queue_data =mp.Queue(5)
-        test_data = {
-            "endpoint"  : "delete.php",
-            "data" :{"no_resi" : "0023"},
-            "http_header" : {"content-type" : "application/json"}
-        }
-        test_queue_data.put(test_data)
-        net_app = NetworkApp()
-        net_app.set_queue_data(test_queue_data)
-        data = net_app.read_queue_data()
-        assert isinstance(data, dict)
+            patch.stopall()
 
 
 """ Test utility functions """
@@ -253,11 +239,11 @@ class TestSendRequests:
             send_app = HttpSendDataApp()
             send_app.set_queue_data(test_queue_data)
             send_app._send_request_app()
+            patch.stopall()
 
 
 class TestGetRequestsRoutine:
     """ Test get requests from server """
-
     def _help_mock_get_requests_with_return_response(self):
         patch.stopall()
         self._mock_get_requests = patch.object(HttpDataAccess, 'get').start()
@@ -298,6 +284,7 @@ class TestGetRequestsRoutine:
         # Tests
         not self._mock_get_requests.assert_called_once()
         assert test_queue.empty()
+        patch.stopall()
 
 
 

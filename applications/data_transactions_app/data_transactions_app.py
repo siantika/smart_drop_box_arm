@@ -15,9 +15,9 @@
     of apps. It uses 'Queue (multiprocessing.Queue) for payload transaction between
     threads. It already implement safety-thread mechanism'
 
-    To create a thread, you need to create a function that invoke object.run()
-    and pass the queue as args. Please see multiprocessing lib API docs for
-    further informations.
+    To create a thread, you need to create a function that invokes app.run()
+    and pass the shared queue as args. Please see multiprocessing lib API docs for
+    further informations (on internet).
     
 '''
 import os
@@ -218,71 +218,22 @@ class EndpointProcessor:
 
 """             Nertwork App Class and its childs class           """
 # Constants
-TIME_INTERVAL_GET_REQUEST = 5    # In secs
-# we send this payload in get requests class to
-# get the all available data in server.
+TIME_INTERVAL_GET_REQUEST = 5   # In secs
+# payload fot getting all not finished no resi in server
 PAYLOAD_GET_DATA = {
     "endpoint": "get.php",
     "data": {},
     "http_header": {"content-type": "application/json"}
 }
 
-
-class NetworkApp:
-    '''
-    Class Network Thread is class that contains methods to run a network thread (make
-    request to server).
-
-    Running this app by invoking 'run' method.
-
-    Attributes:
-        queue_to_operation (Queue): Queue data intended to be sent to operation thread. 
-                                   It contains dict type.
-        queue_from_operation (Queue): Queue data intended to be received by network thread.
-        endpoints_metadata (dict[str][list[str]]): Endpoints for accessing smart drop box api.
-    '''
-    endpoints_metadata = {
+# Endpoint and it's method. It matches main app requirements
+# Open for extention if new endpoints or methods are registered
+ENDPOINT_META_DATA = {
         'get': ['get.php'],
         'post': ['success_item.php', 'post.php'],
         'update': ['update.php'],
         'delete': ['delete.php'],
     }
-
-    def __init__(self) -> None:
-        self.shared_queue_data = mp.Queue()
-        server_address = read_config_file(full_path_config_file,
-                                          'server', 'address')
-        self.data_access = HttpDataAccess(server_address)
-
-    def set_queue_data(self, queue_data: mp.Queue):
-        """ Assign the shared queue between threads
-            Args:
-                queue_data (mp.Queue): queue data to be shared
-                                       between threads
-        """
-        self.shared_queue_data = queue_data
-
-    def read_queue_data(self) -> mp.Queue:
-        '''
-        Read data from queue data sent by other thread.
-        No need for a lock mechanism. This queue implements a safe-thread 
-        mechanism. It blocks the process while no data in the queue.
-        Returns:
-            queue data from other thread (mp.Queue)
-        '''
-        return self.shared_queue_data.get()
-
-    def handle_requests(self, payload: dict) -> tuple[int, any]:
-        '''
-        Handles HTTP requests based on payload.
-        Args:
-            payload (dict): Payload from other thread.
-        Returns:
-            tuple containg status code (int) and response (any)
-        '''
-        endpoint_processor = EndpointProcessor(endpoint_metadata=self.endpoints_metadata,
-                                               request_processor=self.data_access)
-        return endpoint_processor.process(payload)
 
 
 class HttpGetResiDataRoutineApp(DataTransaction):
@@ -294,38 +245,35 @@ class HttpGetResiDataRoutineApp(DataTransaction):
     """
 
     def __init__(self) -> None:
-        # Should init the parent constructor if we declare init in child class.
-        super().__init__()
-        self._net_opt = NetworkApp()
+        server_address = read_config_file(full_path_config_file,
+                                          'server', 'address')
+        self._data_access_proccessor = HttpDataAccess(server_address)
+        self._data_processor = EndpointProcessor(ENDPOINT_META_DATA, 
+                                                 self._data_access_proccessor)
+        self._shared_queue_data = mp.Queue()
         self._old_response_text = None
 
     def set_queue_data(self, queue_data: mp.Queue):
-        """ Set a shared queue for sending  'get' response from server.
-            It inherits NetworkClass 
-         """
-        self._net_opt.set_queue_data(queue_data)
+        """ Set a shared queue for sending  'get' response from server """
+        self._shared_queue_data = queue_data
 
     def _get_request_routine(self):
-        responses = self._net_opt.handle_requests(PAYLOAD_GET_DATA)
+        responses = self._data_processor.process(PAYLOAD_GET_DATA)
         # Only get the response text, index 0 represents http status code
         # and index 1 represents the content/data from the API.
         new_response_text = responses[1]
-        # When other thread receives data from shared queue data
-        # (from this thread), it will execute processes and
-        # it does not read / get data from queue. while this thread getting data from server
-        # every 5 secs and sending it to the queue data, the queue data will store it
-        # and grows out. Since the other thread does not read/get it.
-        # It can cause the queue becoming full.
-        # By doing this, we prevent the queue to becoming full.
+        # Just put the newest data from server. Prevents unecessary
+        # put data to queue
         if self._old_response_text != new_response_text:
             self._old_response_text = new_response_text
-            self._net_opt.shared_queue_data.put(new_response_text)
+            self._shared_queue_data.put(new_response_text)
 
     def run(self) -> None:
-        """ Executes infinite get-request-routine app.
+        """ 
+            Executes infinite get-request-routine app.
             Performs periodic get requests to server base on
-            given interval time in second. 
-            It will send data(no resi etc) to queue"""
+            given interval time in seconds. 
+        """
         prev_time = time.time()
         while True:
             current_time = time.time()
@@ -336,29 +284,38 @@ class HttpGetResiDataRoutineApp(DataTransaction):
 
 class HttpSendDataApp(DataTransaction):
     '''
-        Performs reading a shared queue data from other threads and
-        send it to specific endpoint according the payload processed.
-        It logs the successfull operation (see log 'module' in /utils dir).
-        It inherts NetworkApp class.
+        Performs reading data from other thread using queue then it will
+        send received data (request to the server) to specific endpoint 
+        according  payload processed. It logs the success operations
+        (see log 'module' in /utils dir).
     '''
 
     def __init__(self) -> None:
-        super().__init__()
-        self._net_opt = NetworkApp()
+        server_address = read_config_file(full_path_config_file,
+                                          'server', 'address')
+        self._data_access_processor = HttpDataAccess(server_address)
+        self._data_processor = EndpointProcessor(ENDPOINT_META_DATA,
+                                                 self._data_access_processor)
+        self._shared_queue_data = mp.Queue()
 
     def set_queue_data(self, queue_data: mp.Queue):
         """ Set a shared queue for reading  requests from other threads.
-            It sends the requests the server.
-            It inherits NetworkClass 
+            It sends the requests to the server.
          """
-        self._net_opt.set_queue_data(queue_data)
+        self._shared_queue_data = queue_data
+
+    def _read_data_from_queue(self) -> mp.Queue:
+        """ Read incoming data from other thread using queue.
+            Block process if no data comming.            
+        """
+        return self._shared_queue_data.get()
 
     def _send_request_app(self) -> None:
-        payload = self._net_opt.read_queue_data()
+        payload = self._read_data_from_queue()
         if payload is not None:
             # Only get the response text, index 0 represents http status code
             # and index 1 represents the content/data from the API.
-            responses = self._net_opt.handle_requests(payload)
+            responses = self._data_processor.process(payload)
             response_text = responses[1]
             # Already implements safety-thread
             log.logger.info(f"Response dari request : {response_text}")
