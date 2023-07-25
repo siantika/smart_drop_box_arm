@@ -144,7 +144,7 @@ class NonBlockingAplay(NonBlockingPlayInterface):
         ], stdout=subprocess.PIPE)
         pid = process_aplay.stdout.decode('utf-8')\
             .strip('\n')
-        return 0 if pid is '' else int(pid)
+        return 0 if pid == '' else int(pid)
 
     def play_nonblocking(self)-> int:
         """ 
