@@ -35,6 +35,7 @@ full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 # Should put this imports below appending paths.
 # To recognize the libraries.
 from data_access import HttpDataAccess
+from Interfaces import AppInterface
 import log
 import configparser
 
@@ -60,28 +61,10 @@ def read_config_file(config_file_path: Path, section: str, param: str) -> str:
         raise configparser.Error(f'Error reading configuration file: {error}')
     return parsed_config_data
 
-
 """         Interface for data transactions          """
 
 
-class DataTransaction(ABC):
-    """ Since we use multiprocessing design, the apps should
-        implement set-queue-data method (for communicating between 
-        app) and run method for executing main code of the app.
-        """
-    @abstractmethod
-    def set_queue_data(self, queue_data: mp.Queue) -> None:
-        """ Set a queue data for commuicating between threads """
-        pass
-
-    @abstractmethod
-    def run(self) -> None:
-        """ Performs main app execution """
-        pass
-
-
-"""         Private Classess           """
-
+"""                 Private Classess                 """
 class EndpointProcessor:
     """
     Class for processing HTTP requests based on provided payload and endpoint metadata.
@@ -236,7 +219,7 @@ ENDPOINT_META_DATA = {
     }
 
 
-class HttpGetResiDataRoutineApp(DataTransaction):
+class HttpGetResiDataRoutineApp(AppInterface):
     """ Performs sending a request 'get' every TIME_INTERVAL_GET_REQUEST. 
         We supplied the default payload since we need access all the stored
         data in  server (read API doc for more clarity). It only send the new
@@ -282,7 +265,7 @@ class HttpGetResiDataRoutineApp(DataTransaction):
                 self._get_request_routine()
 
 
-class HttpSendDataApp(DataTransaction):
+class HttpSendDataApp(AppInterface):
     '''
         Performs reading data from other thread using queue then it will
         send received data (request to the server) to specific endpoint 
