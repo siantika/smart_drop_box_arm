@@ -29,7 +29,8 @@
         "./drivers/data_access",
         "./applications/lcd_app",
         "./applications/network_app",
-        "./applications/data_transactions_app"
+        "./applications/data_transactions_app",
+        "./applications/display_app"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"

@@ -1,3 +1,7 @@
+""" Tests functionalities of Lcd I2C used in 
+    display app.
+"""
+
 import sys
 import multiprocessing as mp
 import time
@@ -6,10 +10,11 @@ from unittest.mock import patch, call
 import os
 import pytest 
 
-abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append('applications/lcd_app')
+parrent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parrent_dir, 'applications/display_app'))
+                
 sys.path.append('drivers/lcd')
-from lcd_app import LcdApp,LcdMode
+from display_app import DisplayApp, DisplayMode
 from lcd import LcdI2C as Lcd
 
 """ Unit tests """
@@ -18,7 +23,7 @@ class TestInitMethod:
         with patch.object(Lcd, '__init__') as mock_lcd, \
             patch.object(Lcd, 'init_lcd') as mock_init_lcd:
             mock_lcd.return_value = None
-            lcd_t = LcdApp()
+            lcd_t = DisplayApp()
             assert hasattr(lcd_t, '_queue_data_read')
             assert isinstance(lcd_t._queue_data_read, type(mp.Queue()))
 
@@ -27,7 +32,7 @@ class TestInitMethod:
         with patch.object(Lcd, '__init__') as mock_lcd, \
             patch.object(Lcd, 'init_lcd') as mock_init_lcd:
             mock_lcd.return_value = None
-            lcd_t = LcdApp()
+            lcd_t = DisplayApp()
             mock_lcd.assert_called_once_with(0x27,0)
             mock_init_lcd.assert_called_once()
 
@@ -39,7 +44,7 @@ class TestSetQueueData:
                 patch.object(Lcd, 'write_text'):
             mock_lcd.return_value = None
             test_data = mp.Queue(5)
-            lcd_t = LcdApp()
+            lcd_t = DisplayApp()
             lcd_t.set_queue_data(test_data)
             assert lcd_t._queue_data_read == test_data
             assert isinstance(lcd_t._queue_data_read, type(mp.Queue()))
@@ -59,14 +64,14 @@ class TestReadQueueData:
         """ Should raise an Attribute error """
         self._help_mock_lcd_driver()
         with pytest.raises(AttributeError):
-            lcd_t = LcdApp()
+            lcd_t = DisplayApp()
             lcd_t._queue_data_read = None
             lcd_t._read_queue_data()
         self.stop_all_patch()
 
     def test_read_queue_data_attribute_error(self):
         self._help_mock_lcd_driver()
-        lcd_t = LcdApp()
+        lcd_t = DisplayApp()
         # Make sure _queue_data_read is None to raise AttributeError
         lcd_t._queue_data_read = None
         # When _queue_data_read is None, an AttributeError should be raised
@@ -82,7 +87,7 @@ class TestReadQueueData:
             "payload" : ["Masukan no resi:", "0596"]
             }
         )
-        lcd_t = LcdApp()
+        lcd_t = DisplayApp()
         lcd_t.set_queue_data(q_data)
         ret = lcd_t._read_queue_data()
         
@@ -109,7 +114,7 @@ class TestReadQueueData:
         process_put_data = mp.Process(target=put_data_to_queue, 
                                       args=(empty_queue,))
         self._help_mock_lcd_driver()
-        lcd_t = LcdApp()
+        lcd_t = DisplayApp()
         lcd_t.set_queue_data(empty_queue)
         process_put_data.start()
         lcd_t._read_queue_data()
@@ -121,12 +126,12 @@ class TestParseData:
         with patch.object(Lcd, '__init__') as mock_lcd, \
             patch.object(Lcd, 'init_lcd'):
             mock_lcd.return_value = None
-            lcd_t = LcdApp()
+            lcd_t = DisplayApp()
             test_data = {"cmd":"NORMAL", "payload":["", "a" ]}
             ret = lcd_t._parse_dict_data(test_data)
-            cmd  = LcdMode[ret[0]]
+            cmd  = DisplayMode[ret[0]]
             data_text = ret[1]
-            assert cmd in LcdMode
+            assert cmd in DisplayMode
             assert data_text == ["", "a"]
 
     def test_with_wrong_data_format(self):
@@ -134,7 +139,7 @@ class TestParseData:
             with patch.object(Lcd,'__init__') as mock_lcd, \
                 patch.object(Lcd, 'init_lcd'):
                 mock_lcd.return_value = None
-                lcd_t = LcdApp()
+                lcd_t = DisplayApp()
                 test_data = {"cmd":"NORMAL", "payload":[5, '4']}
                 lcd_t._parse_dict_data(test_data)
 
@@ -162,7 +167,7 @@ class TestDriverClass:
             Steps:
             1. Create queue data with size is more than 1.
             2. Put a payload to queue data.
-            3. Initiate an lcd object from LcdApp class
+            3. Initiate an lcd object from DisplayApp class
             4. Set queue data by invoking set_queue_data method
             5. Invoke _print_data method (since 'run' has infinite loop and 
                we only test non looping code)
@@ -174,7 +179,7 @@ class TestDriverClass:
             "payload" : ["Masukan no resi:", "0596"]
         }
         q_data.put(payload)
-        lcd_t = LcdApp()
+        lcd_t = DisplayApp()
         lcd_t.set_queue_data(q_data)
         lcd_t._print_data()
 
@@ -194,11 +199,11 @@ class TestDriverClass:
             self._help_mock_lcd_driver()
             q_data = mp.Queue(2)
             payload = {
-                "cmd"     : LcdMode.LLL,
+                "cmd"     : DisplayMode.LLL,
                 "payload" : ["Masukan no resi:", "0596"]
             }
             q_data.put(payload)
-            lcd_t = LcdApp()
+            lcd_t = DisplayApp()
             lcd_t.set_queue_data(q_data)
             lcd_t._print_data()
 
