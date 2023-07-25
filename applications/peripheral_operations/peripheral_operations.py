@@ -115,9 +115,50 @@ class PeripheralsSetupCreation:
 
 
 class PeripheralOperations:
-    """ Grouping peripherals """
-    camera = PeripheralsSetupCreation.create_camera_setup()
-    sound = PeripheralsSetupCreation.create_sound_setup()
-    weight = PeripheralsSetupCreation.create_weight_setup()
-    door = PeripheralsSetupCreation.create_door_setup()
-    keypad = PeripheralsSetupCreation.create_keypad_setup()
+    """ Grouping the peripherals in one class 
+        Please initiates with:
+          object_ex = PeripheralOperations.get_instance()
+    """
+    _instance = None
+
+    @classmethod
+    def get_instance(cls):
+        """ Create only 1 instance when it invoke
+            everywhere (Singletone)
+        """
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    def __init__(self):
+        """ Initiate peripherals """
+        self._sound = PeripheralsSetupCreation.create_sound_setup()
+        self._camera = PeripheralsSetupCreation.create_camera_setup()
+        self._weight = PeripheralsSetupCreation.create_weight_setup()
+        self._door = PeripheralsSetupCreation.create_door_setup()
+        self._keypad = PeripheralsSetupCreation.create_keypad_setup()
+
+    @property
+    def sound(self):
+        """ Performs sound operations """
+        return self._sound
+
+    @property
+    def camera(self):
+        """ Performs camera operations """
+        return self._camera
+
+    @property
+    def weight(self):
+        """ Performs weight operations """
+        return self._weight
+
+    @property
+    def door(self):
+        """ Performs door operations """
+        return self._door
+
+    @property
+    def keypad(self):
+        """ Performs keypad operations """
+        return self._keypad

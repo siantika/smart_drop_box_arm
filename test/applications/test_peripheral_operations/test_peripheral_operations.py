@@ -25,34 +25,27 @@ from peripheral_operations import PeripheralOperations, \
 
 class MockResources:
     def help_mock(self):
-        self._mock_serial = patch('serial.Serial').start()
-        self._mock_peripheral_opt = patch('PeripheralOperations').start()
-        # self._mock_camera = patch.object(Periph,'camera').start()
-        # self._mock_sound = patch.object(Periph,'sound').start()
-        # self._mock_weight = patch.object(Periph,'weight').start()
-        # self._mock_door = patch.object(Periph,'door').start()
-        self._mock_keypad = patch.object(PeripheralOperations,'keypad').start()
-        self._mock_keypad.return_value = None
+        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+
 
 class TestPeripheralsSetupCreation(MockResources):
+    """ Test user-define settings. For camera and keypad
+
+       """
 
     def test_camera_setup_should_be_correct(self):
-        self.help_mock()
         camera = SetupPeriph.create_camera_setup()
         assert isinstance(camera, UsbCamera)
 
     def test_sound_setup_should_be_correct(self):
-        self.help_mock()
         sound = SetupPeriph.create_sound_setup()
         assert isinstance(sound, Aplay)
 
     def test_weigth_setup_should_be_correct(self):
-        self.help_mock()
         weight = SetupPeriph.create_weight_setup()
         assert isinstance(weight, HX711Driver)
 
     def test_door_setup_should_be_correct(self):
-        self.help_mock()
         door = SetupPeriph.create_door_setup()
         assert isinstance(door, GpioDoor)
 
@@ -61,5 +54,20 @@ class TestPeripheralsSetupCreation(MockResources):
         keypad = SetupPeriph.create_keypad_setup()
         assert isinstance(keypad, KeypadMatrixUart)
         patch.stopall()
+
+    
+class TestPeripheralOperations(MockResources):
+    """ Test peripheral operations class """
+    
+    def test_with_multiple_initiations(self):
+        """ Shoudl return the same object 
+            (Singletone)
+        """
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        periph_2 = PeripheralOperations.get_instance()
+        assert periph is periph_2
+
+
 
   
