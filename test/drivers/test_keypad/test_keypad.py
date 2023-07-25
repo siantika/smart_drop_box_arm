@@ -13,6 +13,7 @@ Classes:
 
 import sys
 import pytest
+from unittest.mock import patch
 import serial
 sys.path.append('drivers/keypad')
 sys.path.append('drivers/mock_wiringpi')
@@ -22,22 +23,28 @@ from keypad import *
 TEST_SERIAL_PATH = 'dev/ttyS1'
 TEST_BAUDRATE = 9600
 
-class TestKeypadMatrixUart:
+class MockResources:
+    """ Helps mocking resources """
+    def help_mock_serial(self):
+        self.mock_serial = patch('serial.Serial').start()
+    
+class TestKeypadMatrixUart(MockResources):
     """
         Only posible to test the init method. To get comprehensive result,
         we should test directing to hardware level.
     """
     def set_up(self):
-        uart_protocol = KeypadProtocolUart('dev/ttyS1', 9600)
-        self.keypad = KeypadMatrixUart(uart_protocol)
+        self.help_mock_serial()
+        self.keypad = KeypadMatrixUart('dev/ttyS1', 9600)
     
-    def test_init_should_inisiate_keypadprotocoluart_class(self):
+    def test_init_should_initiate_keypadprotocoluart_class(self):
         self.set_up()
         isinstance(self.keypad._communication, KeypadProtocolUart)
 
 
-class TestKeypadProtocolUart:
+class TestKeypadProtocolUart(MockResources):
     def set_up(self):
+        self.help_mock_serial()
         self.uart_protocol = KeypadProtocolUart(
             TEST_SERIAL_PATH,
             TEST_BAUDRATE,
@@ -53,14 +60,5 @@ class TestKeypadProtocolUart:
         assert self.uart_protocol._port == TEST_SERIAL_PATH
         assert self.uart_protocol._baudrate == TEST_BAUDRATE
 
-
-    def test_should_raise_error_when_serial_lib_received_wrong_params(self):
-        """ When args are not inputted correctly, it should raise an Serial
-            Error (inherited from pySerial class)"""
-        
-        with pytest.raises(serial.SerialException):
-            self.set_up()
-            self.uart_protocol.initialize()
-        
 
  
