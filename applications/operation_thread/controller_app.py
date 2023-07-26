@@ -209,6 +209,10 @@ class FilePhoto:
     """ Captured photo """ 
     pass 
 
+class ItemsWeght:
+    " Item weight (no unit)"
+    pass 
+
 
 """ Use case """
 class GetDataItems:
@@ -260,7 +264,7 @@ class Validation:
 
 class TakingItems:
     """ Performs taking-items routine inside the box routine 
-        Rules: Should pass door password validation
+        Condition to excute: Should pass door password validation
         Routines: openning the door, playing 'instruction sound',
         read weight (should be near 0 because no items inside the box)
 
@@ -271,7 +275,7 @@ class TakingItems:
 class ReceivingItems:
     """
         Performs receiving-items routine.
-        Rules: Should pass no resi validation
+        Condition to excute: Should pass no resi validation
         Routines: openning door, reading door position and weighting,
         Checking door postion and change in item weight, and alert if door 
         is open for certain time.
@@ -284,13 +288,28 @@ class ReceivingItems:
             3. If door position close and there is change in item weight, it will
                play " Item successfully stored " and return success operation 
     """
-                
+    pass 
 
 
+class ProcessingData:
+    """ Performs data process (to data source / server) 
+        Condition to excute: Should pass receiving item with
+        success operation.
+        Routines: Tell data sources/server that item data with
+        successfully validate no resi has arrived. So it should be deleted
+        from avalable data item (in data sources/server and stored item data in global var.
+        It also tell the data sources / server to update success items 
+        (arrived system) including courier's photo.
+    """
+    pass 
+    
 
 class Notify:
-    """ Notify the user """
-    pass 
+    """ Notify the user throught medias"""
+    @staticmethod
+    def telegram_notification(self):
+        " Send a notification to telegram bot"
+        pass 
 
 
     '''
