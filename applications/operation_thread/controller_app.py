@@ -1,12 +1,10 @@
 """
-    File           : operation_thread.py
+    File           : Controller app
     Author         : I Putu Pawesi Siantika, S.T.
-    Year           : Mar, 2023
+    Year           : July, 2023
     Description    : 
 
-        Main thread for orechestrating other threads.
-
-    License: see 'licenses.txt' file in the root of project
+        Controls app routines.
 """
 import configparser
 import json
@@ -15,17 +13,18 @@ import sys
 import time
 import threading
 import multiprocessing as mp
+from typing import Any
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
-sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
+sys.path.append(os.path.join(parent_dir, 'applications/data_transactions_app'))
 sys.path.append(os.path.join(parent_dir, 'applications/telegram_app'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
 # Should put here due to DIY libs (we built it and it locates in our project dirs.)
 from telegram_app import TelegramApp
-from network_thread import NetworkThread
+from data_transactions_app import HttpSendDataApp
 from peripheral_operations import PeripheralOperations
 from media_data import LcdData, SoundData
 import log
@@ -187,6 +186,113 @@ class ThreadOperation:
         while True:
             self.periph.play_sound(SoundData.WARNING_DOOR_OPEN)
 
+
+
+# New code
+""" Entitites for bussines logics """
+class DataItems:
+    """ Data items available in data sources """
+    pass 
+
+
+class NoResi:
+    """ Key data to find full information of items data """
+    pass 
+
+
+class DoorPassword:
+    """ Password for opening door """
+    pass 
+
+
+class FilePhoto:
+    """ Captured photo """ 
+    pass 
+
+
+""" Use case """
+class GetDataItems:
+    """ Fetching and storing data items from data sources """
+    pass 
+
+
+class GetNoResi:
+    """ Get no resi from user """
+    pass 
+
+
+class Validation:
+    """ Check and validate inputted user 
+        It validates:
+            1. No resi inputted by user
+            2. Door password  inputted by user
+    """
+    @staticmethod
+    def validate_noresi(self, no_resi:NoResi):
+        """ Validates no resi inputted by user
+            Rules:
+                1. It consists from 4 chars
+                2. Should exist in data items available (variable)
+            Args:
+                no_resi (str): no resi inputted by user.
+            Returns:
+                Validation status (bool): 1 means valid,
+                0 means invalid.
+
+        """        
+        pass 
+
+    @staticmethod
+    def validate_door_password(self, password:DoorPassword):
+        """ Validates door password inputted by user
+            Rules:
+                1. It consists from 4 chars
+                2. Should exist in config file (section: door_password)
+            Args:
+                no_resi (str): no resi inputted by user.
+            Returns:
+                Validation status (bool): 1 means valid,
+                0 means invalid.
+
+        """
+        pass 
+
+
+class TakingItems:
+    """ Performs taking-items routine inside the box routine 
+        Rules: Should pass door password validation
+        Routines: openning the door, playing 'instruction sound',
+        read weight (should be near 0 because no items inside the box)
+
+    """
+    pass 
+
+
+class ReceivingItems:
+    """
+        Performs receiving-items routine.
+        Rules: Should pass no resi validation
+        Routines: openning door, reading door position and weighting,
+        Checking door postion and change in item weight, and alert if door 
+        is open for certain time.
+        NOTE:
+        Conditions of door position and weigh:
+            1. If door is closed and no change in item, it will play 
+               " No item stored " sound.
+            2. If door position is open exceeding door timeout, It will play
+               alert sound until door is closed.
+            3. If door position close and there is change in item weight, it will
+               play " Item successfully stored " and return success operation 
+    """
+                
+
+
+
+class Notify:
+    """ Notify the user """
+    pass 
+
+
     '''
 
     HIGHER METHODS
@@ -204,12 +310,12 @@ class ThreadOperation:
             3. taking item routine
                handle for taking items by user (opening door, tell instructions for deleteing items
                in app). Update read weight (should be near 0.0 because empty). Only valid when universal pass 
-               is inserted and valid.
+               is inserted and match.
 
             4. door session
                Opening door and reading to door sense and weight sensor. There are 2 paths conditions.
                i. no weight change from last read weight and door pos == 1 (closed) -> back to first while code. it doesnt continue 
-                  the sending data to server and it doesnt delete no_resi used (count as failed transaction)
+                  the sending data to server and it doesn't delete no_resi used (count as failed transaction)
                ii. weight changed from last read and door is door pos == 1 -> continue to next routine.
                
             5. final session
