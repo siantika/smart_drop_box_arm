@@ -13,6 +13,7 @@ Classes:
 
 """
 from abc import ABC, abstractmethod
+from datetime import datetime
 import subprocess
 import os
 from enum import Enum
@@ -98,6 +99,7 @@ class UsbCamera(Camera):
         """
         self._hw_addr = str(hw_address)
         self._setting = setting
+        self.dir = None
 
     @property
     def photo_directory(self)->str:
@@ -113,17 +115,17 @@ class UsbCamera(Camera):
 
     def generate_file_name(self) -> str:
         """Generate date-time format for file name.""" 
-        file_name = '%Y-%m-%d_%H-%M-%S.jpg'
-        return file_name
+        return datetime.now().strftime('%Y-%m-%d_%H-%M-%S.jpg')
 
     def capture_photo(self)-> str:
         """Capture a photo using the USB camera.
            Return: success operation = 0,
                    failed operation  = 1
-                   (int)
+                   (int),
+                   dir_saved_photo (relative to the parrent dir)
         """
         # create an absolute path for photo file
-        abs_photo_path = os.path.join(self.dir, self.generate_file_name())
+        dir_saved_photo = os.path.join(self.dir, self.generate_file_name())
         ret_opt = subprocess.run([
             'fswebcam',                    # fswebcam package for Linux
             '-d',                          # camera device address
@@ -131,12 +133,12 @@ class UsbCamera(Camera):
             '-r',                          # photo resolution
             self._setting.resolution,
             '--save',
-            abs_photo_path
+            dir_saved_photo
         ],capture_output=True, text=True, check=True)
 
         #add successful operation checking
-        return 1 if 'stat: No such file or directory' in ret_opt.stderr \
-            else 0
+        return (1, dir_saved_photo) if 'stat: No such file or directory' in ret_opt.stderr \
+            else (0, dir_saved_photo)
     
     def get_all_photos_file_name(self)-> list:
         """Get the file names of all saved photos."""

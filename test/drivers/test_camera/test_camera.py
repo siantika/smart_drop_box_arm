@@ -171,7 +171,7 @@ class TestUsbCameraExecution:
         self.set_up()
         self.cam = UsbCamera('/dev/video0', self.cam_set)
         self.cam.photo_directory = './assets/photos'
-        ret = self.cam.capture_photo()
+        ret = self.cam.capture_photo()[0]
         assert ret == 0
         self.tear_down()
 
@@ -180,9 +180,24 @@ class TestUsbCameraExecution:
         self.set_up()
         self.cam = UsbCamera('/dev/videoasd0', self.cam_set)
         self.cam.photo_directory = './assets/photos'
-        ret = self.cam.capture_photo()
+        ret = self.cam.capture_photo()[0]
         assert ret == 1
         self.tear_down()
+
+    def test_should_return_success_operation_and_saved_photo_dir(self):
+        """ Should return success and correct photo-saved dir"""
+        dir_saved_photo = None
+        self.set_up()
+        self.cam = UsbCamera('/dev/video0', self.cam_set)
+        self.cam.photo_directory = './assets/photos'
+        ret = self.cam.capture_photo()
+
+        # Get photo file dir
+        file_name = os.listdir(os.path.join(abs_path, self.cam.photo_directory))[0]
+        dir_saved_photo = os.path.join(self.cam.photo_directory,
+                                       file_name)
+        assert ret[0] == 0
+        assert ret[1] == str(dir_saved_photo)
 
 class TestEnumResolution:
     """ Tests enumeration of resolution for camera"""
