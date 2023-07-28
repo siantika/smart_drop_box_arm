@@ -63,7 +63,8 @@ class TestEndpointProcessor:
         self._mock_get_method.assert_called_once_with(
             param = {"no_resi" : "0023"},
             endpoint = "get.php",
-            http_header = {"content-type" : "application/json"}
+            http_header = {"content-type" : "application/json"},
+            timeout = 10,
         )
 
     def test_with_correct_post_multipart(self):
@@ -81,7 +82,8 @@ class TestEndpointProcessor:
             param = {"no_resi" : "0023", "item":"sikat gigi", 
                      "file":"image.jpg"},
             endpoint = "success_item.php",
-            http_header = {"content-type" : "application/json"}
+            http_header = {"content-type" : "application/json"},
+            timeout = 10,
         )
         
     def test_with_correct_post_method_and_payload(self):
@@ -98,7 +100,8 @@ class TestEndpointProcessor:
         self._mock_post_method.assert_called_once_with(
             param = {"no_resi" : "0023", "item":"sikat gigi"},
             endpoint = "post.php",
-            http_header = {"content-type" : "application/json"}
+            http_header = {"content-type" : "application/json"},
+            timeout = 10,
         )
         
     def test_with_correct_update_method_and_payload(self):
@@ -119,7 +122,8 @@ class TestEndpointProcessor:
                      "new_resi" : "1121",
                      "name":"batok kelapa"},
             endpoint = "update.php",
-            http_header = {"content-type" : "application/json"}
+            http_header = {"content-type" : "application/json"},
+            timeout = 10,
         )
         
     def test_with_correct_delete_method_and_payload(self):
@@ -136,7 +140,8 @@ class TestEndpointProcessor:
         self._mock_delete_method.assert_called_once_with(
             param = {"no_resi" : "0023"},
             endpoint = "delete.php",
-            http_header = {"content-type" : "application/json"}
+            http_header = {"content-type" : "application/json"},
+            timeout = 10,
         )
 
     def test_with_unknown_method(self):

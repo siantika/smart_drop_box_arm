@@ -25,7 +25,6 @@ from pathlib import Path
 import sys
 import multiprocessing as mp
 import time
-from abc import ABC, abstractmethod
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(os.path.join(parent_dir, 'drivers/data_access'))
@@ -39,6 +38,8 @@ from Interfaces import AppInterface
 import log
 import configparser
 
+# Constant 
+TIMEOUT_REQUEST = 10 # secs
 
 # Utility functions
 def read_config_file(config_file_path: Path, section: str, param: str) -> str:
@@ -168,7 +169,8 @@ class EndpointProcessor:
             return http_method_function(
                 param=http_data,
                 endpoint=endpoint,
-                http_header=http_header
+                http_header=http_header,
+                timeout=TIMEOUT_REQUEST
             )
         except TypeError:
             raise ValueError("Endpoint not found or not registered!")
