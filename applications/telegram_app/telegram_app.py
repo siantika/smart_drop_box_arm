@@ -57,7 +57,7 @@ class TelegramApp:
         time_now_strf = time_now.strftime("%Y\\-%m\\-%d %H:%M:%S")
         caption = \
             f"*INFO \\!* \nBarang telah diterima \\!\n\
-*Nama barang*  : _{raw_data_caption['name']}_ \n\
+*Nama barang*  : _{raw_data_caption['item']}_ \n\
 *No resi*          : _{raw_data_caption['no_resi']}_ \n\
 *Tanggal tiba* : _{time_now_strf}_ \n "  
         return caption
