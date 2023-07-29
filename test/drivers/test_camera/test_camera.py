@@ -76,7 +76,7 @@ class TestUsbCamera:
         '''Should generate date-time format! '''
         self.set_up()
         ret = self.cam.generate_file_name()
-        assert ret == '%Y-%m-%d_%H-%M-%S.jpg'
+        assert ret == datetime.now().strftime('%Y-%m-%d_%H-%M-%S.jpg')
         self.tear_down()
 
     def test_get_all_photos_name(self):
