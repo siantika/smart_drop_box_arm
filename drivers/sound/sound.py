@@ -135,6 +135,8 @@ class NonBlockingAplay:
                 pid of current aplay (int) : 0 means No aplay is running
                                         , otherwise it returns the pid of aplay.
         """
+        # Put some delay for processing
+        time.sleep(0.3)
         process_aplay = subprocess.run([
             'pidof', 
             'aplay',
