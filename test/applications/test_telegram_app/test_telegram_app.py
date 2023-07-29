@@ -23,7 +23,7 @@ class TestTelegramApp:
         """ Should invoke requests.post method once """
         with patch.object(requests, 'post') as mock_req_post:
             mock_req_post.return_value.status_code = None
-            test_raw_caption = {'name': 'spidol',
+            test_raw_caption = {'item': 'spidol',
                         'no_resi': '0025',
                         'date_ordered': '2023-03-01 10:18:45',
                         }
