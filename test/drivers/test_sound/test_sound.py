@@ -21,7 +21,7 @@ import subprocess
 import re
 ABS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(os.path.join(ABS_PATH, 'drivers/sound'))
-from sound import Aplay, SoundProcessing
+from sound import Aplay, SoundProcessing, BlockingAplay, NonBlockingAplay
 import pytest
 
 # Choose sound processing mode base on operating system
@@ -184,5 +184,53 @@ class TestVolumeControl:
         assert presentase_sound_processing_now == 32
 
 
-        
+class TestBlockingAplay:
+    """ Test the blocking method using Aplay.
+        The method only 'play' """
+    def test_with_correct_sound_file_and_blocking_mode_set_to_true(self):
+        """ Should play the sound file in blocking mode """
+        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
+        sound = Aplay()
+        start_time = time.time()
+        sound.play(file_name1, True)
+        end_time = time.time()
+        execution_time = end_time - start_time
 
+        # If the method is blocking, the execution time should be close to the duration of the sound file
+        # You may want to set a threshold to account for minor variations in execution time
+        expected_duration = 1.0  # Replace with the actual duration of your test sound file
+        assert execution_time  > expected_duration
+
+    def test_with_correct_sound_file_and_nonblocking_mode_set_to_false(self):
+        """ time excution should below expected_duration (non-blocking) """
+        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
+        sound = Aplay()
+        start_time = time.time()
+        pid = sound.play(file_name1, False)
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        # If the method is blocking, the execution time should be close to the duration of the sound file
+        # You may want to set a threshold to account for minor variations in execution time
+        expected_duration = 1.0  # Replace with the actual duration of your test sound file
+        assert execution_time  < expected_duration
+        # Clean the task by stop it so it doesn't affect next test.
+        time.sleep(1.0)
+        sound.stop(pid)
+
+    def test_with_correct_sound_file_and_nonblocking_mode_default(self):
+        """ time excution should below expected_duration (non-blocking) """
+        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
+        sound = Aplay()
+        start_time = time.time()
+        pid = sound.play(file_name1)
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        # If the method is blocking, the execution time should be close to the duration of the sound file
+        # You may want to set a threshold to account for minor variations in execution time
+        expected_duration = 1.0  # Replace with the actual duration of your test sound file
+        assert execution_time  < expected_duration
+        # Clean the task by stop it so it doesn't affect next test.
+        time.sleep(1.0)
+        sound.stop(pid)

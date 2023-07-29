@@ -26,21 +26,14 @@ INSTRUKSI_SOUND = DIR_OF_SOUND_FILES + 'instruksi_hapus_item_di_app.wav'
 sound = Aplay()
 # Adjust the hardware sound volume (native is PCM, SBC is DAC)
 sound.volume_control(10, SoundProcessing.PCM)
-# Play the first sound
-pid1 = sound.play(DITERIMA_SOUND)
-# give delay for next command (it uses multithread)
-# So we can simultaneously execute another syntax while plyaing a sound.
-# play the second sound after the first sound is complete
-# Since sound play created separate task for playing first song,
-# we need to wait the first task  till finish, but we can do another tasks
-# that including sound operations.
-# Ex: I will print text after  I played first sound.
-print("Just do another tasks ...")
-time.sleep(1) # wait until 1 sec
+# Play the first sound in blocking mode
+pid1 = sound.play(DITERIMA_SOUND, True)
+# Play the second sound in non-blocking mode.
 pid2 = sound.play(INSTRUKSI_SOUND) 
-while pid2 == 1:
-    pid2 = sound.play(INSTRUKSI_SOUND)  
+# We can do another tasks simultaneously while playing a sound.
+print(" Hey, I just playing another task here ...")
 time.sleep(1)
-# stop the second sound after 1 second
+# Since we use the non-blocking mode, we can stop the sound in 
+# the middle of sound duration
 sound.stop(pid2)
 # EOF
