@@ -110,7 +110,7 @@ class NoResi:
         if not isinstance(self.value_4_digits, str):
             raise TypeError("Attribute 'value_4_digits' should be as a string.")
 
-        if len(self.value_4_digits) > 4 or len(self.value_4_digits) < 4:
+        if len(self.value_4_digits) > 4:
             raise ValueError("'Value_4_digits' should be 4 chars only ")
 
 @dataclass 
@@ -217,14 +217,18 @@ class UserInputNoResi:
             Returns:
                 No resi inputted by user (NoResi)
         """
+        str_no_resi:str
         no_resi_buffer:list = []
         start_time = time.time()
-        while time.time() - start_time < self.GET_RESI_TIMEOUT or len(no_resi_buffer) <= 4:
+        while (time.time() - start_time < self.GET_RESI_TIMEOUT) and len(no_resi_buffer) < 4:
             user_input_char = interface.keypad.reading_input_char()
             self._determinator(no_resi_buffer, user_input_char, display_app_queue)
-        # covert list to string
-        no_resi = NoResi("".join(no_resi_buffer))
-        return no_resi
+        # Check user input for existing no resi
+        if user_input_char:
+            str_no_resi = "".join(no_resi_buffer)
+        else:
+            str_no_resi = '' 
+        return NoResi(str_no_resi)
 
             
 class Validation:
@@ -273,23 +277,23 @@ class Validation:
         return True if password is door_pass else False
 
 
-class TakingItems:
+class TakingItem:
     """ Performs taking-items routine inside the box routine 
         Condition to excute: Should pass door password validation
         Routines: openning the door, playing 'instruction sound',
         read weight (should be near 0 because no items inside the box)
 
     """
-    def process(self, periph:PeripheralOperations, ):
+    def process(periph:PeripheralOperations):
+        pid_non_block_sound = None
         periph.door.unlock()
-        periph.sound.play(SoundData.TAKING_ITEM)
+        periph.sound.play(SoundData.TAKING_ITEM, True)
         while True:
-            time.time()
             if periph.door.sense_door_state == False:
                 break
             if periph.door.sense_door_state == True and time.time() > DOOR_TIMEOUT:
-                if periph.sound.play(SoundData.WARNING_DOOR_OPEN) == None:
-                    pass 
+               if pid_non_block_sound == None:
+                   pid_non_block_sound = periph.sound.play(SoundData.WARNING_DOOR_OPEN)
 
 
 

@@ -117,6 +117,8 @@ class TestGetDataItem:
 
 class TestUserNoResi:
     """ Test mechanism to get no resi """
+    def help_mock(self):
+        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
 
     def test_determinator_with_correct_delete_no_resi_scenario(self):
         """ Test with 'D' char that inputted by user.
@@ -159,19 +161,49 @@ class TestUserNoResi:
                          '6']
         }
  
-    # fix next time 
-    # def test_get_method_with_correct_input_4_chars(self):
-    #     periph = PeripheralOperations.get_instance()
-    #     keypad = periph.keypad
-    #     with patch.object(keypad, 'reading_input_char') as mock_keypad,\
-    #         patch.object(keypad, 'initialize'),\
-    #             patch.object(serial.Serial, '__init__', return_value=None):
-    #         mock_keypad.return_value = '5589'
-    #         test_display_queue = mp.Queue(5)
-    #         data = UserInputNoResi()
-    #         no_resi = data.get(periph, test_display_queue)
-    #         assert no_resi.value_4_digits == '5589'
 
+    def test_get_method_with_correct_input_4_chars(self):
+        """ Should return a correct number resi """
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        keypad = periph.keypad
+        with patch.object(keypad, 'reading_input_char', return_value='1'):
+            test_display_queue = mp.Queue(4)
+            data = UserInputNoResi()
+            no_resi = data.get(periph, test_display_queue)
+            assert no_resi.value_4_digits == '1111'
+        # clean the serial pacther 
+        patch.stopall()
+
+
+    def test_get_method_with_empty_input_chars(self):
+        """ Should return empty string """
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        keypad = periph.keypad
+        with patch.object(keypad, 'reading_input_char', return_value=None):
+            test_display_queue = mp.Queue(4)
+            data = UserInputNoResi()
+            no_resi = data.get(periph, test_display_queue)
+            assert no_resi.value_4_digits == ''
+            # Clean the serial patcher
+        patch.stopall()
+
+    def test_get_method_with_less_than_3_input_chars(self):
+        """ Should return empty string 
+            Queue size affects the mock keypad sending the returns
+            values. Here it specified with 3 means it send ''3 times
+        """
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        keypad = periph.keypad
+        with patch.object(keypad, 'reading_input_char', return_value=None):
+            test_display_queue = mp.Queue(3)
+            data = UserInputNoResi()
+            no_resi = data.get(periph, test_display_queue)
+            assert no_resi.value_4_digits == ''
+            # Clean the serial patcher
+        patch.stopall()
 
 
 class TestValidation:
@@ -215,3 +247,11 @@ class TestValidation:
     def test_password_validation_with_uncorrect_password(self):
         """ Returns False """
         assert not Validation.validate_door_password('5696', 'AA5C')
+
+class TestTakingItem:
+    """ Test taking item operation """
+    def help_mock(self):
+        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+
+    def test_with_no_action_done(self):
+        pass 
