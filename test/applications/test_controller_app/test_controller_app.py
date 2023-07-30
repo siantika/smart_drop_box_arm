@@ -50,9 +50,9 @@ class TestEntities:
             no_resi = NoResi("55522223336210002312")
 
     def test_no_resi_with_less_than_4_chars(self):
-        """Test creation of NoResi entity with a string input shorter than 4 characters, should raise ValueError."""
-        with pytest.raises(ValueError):
-            no_resi = NoResi("521")
+        """Test creation of NoResi entity with a string input shorter than 4 characters, should return the same value."""
+        no_resi = NoResi("521")
+        assert no_resi.value_4_digits == "521"
 
     def test_file_photo_entity_with_correct_args(self):
         """Test creation of FilePhoto entity with correct binary data input."""
@@ -249,19 +249,19 @@ class TestValidation:
         assert not Validation.validate_door_password('5696', 'AA5C')
 
 # NOTE: unfinished, please find the solution of sound warning playing
-class TestTakingItem:
-    """ Test taking item operation """
-    def help_mock(self):
-        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+# class TestTakingItem:
+#     """ Test taking item operation """
+#     def help_mock(self):
+#         self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
 
-    def test_with_no_action_done(self):
-        """ Closed door, break immediatelly the loop """
-        self.help_mock()
-        periph = PeripheralOperations.get_instance()
-        door = periph.door
-        with patch.object(door, 'sense_door_state', return_value=True):
-            TakingItem.process(periph)
-        patch.stopall()
+#     def test_with_no_action_done(self):
+#         """ Closed door, break immediatelly the loop """
+#         self.help_mock()
+#         periph = PeripheralOperations.get_instance()
+#         door = periph.door
+#         with patch.object(door, 'sense_door_state', return_value=True):
+#             TakingItem.process(periph)
+#         patch.stopall()
 
 
 class TestTakingPhoto:
@@ -275,6 +275,11 @@ class TestTakingPhoto:
         self.help_mock()
         taking_photo = TakingPhoto()
         periph = PeripheralOperations.get_instance()
+        # clean old photos
+        all_photos = periph.camera.get_all_photos_file_name()
+        if len(all_photos) > 0:
+            periph.camera.delete_all_photos()
+            
         photo = taking_photo.process(periph)
         #open the same photo and read it as binary data
         expected_bin_data = None

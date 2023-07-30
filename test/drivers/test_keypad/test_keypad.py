@@ -39,7 +39,7 @@ class TestKeypadMatrixUart(MockResources):
     
     def test_init_should_initiate_keypadprotocoluart_class(self):
         self.set_up()
-        isinstance(self.keypad._communication, KeypadProtocolUart)
+        isinstance(self.keypad._keypad, KeypadProtocolUart)
 
 
 class TestKeypadProtocolUart(MockResources):
