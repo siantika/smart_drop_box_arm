@@ -2,12 +2,15 @@ import io
 import os
 import sys
 import pytest
+import serial
 import multiprocessing as mp
 from unittest.mock import patch
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(os.path.join(parent_dir, 'applications/controller_app'))
+sys.path.append(os.path.join(parent_dir, 'applications/display_app'))
 
 from controller_app import *
+from display_app import * 
 
 class TestEntities:
     """Test entities in the controller app class."""
@@ -110,3 +113,65 @@ class TestGetDataItem:
             time.sleep(0.1)
             data_item = DataItemRoutines()
             data = data_item.get(queue_data)
+
+
+class TestUserNoResi:
+    """ Test mechanism to get no resi """
+
+    def test_determinator_with_correct_delete_no_resi_scenario(self):
+        """ Test with 'D' char that inputted by user.
+            It should delete the latest char.           
+        """
+        test_queue_data = mp.Queue(4)
+        test_keypad_buffer = ['5', '6']
+        _determinator = UserInputNoResi()
+        _determinator._determinator(
+            test_keypad_buffer,
+            'D',
+             test_queue_data 
+        )
+        # Give time for putting data in the queue
+        time.sleep(0.1)
+        data = test_queue_data.get_nowait()
+        assert data == {
+            'cmd' : DisplayMode.NORMAL,
+            'payload' : ['Masukan resi:',
+                         '5']
+        }
+
+    def test_determinator_with_correct_input_resi_scenario(self):
+        """ Test with valid no resi inputted by user             
+        """
+        test_queue_data = mp.Queue(4)
+        test_keypad_buffer = []
+        _determinator = UserInputNoResi()
+        _determinator._determinator(
+            test_keypad_buffer,
+            '6',
+             test_queue_data 
+        )
+        # Give time for putting data in the queue
+        time.sleep(0.1)
+        data = test_queue_data.get_nowait()
+        assert data == {
+            'cmd' : DisplayMode.NORMAL,
+            'payload' : ['Masukan resi:',
+                         '6']
+        }
+ 
+    # fix next time 
+    # def test_get_method_with_correct_input_4_chars(self):
+    #     periph = PeripheralOperations.get_instance()
+    #     keypad = periph.keypad
+    #     with patch.object(keypad, 'reading_input_char') as mock_keypad,\
+    #         patch.object(keypad, 'initialize'),\
+    #             patch.object(serial.Serial, '__init__', return_value=None):
+    #         mock_keypad.return_value = '5589'
+    #         test_display_queue = mp.Queue(5)
+    #         data = UserInputNoResi()
+    #         no_resi = data.get(periph, test_display_queue)
+    #         assert no_resi.value_4_digits == '5589'
+
+
+
+

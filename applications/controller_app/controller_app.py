@@ -177,9 +177,9 @@ class DataItemRoutines:
         return None
 
 
-class GetNoResi:
+class UserInputNoResi:
     """ Get no resi from user """
-    GET_RESI_TIMEOUT = 15 # secs
+    GET_RESI_TIMEOUT = 10 # secs
 
     def _determinator(self, no_resi_buffer:list,
                        single_char:str,  queue_data:mp.Queue)-> None:
@@ -209,15 +209,21 @@ class GetNoResi:
                 }
             )
         
-    def get(self, no_resi:NoResi, interface:PeripheralOperations,
+    def get(self, interface:PeripheralOperations,
             display_app_queue:mp.Queue) -> NoResi:
-        """ Get no resi from user """
-        no_resi_buffer:str = ""
+        """ Get chars inputted by user 
+            Args:
+                interface
+            Returns:
+                No resi inputted by user (NoResi)
+        """
+        no_resi_buffer:list = []
         start_time = time.time()
         while time.time() - start_time < self.GET_RESI_TIMEOUT or len(no_resi_buffer) <= 4:
-            a_char_of_no_resi = interface.keypad.reading_input_char()
-            self._determinator(a_char_of_no_resi, display_app_queue)
-        no_resi.value_4_digits = no_resi_buffer
+            user_input_char = interface.keypad.reading_input_char()
+            self._determinator(no_resi_buffer, user_input_char, display_app_queue)
+        # covert list to string
+        no_resi = NoResi("".join(no_resi_buffer))
         return no_resi
 
             
