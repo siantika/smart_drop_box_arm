@@ -343,3 +343,27 @@ class TestProcessingData:
             'http_header' : {'content-type' : 'application/json'},
             'file' : binary_data_read
             }
+
+class TestNotify:
+    """ Test notify operations. It implements Telegram app """
+    def test_telegram_notif_with_correct_data(self):
+        """ 'Telegram send notification' method invoked
+              once with corrects params """
+                # Create mock for binary data
+        binary_data = b'\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64'
+        # Create a binary data
+        # Write binary data to the in-memory stream using BytesIO
+        binary_data_read = None
+        with io.BytesIO() as stream:
+            stream.write(binary_data)
+            stream.seek(0)  # Move the stream cursor to the beginning
+            binary_data_read = stream.read()
+        
+        test_target_data_item = DataItem('0030', 'rokok', '2023-07-20 22:26:40')
+        with patch.object(TelegramApp, 'send_notification', return_value = 1) as mock_notify:
+            Notify.send_telegram_notification(test_target_data_item,
+                                              binary_data_read)
+            mock_notify.assert_called_once_with(
+                {'no_resi':'0030', 'item' : 'rokok'},
+                binary_data_read
+            )

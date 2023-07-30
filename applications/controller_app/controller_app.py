@@ -424,12 +424,12 @@ class ProcessingData:
 class Notify:
     """ Notify the user throught medias"""
     @staticmethod
-    def telegram_notification(self, target_data_item: DataItem,
-                              file_photo:FilePhoto)->int:
+    def send_telegram_notification(target_data_item: DataItem,
+                              bin_data_photo)->int:
         """ Send a notification to telegram bot 
             Args:
                 target_data_item(DataItem): selected data item
-                file_photo(FilePhoto): File photo for sending photo
+                bin_data_photo(bytes): File photo for sending photo
                                         to telegram bot
             Returns:
                 http status code (int)
@@ -440,7 +440,7 @@ class Notify:
         }
         telegram = TelegramApp()
         return telegram.send_notification(data_to_dict, 
-                                          file_photo.bin_data) 
+                                          bin_data_photo) 
 
 
 
