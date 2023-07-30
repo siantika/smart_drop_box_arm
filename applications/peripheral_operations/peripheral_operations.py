@@ -68,7 +68,7 @@ class PeripheralsSetupCreation:
             saved photo are configured in config file
         """
         camera_setting = UsbCameraSetting()
-        camera_setting.res = CameraResolution._640x480
+        camera_setting.resolution = CameraResolution._640x480
         camera_hw_addr = read_config_file(config_dir,
                                           'camera', 'hw_address')
         usb_camera = UsbCamera(camera_hw_addr, camera_setting)
