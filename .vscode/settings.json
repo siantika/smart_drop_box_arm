@@ -30,7 +30,8 @@
         "./applications/lcd_app",
         "./applications/network_app",
         "./applications/data_transactions_app",
-        "./applications/display_app"
+        "./applications/display_app",
+        "./applications/controller_app"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"
