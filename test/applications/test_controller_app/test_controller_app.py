@@ -286,3 +286,60 @@ class TestTakingPhoto:
         # Clean all resources 
         patch.stopall()
         periph.camera.delete_all_photos()
+
+# Note: next time  
+# class TestReceivingItem:
+#     """ Test receiving-item operations. There are
+#     3 conditions should be tested.
+#         1. If door is closed and no change in item weight, it will play 
+#             "No item stored" sound.
+#         2. If door position is open exceeding door timeout, It will play
+#             alert sound until door is closed.
+#         3. If door position close and there is change in item weight, it will
+#             play " Item successfully stored " and return success operation 
+#     """
+
+#     def test_with_condition_1(self):
+#         """ Should """
+
+
+class TestProcessingData:
+    """ Test processing data operations """
+    def test_with_correct_queue_data(self):
+        """ queue data to data-access should be match,
+            queue data size is not full  """
+        queue_data_to_data_access = mp.Queue(5)
+        test_target_data_item = DataItem('5569', 'sepatu', 
+                                         '2023-07-20 22:26:40')
+        # Create mock for binary data
+        binary_data = b'\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64'
+        # Create a binary data
+        # Write binary data to the in-memory stream using BytesIO
+        binary_data_read = None
+        with io.BytesIO() as stream:
+            stream.write(binary_data)
+            stream.seek(0)  # Move the stream cursor to the beginning
+            binary_data_read = stream.read()
+
+        processing_data = ProcessingData()
+        processing_data.process(queue_data_to_data_access, 
+                                test_target_data_item,
+                                binary_data_read)
+        
+        # assert the delete.php endpoint
+        assert queue_data_to_data_access.get_nowait() == {
+            'endpoint' : 'delete.php',
+            'data' : {'no_resi': '5569'},
+            'http_header' : {'content-type' : 'application/json'},
+            }
+
+        # assert the success_item.php endpoint
+        assert queue_data_to_data_access.get_nowait() == {
+            'endpoint' : 'success_item.php',
+            'data' : {'no_resi': '5569', 
+                      'item' : 'sepatu', 
+                      'date_ordered' : '2023-07-20 22:26:40'
+                      },
+            'http_header' : {'content-type' : 'application/json'},
+            'file' : binary_data_read
+            }

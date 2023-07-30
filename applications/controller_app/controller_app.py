@@ -328,7 +328,7 @@ class TakingPhoto:
         return FilePhoto(photo_in_bin_data)
 
 
-class ReceivingItems:
+class ReceivingItem:
     """
         Performs receiving-items routine.
         Condition to excute: Should pass no resi validation
@@ -385,13 +385,13 @@ class ProcessingData:
             'no_resi' : target_data_item.no_resi
         } 
         http_header = {'content-type' : 'application/json'}
-        payload.update['endpoint'] = 'delete.php'
-        payload.update['data'] = data_to_dict
-        payload.update['http_header'] = http_header
+        payload['endpoint'] = 'delete.php'
+        payload['data'] = data_to_dict
+        payload['http_header'] = http_header
         return payload
 
     def _send_post_multipart_requests(self, target_data_item:DataItem,
-                             file_photo:FilePhoto) -> dict:
+                             bin_data_photo:bytes) -> dict:
         payload = {}
         data_to_dict = {
             'no_resi' : target_data_item.no_resi,
@@ -399,10 +399,10 @@ class ProcessingData:
             'date_ordered' : target_data_item.date_ordered
         } 
         http_header = {'content-type' : 'application/json'}
-        payload.update['endpoint'] = 'success_item.php'
-        payload.update['data'] = data_to_dict
-        payload.update['http_header'] = http_header
-        payload.update['file'] = file_photo.bin_data
+        payload['endpoint'] = 'success_item.php'
+        payload['data'] = data_to_dict
+        payload['http_header'] = http_header
+        payload['file'] = bin_data_photo
         return payload
 
     def process(self, queue_to_data_access:mp.Queue,
@@ -411,11 +411,13 @@ class ProcessingData:
         delete_request = self._send_delete_requests(target_data_item)
         post_multipart_request = self._send_post_multipart_requests(target_data_item, 
                                                                     file_photo)
-        # send to data access queue
+        # Send data to data-access queue
         try:
             queue_to_data_access.put_nowait(delete_request)
             queue_to_data_access.put_nowait(post_multipart_request)
-        except queue_to_data_access.full():
+            # give time for queue to putting the data
+            time.sleep(0.3)
+        except queue.Full:
             pass 
 
 
