@@ -42,7 +42,7 @@ class KeypadInterface(ABC):
 class KeypadProtocolInterface(ABC):
     """ Interface for keypad protocol"""
     @abstractmethod
-    def initialize(self)-> None:
+    def initialize(self)-> any:
         """ Initializes a protocol"""
         pass
 
@@ -64,9 +64,8 @@ class KeypadProtocolUart(KeypadProtocolInterface):
         """
         self._port = port 
         self._baudrate = baudrate
-        self._serial = None
     
-    def initialize(self) -> None:
+    def initialize(self) -> serial.Serial:
         """
             Initialize uart protocol using serial library.
             The configurable args only: port and baudrate.
@@ -76,14 +75,14 @@ class KeypadProtocolUart(KeypadProtocolInterface):
                     SerialException : when device can't be found or
                                     can't be configured.
         """
-        self.uart = serial.Serial(
-        port = self._port,
-        baudrate = self._baudrate,
-        parity = serial.PARITY_NONE,
-        stopbits = serial.STOPBITS_ONE,
-        bytesize = serial.EIGHTBITS,
-        timeout = 1 # secs
-        )
+        return serial.Serial(
+            port = self._port,
+            baudrate = self._baudrate,
+            parity = serial.PARITY_NONE,
+            stopbits = serial.STOPBITS_ONE,
+            bytesize = serial.EIGHTBITS,
+            timeout = 1 # secs
+            )
         
 
 class KeypadMatrixUart(KeypadInterface):
@@ -91,8 +90,8 @@ class KeypadMatrixUart(KeypadInterface):
         Implementation of keypad matrix using uart protocol.
     """
     def __init__(self, port:Path, baudrate:int ):
-        self._communication = KeypadProtocolUart(port, baudrate)
-        self._communication.initialize()
+        keypad_protocol = KeypadProtocolUart(port, baudrate)
+        self._keypad = keypad_protocol.initialize()
     
     def reading_input_char(self)-> str:
         '''
@@ -103,7 +102,7 @@ class KeypadMatrixUart(KeypadInterface):
         '''
         char_data = None
         try:
-            char_data = self._communication.readline()\
+            char_data = self._keypad.readline()\
                 .decode('utf-8').strip() 
         except UnicodeDecodeError as msg_error:
             print(f"Error keypad: {msg_error}")
