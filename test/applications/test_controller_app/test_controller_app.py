@@ -174,4 +174,44 @@ class TestUserNoResi:
 
 
 
+class TestValidation:
+    """ Test vallidation of no resi and door password """
+    def test_validation_no_resi_with_exist_data(self):
+        """ Returns exist data from available data stored in dict """
+        test_available_data = {
+            '2321' : {
+                        'no_resi' : '2321',
+                        'item' : 'bola',
+                        'date_ordered' : '2023-07-20 22:26:40'
+                     },
+        }
+        user_no_resi = NoResi('2321')
+        valid_no_resi = Validation.validate_no_resi(user_no_resi,
+                                                    test_available_data)
 
+        assert valid_no_resi.no_resi == '2321'
+        assert valid_no_resi.item == 'bola'
+        assert valid_no_resi.date_ordered == '2023-07-20 22:26:40'
+
+    def test_validation_no_resi_with_non_exist_data(self):
+        """ Returns None """
+        test_available_data = {
+            '2321' : {
+                        'no_resi' : '2321',
+                        'item' : 'bola',
+                        'date_ordered' : '2023-07-20 22:26:40'
+                     },
+        }
+        user_no_resi = NoResi('0023')
+        valid_no_resi = Validation.validate_no_resi(user_no_resi,
+                                                    test_available_data)
+
+        assert valid_no_resi == None
+
+    def test_password_validation_with_correct_password(self):
+        """ Returns True"""
+        assert Validation.validate_door_password('AA5C', 'AA5C')
+    
+    def test_password_validation_with_uncorrect_password(self):
+        """ Returns False """
+        assert not Validation.validate_door_password('5696', 'AA5C')

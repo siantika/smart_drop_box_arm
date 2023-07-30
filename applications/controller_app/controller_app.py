@@ -246,14 +246,13 @@ class Validation:
                 target data item if no resi exist else None
 
         """
-        target_data_item:DataItem 
-
         if no_resi.value_4_digits in available_data_items.keys():
-            target_data_item.no_resi = available_data_items[no_resi.value_4_digits][0]
-            target_data_item.item = available_data_items[no_resi.value_4_digits][1]
-            target_data_item.date_ordered = available_data_items[no_resi.value_4_digits][2]
-            return target_data_item
-        
+            target_data = available_data_items[no_resi.value_4_digits]
+            return DataItem(
+                target_data['no_resi'],
+                target_data['item'],
+                target_data['date_ordered']
+            )
         return None
          
 
