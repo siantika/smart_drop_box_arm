@@ -166,7 +166,6 @@ class DataItemRoutines:
         Returns:
             Data items (DataItem) or None if no data in queue.
         """
-
         raw_data_items = self._get_data_from_queue(queue_data)
         if raw_data_items:
             data_item = DataItem(
@@ -190,7 +189,7 @@ class GetNoResi:
                 queue_data (mp.Queue) : queue data to display
                                         app
             """ 
-        if single_char is not None and single_char is not 'D':
+        if single_char is not None and single_char != 'D':
             no_resi_buffer.append(single_char)
             # send to display app 
             queue_data.put(
@@ -200,7 +199,7 @@ class GetNoResi:
                 }
             )
         # Delete the latest char in no resi buffer
-        if single_char is 'D':
+        if single_char == 'D':
             no_resi_buffer.pop()
             # send coverted list to string to display app queue
             queue_data.put(
