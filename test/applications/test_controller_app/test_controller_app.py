@@ -71,3 +71,26 @@ class TestEntities:
         """Test creation of ItemWeight entity with a correct float value input."""
         item = ItemsWeight(8.0362)
         assert item.unit_weight == 8.0362
+
+
+class TestGetDataItem:
+    """ Test creation for getting data item from data source"""
+
+    def test_with_correct_queue_data(self):
+        """ Should return no_resi, item, and date_odered """
+        queue_data = mp.Queue(2)
+        queue_data.put(
+            {
+                'no_resi' : '3333',
+                'item' : 'Vape',
+                'date_ordered' : '2023-07-20 22:26:40',
+            }
+        )
+        #add delay for putting data in queue
+        time.sleep(0.1)
+        data_item = DataItemRoutines()
+        data = data_item.get(queue_data)
+        assert data != None
+        assert data.no_resi== '3333'
+        assert data.item == 'Vape'
+        assert data.date_ordered == '2023-07-20 22:26:40'

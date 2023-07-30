@@ -10,6 +10,7 @@ import configparser
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import queue
 import sys
 import time
 import multiprocessing as mp
@@ -145,27 +146,34 @@ class ItemsWeight:
             raise TypeError("Attribute 'unit_weight' should be as a float.")
 
 
-""" Use case """
-class GetDataItems:
-    """ Fetching and storing data items from data sources/server"""
-    def get(self, queue_data:mp.Queue, data_item:DataItem)-> None | DataItem:
-        """ Reads existing data from data source using
-            queue. Non blocking operation applied. Since
-            this app needs to execute another processes
-            (main controller) in almost simultaneously.
+""" Use cases """
+class DataItemRoutines:
+    """ Fetching and storing data items from data sources/server """
+
+    def _get_data_from_queue(self, queue: mp.Queue)-> DataItem | None:
+        """ Gets a data from queue
             Args:
-                queue_data (mp.Queue) : queue data for receiving
-                data from other thread.
-                data_item (DataItem) : data item entity from 
-                data sources/server
+                queue (mp.Queue) : queue data 
             Returns:
-                data items (DataItem) or None if no data in queue
+                Data items (DataItem) or None if no data in queue.
         """
-        raw_data_items = None if queue_data.get(False, timeout=1) else None
-        if raw_data_items != None:
-            data_item.no_resi = raw_data_items['no_resi']
-            data_item.item = raw_data_items['item']
-            data_item.date_ordered = raw_data_items['date_ordered']
+        return queue.get_nowait() if not queue.empty() else None
+
+    def get(self, queue_data: mp.Queue) -> DataItem | None:
+        """Reads existing data from data source using queue.
+        Args:
+            queue_data (mp.Queue): Queue data for receiving data from other threads.
+        Returns:
+            Data items (DataItem) or None if no data in queue.
+        """
+
+        raw_data_items = self._get_data_from_queue(queue_data)
+        if raw_data_items:
+            data_item = DataItem(
+                no_resi=raw_data_items['no_resi'],
+                item=raw_data_items['item'],
+                date_ordered=raw_data_items['date_ordered']
+            )
             return data_item
         return None
 
