@@ -224,10 +224,7 @@ class UserInputNoResi:
             user_input_char = interface.keypad.reading_input_char()
             self._determinator(no_resi_buffer, user_input_char, display_app_queue)
         # Check user input for existing no resi
-        if user_input_char:
-            str_no_resi = "".join(no_resi_buffer)
-        else:
-            str_no_resi = '' 
+        str_no_resi = "".join(no_resi_buffer) if user_input_char else ''
         return NoResi(str_no_resi)
 
             

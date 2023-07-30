@@ -189,7 +189,7 @@ class TestUserNoResi:
             # Clean the serial patcher
         patch.stopall()
 
-    def test_get_method_with_less_than_3_input_chars(self):
+    def test_get_method_with_less_than_4_input_chars(self):
         """ Should return empty string 
             Queue size affects the mock keypad sending the returns
             values. Here it specified with 3 means it send ''3 times
@@ -247,6 +247,7 @@ class TestValidation:
     def test_password_validation_with_uncorrect_password(self):
         """ Returns False """
         assert not Validation.validate_door_password('5696', 'AA5C')
+
 
 class TestTakingItem:
     """ Test taking item operation """
