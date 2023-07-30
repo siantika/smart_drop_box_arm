@@ -281,17 +281,19 @@ class TakingItem:
         read weight (should be near 0 because no items inside the box)
 
     """
+    @staticmethod
     def process(periph:PeripheralOperations):
         pid_non_block_sound = None
         periph.door.unlock()
         periph.sound.play(SoundData.TAKING_ITEM, True)
+        time_start = time.time()
         while True:
-            if periph.door.sense_door_state == False:
-                break
-            if periph.door.sense_door_state == True and time.time() > DOOR_TIMEOUT:
+            if periph.door.sense_door_state == False: break
+            if periph.door.sense_door_state == True and \
+                (time.time() - time_start < DOOR_TIMEOUT):
                if pid_non_block_sound == None:
-                   pid_non_block_sound = periph.sound.play(SoundData.WARNING_DOOR_OPEN)
-
+                   pid_non_block_sound = periph.sound.play\
+                    (SoundData.WARNING_DOOR_OPEN)
 
 
 class TakingPhoto:
@@ -306,11 +308,12 @@ class TakingPhoto:
             Returns:
                 photo in binary format (byte)
         """
+        bin_photo = None
         with open(photo_file, 'rb') as f:
-            bin_photo = f
+            bin_photo = f.read()
         return bin_photo
 
-    def process(self, periph:PeripheralOperations, photo:FilePhoto):
+    def process(self, periph:PeripheralOperations)-> FilePhoto:
         """ Taking a picture 
             Args:
                 periph : Peripheral operations acessing sound and camera
@@ -320,9 +323,9 @@ class TakingPhoto:
         """
         periph.sound.play(SoundData.POSE_COURIRER)
         periph.sound.play(SoundData.TAKING_PICTURE)
-        periph.camera.capture_photo()
-        photo.bin_data = self._get_photo_file_as_binary()
-        return photo
+        file_path = periph.camera.capture_photo()[1]
+        photo_in_bin_data = self._get_photo_file_as_binary(file_path)
+        return FilePhoto(photo_in_bin_data)
 
 
 class ReceivingItems:

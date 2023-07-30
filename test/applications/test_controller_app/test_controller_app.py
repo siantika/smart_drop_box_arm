@@ -248,11 +248,41 @@ class TestValidation:
         """ Returns False """
         assert not Validation.validate_door_password('5696', 'AA5C')
 
-
+# NOTE: unfinished, please find the solution of sound warning playing
 class TestTakingItem:
     """ Test taking item operation """
     def help_mock(self):
         self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
 
     def test_with_no_action_done(self):
-        pass 
+        """ Closed door, break immediatelly the loop """
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        door = periph.door
+        with patch.object(door, 'sense_door_state', return_value=True):
+            TakingItem.process(periph)
+        patch.stopall()
+
+
+class TestTakingPhoto:
+    """ Test taking photo operation """
+    def help_mock(self):
+        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+
+    def test_with_correct_photo(self):
+        """ Capturing directly from development 
+            camera """
+        self.help_mock()
+        taking_photo = TakingPhoto()
+        periph = PeripheralOperations.get_instance()
+        photo = taking_photo.process(periph)
+        #open the same photo and read it as binary data
+        expected_bin_data = None
+        file_name = periph.camera.get_all_photos_file_name()[0]
+        full_path = os.path.join(parent_dir, './assets/photos/', file_name)
+        with open(full_path, 'rb') as f:
+            expected_bin_data = f.read()
+        assert photo.bin_data == expected_bin_data
+        # Clean all resources 
+        patch.stopall()
+        periph.camera.delete_all_photos()
