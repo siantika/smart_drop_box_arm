@@ -19,14 +19,12 @@ import sys
 import os
 import subprocess
 import re
-import multiprocessing as mp
-from unittest.mock import patch
-ABS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(ABS_PATH, 'drivers/sound'))
-from sound import Aplay, SoundProcessing, BlockingAplay, NonBlockingAplay
-import pytest
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'drivers/sound'))
+from sound import Aplay, SoundProcessing
 
-# Choose sound processing mode base on operating system
+# Choose the sound-processing mode base on operating system
+# It depends on device's sound card
 if sys.platform == 'armv7l':
     # default orange pi zero lts sound card
     SOUND_PROCESSING = SoundProcessing.DAC
@@ -35,34 +33,22 @@ else:
 
 
 class TestSoundInterfaceInAplay():
-    def set_up(self):
-        self.sound = Aplay()
-
-    def tear_down(self):
-        while True:     
-            process_aplay = subprocess.run([
-                'pidof', 
-                'aplay',
-            ], stdout=subprocess.PIPE)
-            aplay_pid = process_aplay.stdout.decode('utf-8').strip('\n')
-            if aplay_pid == '':
-                break
-            time.sleep(1)
-
+    """ Test the init state of Sound Interface class """
     def test_sound_interface_in_aplay_should_be_correct(self):
-        self.set_up()
-        assert hasattr(self.sound, 'play')
-        assert hasattr(self.sound, 'stop')
-        assert hasattr(self.sound, 'volume_control')
+        sound = Aplay()
+        assert hasattr(sound, 'play')
+        assert hasattr(sound, 'stop')
+        assert hasattr(sound, 'volume_control')
 
 
 class TestSoundPlayAplay:
+    """ Test sound aplay operations"""
     def set_up(self):
         self.sound = Aplay()
      
     def test_with_correct_file(self):
         """ Test with correct sound file (.wav)"""
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
+        file_name1 = os.path.join(parent_dir, 'assets/sounds/ambil_barang.wav') 
         self.set_up()
         sound_thd = self.sound.play(file_name1)
         assert sound_thd.is_alive()
@@ -83,7 +69,7 @@ class TestSoundPlayAplay:
             The sound should be played more than once.
             This test shows if this sound playing in non-blocking mode 
         """
-        file_name1 = os.path.join(ABS_PATH, 
+        file_name1 = os.path.join(parent_dir, 
                                   'assets/sounds/ambil_barang.wav') 
         self.set_up()
         sound_thd = self.sound.play(file_name1, False, True)
@@ -96,23 +82,24 @@ class TestSoundPlayAplay:
 
 
 class TestStopSoundAplay:
+    """ Test the sound-stop operation with many conditions """
     def set_up(self):
         self.sound = Aplay()
 
     def test_sound_should_able_stop_song_correctly(self):
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
+        file_name1 = os.path.join(parent_dir, 'assets/sounds/ambil_barang.wav') 
         self.set_up()
         sound_thread = self.sound.play(file_name1)
         self.sound.stop(sound_thread)
         assert sound_thread.is_alive() == False
 
     def test_sound_should_able_stop_song_in_the_middle_of_sound_correctly(self):
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
+        file_name1 = os.path.join(parent_dir, 'assets/sounds/ambil_barang.wav') 
         self.set_up()
         sound_thread = self.sound.play(file_name1)
         # let the song played half of duration(approx)
         time.sleep(1)
-        # stopit 
+        # stop it 
         self.sound.stop(sound_thread)
         print(sound_thread)
 
@@ -167,12 +154,15 @@ class TestVolumeControl:
 class TestBlockingAplay:
     """ Test the blocking method using Aplay.
         The method only 'play' """
+    def set_up(self):
+        self.sound =Aplay()
+
     def test_with_correct_sound_file_and_blocking_mode_set_to_true(self):
         """ Should play the sound file in blocking mode """
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
-        sound = Aplay()
+        file_name1 = os.path.join(parent_dir, 'assets/sounds/ambil_barang.wav') 
+        self.set_up()
         start_time = time.time()
-        sound.play(file_name1, True)
+        self.sound.play(file_name1, True)
         end_time = time.time()
         execution_time = end_time - start_time
 
@@ -183,10 +173,10 @@ class TestBlockingAplay:
 
     def test_with_correct_sound_file_and_nonblocking_mode_set_to_false(self):
         """ time excution should below expected_duration (non-blocking) """
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
-        sound = Aplay()
+        file_name1 = os.path.join(parent_dir, 'assets/sounds/ambil_barang.wav') 
+        self.set_up()
         start_time = time.time()
-        pid = sound.play(file_name1, False)
+        sound_thread = self.sound.play(file_name1, False)
         end_time = time.time()
         execution_time = end_time - start_time
 
@@ -196,14 +186,14 @@ class TestBlockingAplay:
         assert execution_time  < expected_duration
         # Clean the task by stop it so it doesn't affect next test.
         time.sleep(1.0)
-        sound.stop(pid)
+        self.sound.stop(sound_thread)
 
     def test_with_correct_sound_file_and_nonblocking_mode_default(self):
         """ time excution should below expected_duration (non-blocking) """
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
-        sound = Aplay()
+        file_name1 = os.path.join(parent_dir, 'assets/sounds/ambil_barang.wav') 
+        self.set_up()
         start_time = time.time()
-        pid = sound.play(file_name1)
+        sound_thread = self.sound.play(file_name1)
         end_time = time.time()
         execution_time = end_time - start_time
 
@@ -213,4 +203,4 @@ class TestBlockingAplay:
         assert execution_time  < expected_duration
         # Clean the task by stop it so it doesn't affect next test.
         time.sleep(1.0)
-        sound.stop(pid)
+        self.sound.stop(sound_thread)

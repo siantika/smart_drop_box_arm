@@ -1,5 +1,5 @@
 """
-Module: sound driver
+Module: Sound driver
 Author: I Putu Pawesi Siantika, S.T.
 Date  : Feb 2023, refactored in Jul 2023
 
@@ -9,15 +9,15 @@ It works only for 'wav' file type and on machine that runs linux distros!
 
 Classes:
 - SoundInterface (abstract base class) = Represents sound interface.
-- Aplay = Implementation for aplay package on linux
-- NonBlockingAplay = Operations in non blocking mode using Aplay media player.
-  method interface for playing sound.
-- BlockingAplay  = Operations in blocking mode using Aplay media player.
+- Aplay = Implementations for aplay package on linux
+- AplaPlayMode = Implementations of play mode in aplay media player.
+  It handles repetition mode of playing a sound
 """
 
 import multiprocessing as mp
 import os
 import subprocess
+from pathlib import Path
 from abc import ABC, abstractmethod
 import time
 
@@ -25,26 +25,27 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 
 class SoundProcessing:
-    """ Contains options flag for sound processing used in Aplay"""
+    """ Contains options flag for sound processing used in Aplay media player"""
     PCM = 'PCM'
     DAC = 'DAC'
 
 
 class SoundInterface(ABC):
-    """ Represents abstract base class for simple sound operations"""
+    """ Represents abstract base class for simple sound operations 
+        ( play a sound, stop a sound, and control the sound-hardware's volume)"""
     @abstractmethod
-    def play(self, file_name:str)-> int:
-        """ plays a sound"""
+    def play(self, file_name:Path)-> any:
+        """ Plays a sound"""
         pass
 
     @abstractmethod
-    def stop(self, pid:int)-> None:
-        """ stops the ongoing sound """
+    def stop(self, process:any)-> None:
+        """ Stops the ongoing sound """
         pass
 
     @abstractmethod
     def volume_control(self, level_percent:int) -> None:
-        """ Controls hardware volume"""
+        """ Controls the sound-hardware's volume"""
         pass
 
 
@@ -53,56 +54,41 @@ class Aplay(SoundInterface):
         Implementation for media player using aplay package that
         compatible with linux distros.
     """
-    def _get_pid_aplay(self)-> int:
-        """ Returns pid of current aplay
-            Returns:
-                pid of current aplay (int) : 0 means No aplay is running
-                                        , otherwise it returns the pid of aplay.
-        """
-        process_aplay = subprocess.run([
-            'pidof', 
-            'aplay',
-        ], stdout=subprocess.PIPE)
-        pid = process_aplay.stdout.decode('utf-8')\
-            .strip('\n')
-        return 0 if pid == '' else int(pid)
 
-    def play(self, file_name:str, blocking:bool= None,
-             repeat:bool = None )-> mp.Process | None:
+    def play(self, file_name:Path, blocking:bool= None,
+             repeat:bool = False )-> mp.Process | None:
         """ 
             Plays a sound. Only support wav type.
-                args:
+                Args:
                     file_name (str) : file name of song and its path.
                     blocking (bool) : playing mode. Default is None (means
                     non blocking mode, if it is True = blocking, 
                     otherwise it is blocking)
-                    repeat(bool) : repeat playing the sound.
-                returns:
-                    pid of running aplay (int) for non-blocking mode,
-                    returns None for blocking mode.
+                    repeat(bool) : enable 'repeat' playing sound
+                Returns:
+                    mp.Process object if non-blocking play or None if
+                    blocking play.
         """
-        if blocking == None or blocking == False:    
-            mode = NonBlockingAplay()
-            sound_thread = mode.play(file_name, repeat)
-            return sound_thread
+        play_mode = AplayPlayMode()
+        if blocking:
+            play_mode.play_blocking_mode(file_name)
         else:
-            mode = BlockingAplay()
-            mode.play(file_name)
+            return play_mode.play_non_blocking_mode(file_name, repeat)
 
     def stop(self, sound_thread:mp.Process = None) -> None:
         """
             Stops ongoing sound by brute-forcing the process/task that playing
             sound file. Only valid in non-blocking mode.
                 args:
-                    pid (int) : pid of aplay process that wants to be killed.
+                    sound_thread (mp.Process) : processing object of sound 
+                    that playing.
         """
-        if sound_thread is None:
+        if sound_thread == None:
             return None
         
-        if  sound_thread.is_alive() and sound_thread:
-            non_block = NonBlockingAplay()
-            non_block.stop(sound_thread)
-
+        if sound_thread.is_alive():
+            sound_thread.kill()
+            time.sleep(0.3)
 
     def volume_control(self, level_percent:int, audio_processing:SoundProcessing)-> None:
         """
@@ -119,84 +105,55 @@ class Aplay(SoundInterface):
             ], check=True)
 
 
-class NonBlockingAplay:
+class AplayPlayMode:
     """ 
         Non blocking process is achieved by creating a separate task for each 
         sound file played. Stopping the sound need to be done by killing the task
         using PID returned from play method (in this clas, we use 'stop' method).
         It uses multiprocessing module/library for and Aplay package (media player).  
     """
-
-    def play_execution(self, file_name:str, repeat:bool=False)-> None:
-        """ Private method for playing sound in aplay media player """
-        if repeat:
-            while True:  
-                subprocess.run([
-                    'aplay',
-                    str(file_name),
-                    ],)
-        else:
-            subprocess.run([
-                'aplay',
-                str(file_name),
-                ],)
-    
-    def _get_pid_aplay(self)-> int:
-        """ Returns pid of current aplay
-            Returns:
-                pid of current aplay (int) : 0 means No aplay is running
-                                        , otherwise it returns the pid of aplay.
-        """
-        # Put some delay for processing
-        time.sleep(0.3)
-        process_aplay = subprocess.run([
-            'pidof', 
-            'aplay',
-        ], stdout=subprocess.PIPE)
-        pid = process_aplay.stdout.decode('utf-8')\
-            .strip('\n')
-        return 0 if pid == '' else int(pid)
-
-    def play(self, file_name:str, repeat:bool = False)-> mp.Process:
-        """ 
-        Plays a non-blocking sound by creating separate task.
-            Args:
-                file_name (str) : full path of the sound file.
-            Returns:
-                pid of aplay (int): 0 means no aplay is running,
-                                   otherwise it returns aplay PID.
-        """
-        sound_thread = mp.Process(target=self.play_execution, 
-                            args=(file_name, repeat, ))
-        sound_thread.start()
-        # get a current aplay pid
-        return sound_thread
-    
-    def stop(self, sound_thread:mp.Process) -> None:
-        """ 
-            Stop the sound that playing in non-blocking mode 
-            Args:
-                sound_thread (mp.Process) : an object of mp.Process
-                                            instance
-
-        """
-        sound_thread.kill()
-        time.sleep(0.3)
-            
-        
-    
-class BlockingAplay:
-    """ Plays a sound in blocking mode using Aplay package 
-        We cannot stop the sound that playing in blocking mode.
-    """
-    def play(self, file_name:str)->None:
-        """ Plays the sound in blocking mode
-            Args:
-                file_name (str) : full path of the sound file.
-        """
+    def _excute_aplay_subprocess(self, file_name:Path):
+        """ excute subprocess that runs aplay method 
+           to play a sound """
         subprocess.run([
             'aplay',
             str(file_name),
             ],)
         
+    def _determinator_repeat(self, file_name:Path, repeat:bool=False)-> None:
+        """ Determines the repetition for playing a sound.
+            It is intended for non-blocking mode only.
+        """
+        if repeat:
+            while True:
+                self._excute_aplay_subprocess(file_name)
+        else:
+            self._excute_aplay_subprocess(file_name)
+
+
+    def play_non_blocking_mode(self, file_name:Path, 
+                               repeat:bool = False)-> mp.Process:
+        """ 
+        Plays a non-blocking sound by creating separate task.
+            Args:
+                file_name (Path) : full path of the sound file.
+                repeat (bool) : Default is False. Indicator for
+                determine the repetition of playing one sound
+            Returns:
+                A mp.Process objetc that runs the play-sound 
+                thread.
+
+        """
+        sound_thread = mp.Process(target=self._determinator_repeat, 
+                            args=(file_name, repeat, ))
+        sound_thread.start()
+        return sound_thread
+    
+    def play_blocking_mode(self, file_name:Path)->None:
+        """ Plays the sound in blocking mode
+            Args:
+                file_name (Path) : full path of the sound file.
+        """
+        self._excute_aplay_subprocess(file_name)
+
 # EOF
