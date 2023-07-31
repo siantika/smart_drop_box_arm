@@ -3,7 +3,9 @@
     for playing sound.
 
 '''
-
+import os
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sound_assets_dir = os.path.join(parent_dir, './assets/sounds/')
 class LcdData:
     TIMEOUT = {
     'cmd': 'keypad',
@@ -67,11 +69,11 @@ class LcdData:
     }
 
 class SoundData:
-    WARNING_DOOR_OPEN = 'tutup_pintu.wav'
-    POSE_COURIRER = 'pose_kurir.wav'
-    TAKING_PICTURE = 'ambil_foto.wav'
-    PUT_ITEM = 'taruh_paket.wav'
-    ACCEPTED_ITEM = 'diterima.wav'
-    TAKING_ITEM = 'ambil_barang.wav'
-    INSTRUCTION_DEL_ITEM = 'instruksi_hapus_item_di_app.wav'
-    BARANG_BELUM_DITERIMA = 'belum_diterima.wav'
+    WARNING_DOOR_OPEN = os.path.join(sound_assets_dir,'tutup_pintu.wav')
+    POSE_COURIRER = os.path.join(sound_assets_dir,'pose_kurir.wav')
+    TAKING_PICTURE = os.path.join(sound_assets_dir,'ambil_foto.wav')
+    PUT_ITEM = os.path.join(sound_assets_dir,'taruh_paket.wav')
+    ACCEPTED_ITEM = os.path.join(sound_assets_dir,'diterima.wav')
+    TAKING_ITEM = os.path.join(sound_assets_dir,'ambil_barang.wav')
+    INSTRUCTION_DEL_ITEM = os.path.join(sound_assets_dir,'instruksi_hapus_item_di_app.wav')
+    BARANG_BELUM_DITERIMA = os.path.join(sound_assets_dir,'belum_diterima.wav')
