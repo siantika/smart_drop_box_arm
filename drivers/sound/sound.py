@@ -67,7 +67,8 @@ class Aplay(SoundInterface):
             .strip('\n')
         return 0 if pid == '' else int(pid)
 
-    def play(self, file_name:str, blocking:bool= None)-> int | None:
+    def play(self, file_name:str, blocking:bool= None,
+             repeat:bool = None )-> mp.Process | None:
         """ 
             Plays a sound. Only support wav type.
                 args:
@@ -75,28 +76,32 @@ class Aplay(SoundInterface):
                     blocking (bool) : playing mode. Default is None (means
                     non blocking mode, if it is True = blocking, 
                     otherwise it is blocking)
+                    repeat(bool) : repeat playing the sound.
                 returns:
                     pid of running aplay (int) for non-blocking mode,
                     returns None for blocking mode.
         """
         if blocking == None or blocking == False:    
             mode = NonBlockingAplay()
-            pid = mode.play(file_name)
-            return pid
+            sound_thread = mode.play(file_name, repeat)
+            return sound_thread
         else:
             mode = BlockingAplay()
             mode.play(file_name)
 
-    def stop(self, pid:int) -> None:
+    def stop(self, sound_thread:mp.Process = None) -> None:
         """
             Stops ongoing sound by brute-forcing the process/task that playing
             sound file. Only valid in non-blocking mode.
                 args:
                     pid (int) : pid of aplay process that wants to be killed.
         """
-        if pid != None:
+        if sound_thread is None:
+            return None
+        
+        if  sound_thread.is_alive() and sound_thread:
             non_block = NonBlockingAplay()
-            non_block.stop(pid)
+            non_block.stop(sound_thread)
 
 
     def volume_control(self, level_percent:int, audio_processing:SoundProcessing)-> None:
@@ -122,12 +127,19 @@ class NonBlockingAplay:
         It uses multiprocessing module/library for and Aplay package (media player).  
     """
 
-    def _play(self, file_name:str)-> None:
+    def play_execution(self, file_name:str, repeat:bool=False)-> None:
         """ Private method for playing sound in aplay media player """
-        subprocess.run([
-            'aplay',
-            str(file_name),
-            ],)
+        if repeat:
+            while True:  
+                subprocess.run([
+                    'aplay',
+                    str(file_name),
+                    ],)
+        else:
+            subprocess.run([
+                'aplay',
+                str(file_name),
+                ],)
     
     def _get_pid_aplay(self)-> int:
         """ Returns pid of current aplay
@@ -145,7 +157,7 @@ class NonBlockingAplay:
             .strip('\n')
         return 0 if pid == '' else int(pid)
 
-    def play(self, file_name:str)-> int:
+    def play(self, file_name:str, repeat:bool = False)-> mp.Process:
         """ 
         Plays a non-blocking sound by creating separate task.
             Args:
@@ -154,31 +166,23 @@ class NonBlockingAplay:
                 pid of aplay (int): 0 means no aplay is running,
                                    otherwise it returns aplay PID.
         """
-        thread = mp.Process(target=self._play, args=(file_name,))
-        thread.start()
+        sound_thread = mp.Process(target=self.play_execution, 
+                            args=(file_name, repeat, ))
+        sound_thread.start()
         # get a current aplay pid
-        return self._get_pid_aplay()
+        return sound_thread
     
-    def stop(self, pid:int) -> None:
+    def stop(self, sound_thread:mp.Process) -> None:
         """ 
             Stop the sound that playing in non-blocking mode 
             Args:
-                pid (int) : PID of task that playing the sound
-                            that we want to kill/terminate.
+                sound_thread (mp.Process) : an object of mp.Process
+                                            instance
 
         """
-        if pid != 0:
-            pid_to_str = str(pid)
-            subprocess.run(
-                [
-                'kill',
-                '-9',
-                pid_to_str,
-                ]
-            )
-        # Give the subprocess time to kill the ongoing task 
-        # properly.
+        sound_thread.kill()
         time.sleep(0.3)
+            
         
     
 class BlockingAplay:

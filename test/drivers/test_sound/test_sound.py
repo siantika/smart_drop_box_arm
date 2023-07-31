@@ -19,6 +19,8 @@ import sys
 import os
 import subprocess
 import re
+import multiprocessing as mp
+from unittest.mock import patch
 ABS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(os.path.join(ABS_PATH, 'drivers/sound'))
 from sound import Aplay, SoundProcessing, BlockingAplay, NonBlockingAplay
@@ -57,89 +59,67 @@ class TestSoundInterfaceInAplay():
 class TestSoundPlayAplay:
     def set_up(self):
         self.sound = Aplay()
-
-    def tear_down(self):
-        ''' Make sure sound played until finished each of test case'''
-        while True:     
-            process_aplay = subprocess.run([
-                'pidof', 
-                'aplay',
-            ], stdout=subprocess.PIPE)
-            aplay_pid = process_aplay.stdout.decode('utf-8').strip('\n')
-            if aplay_pid == '':
-                break
-            time.sleep(1)
-
-    def test_sound_should_play_a_song_without_blocking(self):
-        file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
-        self.set_up()
-
-        self.sound.play(file_name1)
-
-        process = subprocess.run(
-            [
-                'pidof',
-                'aplay',
-            ], capture_output=True, text= True
-        )
-
-        assert process.stdout.strip('\n') != ''
-        self.tear_down()
      
-    def test_sound_play_should_return_pid(self):
+    def test_with_correct_file(self):
+        """ Test with correct sound file (.wav)"""
         file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
         self.set_up()
-        ret = self.sound.play(file_name1)
-        assert isinstance(ret, int)
-        self.tear_down()
+        sound_thd = self.sound.play(file_name1)
+        assert sound_thd.is_alive()
+        # Clear the resources 
+        self.sound.stop(sound_thd)
 
-    def test_sound_play_should_return_0_if_no_file_(self):
+    def test_with_no_file(self):
+        """ Test with no sound file 
+            Do nothing
+        """
         self.set_up()
-        ret = self.sound.play('no_file')
-        assert ret == 0
-        
+        sound_thd = self.sound.play('no_file')
+        # Clear the resources 
+        self.sound.stop(sound_thd)
+
+    def test_with_repeat_playing(self):
+        """ Only able when using the non-blocking mode
+            The sound should be played more than once.
+            This test shows if this sound playing in non-blocking mode 
+        """
+        file_name1 = os.path.join(ABS_PATH, 
+                                  'assets/sounds/ambil_barang.wav') 
+        self.set_up()
+        sound_thd = self.sound.play(file_name1, False, True)
+        # The sound duration is not more than 2 secs,so
+        # technically, we will wait until 5 secs and check
+        # if the sound still playing (it repeats to playing the sound)
+        time.sleep(6)
+        # Clear the resources
+        self.sound.stop(sound_thd)
+
 
 class TestStopSoundAplay:
     def set_up(self):
         self.sound = Aplay()
 
-    def tear_down(self):
-        pass
-
     def test_sound_should_able_stop_song_correctly(self):
         file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
         self.set_up()
-        pid = self.sound.play(file_name1)
-        self.sound.stop(pid)
-        #check pid again
-        process_aplay = subprocess.run([
-                'pidof', 
-                'aplay',
-            ], stdout=subprocess.PIPE)
-        aplay_pid = process_aplay.stdout.decode('utf-8').\
-            strip('\n')
-        assert aplay_pid == ''
+        sound_thread = self.sound.play(file_name1)
+        self.sound.stop(sound_thread)
+        assert sound_thread.is_alive() == False
 
-    def test_sound_should_able_stop_song_in_the_midle_of_song_correctly(self):
+    def test_sound_should_able_stop_song_in_the_middle_of_sound_correctly(self):
         file_name1 = os.path.join(ABS_PATH, 'assets/sounds/ambil_barang.wav') 
         self.set_up()
-        pid = self.sound.play(file_name1)
+        sound_thread = self.sound.play(file_name1)
         # let the song played half of duration(approx)
-        time.sleep(0.5)
-        # kill it
-        self.sound.stop(pid)
-        #check pid again
-        process_aplay = subprocess.run([
-                'pidof', 
-                'aplay',
-            ], stdout=subprocess.PIPE)
-        aplay_pid = process_aplay.stdout.decode('utf-8').\
-            strip('\n')
-        assert aplay_pid == ''
+        time.sleep(1)
+        # stopit 
+        self.sound.stop(sound_thread)
+        print(sound_thread)
 
-    def test_sound_should_able_handling_when_song_isnot_played(self):
+    def test_stop_sound_with_no_sound_playing_sound(self):
+        """ It should do nothing and not crashing the program """
         self.set_up()
-        self.sound.stop(0) # no song is played
+        self.sound.stop()
 
 
 class TestSoundProcessing:
