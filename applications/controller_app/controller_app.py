@@ -39,50 +39,11 @@ full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 full_photo_folder = os.path.join(parent_dir, 'assets/photos/')
 
 # TIMEOUT in secs
-KEYPAD_TIMEOUT = 15
-DOOR_TIMEOUT = 15
+KEYPAD_TIMEOUT = 6
+DOOR_TIMEOUT = 10
 NETWORK_TIMEOUT = 5
-# Compesate error read by weight sensor due to electrical issue
+# Compensate error read by weight sensor due to electrical issue
 WEIGHT_OFFSET = 1.0
-
-
-# New code
-def create_payload_for_queue_apps(app_name: str, method, 
-                                  is_data_object=False, **kwargs) -> dict:
-    lines = None
-    data_object = {}
-    lc_app_name = str.lower(app_name)
-
-    if lc_app_name == 'lcd':
-        if is_data_object:
-            data_object = {'method': method}
-            payload = {'payload': kwargs['data_object']}
-            data_object.update(payload)
-        else:
-            lines = [kwargs[key] for key in ['first_line', 'second_line']
-                        if key in kwargs]
-
-            # Raise value error when lines don't have intended params
-            len_of_lines = len(lines)
-            len_of_params = len(kwargs.values())
-            if len_of_lines != 2 or len_of_params != 2:
-                raise ValueError(
-                    "Lcd parameters should be only 'first_line' and 'second_line'!")
-
-            payload = {'payload': lines}
-            data_object = {'cmd': method}
-            data_object.update(payload)
-
-    if lc_app_name == 'network':
-        if is_data_object:
-            data_object = {'method': method}
-            payload = {'payload': kwargs['data_object']}
-            data_object.update(payload)
-        else:
-            data_object = {'method': method}
-            data_object.update(kwargs)
-    return data_object
-
 
 """ Entitites for bussines logics """
 @dataclass
@@ -283,17 +244,24 @@ class TakingItem:
     """
     @staticmethod
     def process(periph:PeripheralOperations):
-        pid_non_block_sound = None
+        sound_thread:mp.Process = None
+        is_sound_warning_played:bool = False
         periph.door.unlock()
         periph.sound.play(SoundData.TAKING_ITEM, True)
         time_start = time.time()
         while True:
-            if periph.door.sense_door_state == False: break
-            if periph.door.sense_door_state == True and \
-                (time.time() - time_start < DOOR_TIMEOUT):
-               if pid_non_block_sound == None:
-                   pid_non_block_sound = periph.sound.play\
-                    (SoundData.WARNING_DOOR_OPEN)
+            if periph.door.sense_door_state() == False: 
+                if sound_thread is not None:
+                    periph.sound.stop(sound_thread)
+                break
+            if periph.door.sense_door_state() == True and \
+                (time.time() - time_start > DOOR_TIMEOUT) and\
+                    is_sound_warning_played == False:
+                
+                is_sound_warning_played = True
+                sound_thread = periph.sound.play\
+                    (SoundData.WARNING_DOOR_OPEN, False, True)
+            
 
 
 class TakingPhoto:

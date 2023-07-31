@@ -161,7 +161,6 @@ class TestUserNoResi:
                          '6']
         }
  
-
     def test_get_method_with_correct_input_4_chars(self):
         """ Should return a correct number resi """
         self.help_mock()
@@ -174,7 +173,6 @@ class TestUserNoResi:
             assert no_resi.value_4_digits == '1111'
         # clean the serial pacther 
         patch.stopall()
-
 
     def test_get_method_with_empty_input_chars(self):
         """ Should return empty string """
@@ -248,20 +246,30 @@ class TestValidation:
         """ Returns False """
         assert not Validation.validate_door_password('5696', 'AA5C')
 
-# NOTE: unfinished, please find the solution of sound warning playing
-# class TestTakingItem:
-#     """ Test taking item operation """
-#     def help_mock(self):
-#         self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
 
-#     def test_with_no_action_done(self):
-#         """ Closed door, break immediatelly the loop """
-#         self.help_mock()
-#         periph = PeripheralOperations.get_instance()
-#         door = periph.door
-#         with patch.object(door, 'sense_door_state', return_value=True):
-#             TakingItem.process(periph)
-#         patch.stopall()
+class TestTakingItem:
+    """ Test taking item operations """
+    def help_mock(self):
+        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+
+    def test_with_close_the_door(self):
+        """ Closed door, break immediatelly the loop """
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        door = periph.door
+        with patch.object(door, 'sense_door_state', return_value = False):
+            TakingItem.process(periph)
+        patch.stopall()
+
+ # NOTE : performs this test manual !
+    # def test_with_door_always_open(self):
+    #     """ Plays the warning sound """
+    #     self.help_mock()
+    #     periph = PeripheralOperations.get_instance()
+    #     door = periph.door
+    #     with patch.object(door, 'sense_door_state', return_value = True):
+    #         TakingItem.process(periph)
+    #     patch.stopall()
 
 
 class TestTakingPhoto:
