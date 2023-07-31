@@ -242,17 +242,20 @@ class TakingItem:
         read weight (should be near 0 because no items inside the box)
 
     """
-    @staticmethod
-    def process(periph:PeripheralOperations):
+    def process(periph:PeripheralOperations)-> ItemsWeight:
         sound_thread:mp.Process = None
+        item_weight = 0.0
         is_sound_warning_played:bool = False
         periph.door.unlock()
         periph.sound.play(SoundData.TAKING_ITEM, True)
         time_start = time.time()
         while True:
             if periph.door.sense_door_state() == False: 
+                periph.door.lock()
                 if sound_thread is not None:
                     periph.sound.stop(sound_thread)
+                item_weight = periph.weight.get_weight()
+                log.logger.info(f"Barang telah di ambil")
                 break
             if periph.door.sense_door_state() == True and \
                 (time.time() - time_start > DOOR_TIMEOUT) and\
@@ -261,7 +264,7 @@ class TakingItem:
                 is_sound_warning_played = True
                 sound_thread = periph.sound.play\
                     (SoundData.WARNING_DOOR_OPEN, False, True)
-            
+        return ItemsWeight(item_weight)          
 
 
 class TakingPhoto:

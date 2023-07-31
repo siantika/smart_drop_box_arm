@@ -253,12 +253,18 @@ class TestTakingItem:
         self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
 
     def test_with_close_the_door(self):
-        """ Closed door, break immediatelly the loop """
+        """ Closed door, break immediatelly the loop,
+        read the weight of items and log the success of process execution"""
         self.help_mock()
         periph = PeripheralOperations.get_instance()
         door = periph.door
-        with patch.object(door, 'sense_door_state', return_value = False):
-            TakingItem.process(periph)
+        weight = periph.weight
+        with patch.object(door, 'sense_door_state', return_value = False),\
+            patch.object(weight, 'get_weight', return_value = 12.2),\
+                patch('log.logger.info') as mock_log_info:
+            weight = TakingItem.process(periph)
+            mock_log_info.assert_called_once()
+            assert weight.unit_weight == 12.2
         patch.stopall()
 
  # NOTE : performs this test manual !
