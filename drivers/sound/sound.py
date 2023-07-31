@@ -55,7 +55,7 @@ class Aplay(SoundInterface):
         compatible with linux distros.
     """
 
-    def play(self, file_name:Path, blocking:bool= None,
+    def play(self, file_name:Path, blocking:bool= False,
              repeat:bool = False )-> mp.Process | None:
         """ 
             Plays a sound. Only support wav type.
