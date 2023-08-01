@@ -306,21 +306,76 @@ class TestTakingPhoto:
         patch.stopall()
         periph.camera.delete_all_photos()
 
-# Note: next time  
-# class TestReceivingItem:
-#     """ Test receiving-item operations. There are
-#     3 conditions should be tested.
-#         1. If door is closed and no change in item weight, it will play 
-#             "No item stored" sound.
-#         2. If door position is open exceeding door timeout, It will play
-#             alert sound until door is closed.
-#         3. If door position close and there is change in item weight, it will
-#             play " Item successfully stored " and return success operation 
-#     """
 
-#     def test_with_condition_1(self):
-#         """ Should """
+class TestReceivingItem:
+    """ Test receiving-item operations. There are
+    3 conditions should be tested.
+        1. If door is closed and no change in item weight, it will play 
+            "No item stored" sound.
+        2. If door position is open exceeding door timeout, It will play
+            alert sound until door is closed.
+        3. If door position close and there is change in item weight, it will
+            play " Item successfully stored " and return success operation 
+    """
+    def _mock_resources(self):
+        self.mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+        self.periph = PeripheralOperations.get_instance()
+        door = self.periph.door
+        weight = self.periph.weight
+        
+        self.mock_door_sense = patch.object(door, 'sense_door_state').start()
+        self.mock_get_weight = patch.object(weight, 'get_weight').start()
+        self.mock_door_unlock = patch.object(door, 'unlock').start()
+        self.mock_door_lock = patch.object(door, 'lock').start()
 
+    def test_with_condition_1(self):
+        """ Should performs 'no received item' process """
+        self._mock_resources()
+        self.mock_door_sense.return_value = False
+        self.mock_get_weight.return_value = 12.0
+        test_item = ItemsWeight(12.0)
+        test_queue_to_disp = mp.Queue(2)
+        rec_item = ReceivingItem()
+        new_item = rec_item.process(self.periph, test_item, test_queue_to_disp
+                         )
+        self.mock_door_unlock.assert_called()
+        data_sent_to_disp = test_queue_to_disp.get_nowait()
+        assert data_sent_to_disp == LcdData.NO_ITEM_RECEIVED
+        assert new_item.unit_weight == 12.0 
+        #clear resoureces 
+        patch.stopall()
+
+    # NOTE: Performs the test manually 
+    # def test_with_condition_2(self):
+    #     """ Should performs 'alert' process """
+    #     self._mock_resources()
+    #     self.mock_door_sense.return_value = True
+    #     self.mock_get_weight.return_value = 12.0
+    #     test_item = ItemsWeight(12.0)
+    #     test_queue_to_disp = mp.Queue(2)
+    #     rec_item = ReceivingItem()
+    #     rec_item.process(self.periph, test_item, test_queue_to_disp
+    #                      )
+    #     #clear resourcess 
+    #     patch.stopall()
+
+    def test_with_condition_3(self):
+        """ Should performs 'item stored ' process """
+        self._mock_resources()
+        self.mock_door_sense.return_value = False
+        self.mock_get_weight.return_value = 22.0
+        test_item = ItemsWeight(12.0)
+        test_queue_to_disp = mp.Queue(2)
+        rec_item = ReceivingItem()
+        new_item = rec_item.process(self.periph, test_item, test_queue_to_disp
+                         )
+        self.mock_door_unlock.assert_called()
+        data_sent_to_disp = test_queue_to_disp.get_nowait()
+        assert data_sent_to_disp == LcdData.ITEM_RECEIVED
+        assert new_item.unit_weight == 22.0
+        #clear resoureces 
+        patch.stopall()
+        
 
 class TestProcessingData:
     """ Test processing data operations """
@@ -362,6 +417,7 @@ class TestProcessingData:
             'http_header' : {'content-type' : 'application/json'},
             'file' : binary_data_read
             }
+
 
 class TestNotify:
     """ Test notify operations. It implements Telegram app """

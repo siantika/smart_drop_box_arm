@@ -304,38 +304,50 @@ class ReceivingItem:
         Performs receiving-items routine.
         Condition to excute: Should pass no resi validation
         Routines: openning door, reading door position and weighting,
-        Checking door postion and change in item weight, and alert if door 
-        is open for certain time.
+        Checking door postion and changed in item weight, and alert if door 
+        is open for certain time (exceeded TIME_DOOR_TIMEOUT).
         NOTE:
         Conditions of door position and weigh:
             1. If door is closed and no change in item weight, it will play 
-               "No item stored" sound.
-            2. If door position is open exceeding door timeout, It will play
+               "No item stored" sound and display the message respectively to condition.
+            2. If door position is opened and exceeding the timeout, It will play
                alert sound until door is closed.
-            3. If door position close and there is change in item weight, it will
-               play " Item successfully stored " and return success operation 
+            3. If door position is closed and there is a change in item weight, it will
+               play " Item successfully stored " and return success operation.
+
+        Returns: New item weight (ItemWeight).
     """    
-    @staticmethod
-    def process(periph:PeripheralOperations, last_weight:ItemsWeight,
-                queue_to_display:mp.Queue):
+    def process(self, periph:PeripheralOperations, last_weight:ItemsWeight,
+                queue_to_display:mp.Queue)-> ItemsWeight:
+        is_warn_sound_played = False
+        new_weight = 0.0
         periph.door.unlock()
         start_time = time.time()
         while True:
+            new_weight = periph.weight.get_weight()
             # Condition 1
-            if periph.door.sense_door_state() == True and \
-            periph.weight.get_weight() == last_weight:
-                periph.sound.play()
+            if periph.door.sense_door_state() == False and \
+            new_weight <= last_weight.unit_weight:
+                periph.door.lock()
+                periph.sound.play(SoundData.BARANG_BELUM_DITERIMA)
                 queue_to_display.put(LcdData.NO_ITEM_RECEIVED)
+                # Delay for putting data in queue 
+                time.sleep(0.3)
                 break
             # Condition 2
-            if time.time() - start_time > DOOR_TIMEOUT:
-                periph.sound.play()
+            if (time.time() - start_time > DOOR_TIMEOUT) and \
+            is_warn_sound_played == False:
+                is_warn_sound_played = True
+                periph.sound.play(SoundData.WARNING_DOOR_OPEN, False, True)
             # Condition 3
-            if periph.door.sense_door_state() == True and \
-            periph.weight.get_weight() > last_weight:
-                periph.sound.play()
+            if periph.door.sense_door_state() == False and \
+            new_weight > last_weight.unit_weight:
+                periph.sound.play(SoundData.ACCEPTED_ITEM)
                 queue_to_display.put(LcdData.ITEM_RECEIVED)
+                # Delay for putting data in queue 
+                time.sleep(0.3)
                 break
+        return ItemsWeight(new_weight)
 
 
 class ProcessingData:
