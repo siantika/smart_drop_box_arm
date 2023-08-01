@@ -22,6 +22,7 @@ sys.path.append(os.path.join(parent_dir, 'applications/peripheral_operations'))
 sys.path.append(os.path.join(parent_dir, 'applications/data_transactions_app'))
 sys.path.append(os.path.join(parent_dir, 'applications/display_app'))
 sys.path.append(os.path.join(parent_dir, 'applications/telegram_app'))
+sys.path.append(os.path.join(parent_dir, 'drivers/data_access'))
 sys.path.append(os.path.join(parent_dir, 'utils'))
 
 # Should put here due to DIY libs (we built it and it locates in our project dirs.)
@@ -30,6 +31,7 @@ from data_transactions_app import HttpSendDataApp
 from peripheral_operations import PeripheralOperations
 from display_app import DisplayMode
 from media_data import LcdData, SoundData
+from data_access import HttpDataAccess
 import log
 
 # telegram app object
@@ -44,6 +46,15 @@ DOOR_TIMEOUT = 10
 NETWORK_TIMEOUT = 5
 # Compensate error read by weight sensor due to electrical issue
 WEIGHT_OFFSET = 1.0
+
+
+""" Utility Functions """
+def read_config_file(section:str, option:str)-> str:
+    """ Read intended data from config file """
+    file = configparser.ConfigParser()
+    file.read(full_path_config_file)
+    raw_data =  file.get(section, option)
+    return raw_data
 
 """ Entitites for bussines logics """
 @dataclass
@@ -424,6 +435,42 @@ class Notify:
         telegram = TelegramApp()
         return telegram.send_notification(data_to_dict, 
                                           bin_data_photo) 
+    
+class Registration:
+    """ Registration operations for device to the server """
+    @staticmethod
+    def register_device()-> bool:
+        """ Register the device to the server 
+            Retruns:
+                registered status (bool) 
+        """
+        base_server = read_config_file('server', 'address')
+        device_version = read_config_file('device-info', 'version')
+        serial_number = read_config_file('device-info', 'serial_number')
+        register_http = HttpDataAccess(base_server)
+        http_header = {'content-type':'application/json'}
+        data = {
+            'serial_number' : serial_number,
+            'device_version' : device_version
+        }
+        resp = register_http.post(data, 'device-register.php', http_header,
+                           None, 5)
+        if resp[0] == 200:
+            os.environ['API_KEY'] = resp[1]['api_key']
+            os.environ['OWNER'] = resp[1]['owner']
+            date_registered = resp[1]['date_registered']
+            log.logger.info(f"Device ini telah terhubung ke server pada {date_registered} dengan pemilik {os.environ.get('OWNER')} ")
+            return True
+        return False
+
+
+
+
+        
+
+        
+
+    
 
 
 

@@ -442,3 +442,38 @@ class TestNotify:
                 {'no_resi':'0030', 'item' : 'rokok'},
                 binary_data_read
             )
+
+
+class TestRegister:
+    """ Test the registration of device to server 
+        test the success and the fail processes.
+       """
+
+    def test_with_valid_serial_number(self):
+        with patch.object(HttpDataAccess,'post') as mock_post:
+            test_response =(200, {
+                'api_key' : 'asdasdsad55325asd44d',
+                'owner' : 'Sian ajus',
+                'date_registered' : '20:00:00 1/08/2023'
+            })
+            mock_post.return_value = test_response
+            register = Registration()
+            result = register.register_device()
+            mock_post.assert_called_once()
+            assert os.environ['API_KEY'] == test_response[1]['api_key']
+            assert os.environ['OWNER'] == test_response[1]['owner']
+            assert result == True
+            # Clear environments vars
+            del os.environ['API_KEY']
+            del os.environ['OWNER']
+
+    def test_with_invalid_invalid_serial_number(self):
+        with patch.object(HttpDataAccess,'post') as mock_post:
+            test_response =(403, {'message' : 'Access forbiden '})
+            mock_post.return_value = test_response
+            register = Registration()
+            result = register.register_device()
+            mock_post.assert_called_once()
+            assert 'API_KEY' not in os.environ.keys()
+            assert 'OWNER' not in os.environ.keys()
+            assert result == False
