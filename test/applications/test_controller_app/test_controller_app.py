@@ -477,3 +477,56 @@ class TestRegister:
             assert 'API_KEY' not in os.environ.keys()
             assert 'OWNER' not in os.environ.keys()
             assert result == False
+
+
+class TestSecurity:
+    """ Test security methods """
+    def help_mock(self):
+        self._mock_serial = patch('serial.Serial', spec=serial.Serial).start()
+
+    def test_with_door_state_is_open(self):
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        door = periph.door
+        with patch.object(door, 'sense_door_state') as mock_door:
+            mock_door.return_value = 1
+            sec = Security()
+            sec._operation()
+            # give time for the sound to play
+            time.sleep(0.5)
+            assert sec._has_alert == True
+            # Clear the resources
+            sec._periph.sound.stop(sec._sound_alert)
+            patch.stopall()
+
+    def test_with_door_state_is_close(self):
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        door = periph.door
+        with patch.object(door, 'sense_door_state') as mock_door:
+            mock_door.return_value = 0
+            sec = Security()
+            sec._operation()
+            # give time for the sound to play
+            time.sleep(0.5)
+            assert sec._has_alert == False
+            assert sec._security_flag == 0
+            assert sec._sound_alert == None
+            patch.stopall()
+
+    def test_with_door_open_then_close_the_door(self):
+        self.help_mock()
+        periph = PeripheralOperations.get_instance()
+        door = periph.door
+        with patch.object(door, 'sense_door_state') as mock_door:
+            mock_door.return_value = 1
+            sec = Security()
+            sec._operation()
+            # give time for the sound to play
+            time.sleep(1.0)
+            sec._operation()
+            mock_door.return_value = 0
+            # give time for prcocessing the door state
+            time.sleep(1.0)
+            assert not sec._sound_alert.is_alive()
+            patch.stopall()

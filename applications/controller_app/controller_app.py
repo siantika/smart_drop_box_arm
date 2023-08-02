@@ -436,6 +436,34 @@ class Notify:
         return telegram.send_notification(data_to_dict, 
                                           bin_data_photo) 
     
+
+class Security:
+    """ Security for device """
+    def __init__(self) -> None:
+        self._security_flag:bool = 0
+        self._has_alert:bool = False
+        self._sound_alert:mp.Process = None
+        self._periph = PeripheralOperations.get_instance()
+
+    def _operation(self) -> None:
+        """ Check the door if it is opem. 
+            It will alert the user by:
+             + playing a warning sound (stop when door is closed)
+             + sending telegram notification once """
+        # True means door is openned
+        if self._periph.door.sense_door_state():
+            self._security_flag = 1
+
+        if self._security_flag and self._has_alert == False:
+            self._has_alert = True
+            self._sound_alert = self._periph.sound.play(SoundData.WARNING_DOOR_OPEN, False, True)
+        else:
+            if self._sound_alert != None:
+                self._periph.sound.stop(self._sound_alert)
+            self._has_alert = False
+            self._security_flag = 0
+        
+
 class Registration:
     """ Registration operations for device to the server """
     @staticmethod
