@@ -216,7 +216,8 @@ class TestValidation:
                      },
         }
         user_no_resi = NoResi('2321')
-        valid_no_resi = Validation.validate_no_resi(user_no_resi,
+        validator = Validation(('door', 'password'))
+        valid_no_resi = validator.validate_input(user_no_resi,
                                                     test_available_data)
 
         assert valid_no_resi.no_resi == '2321'
@@ -233,18 +234,23 @@ class TestValidation:
                      },
         }
         user_no_resi = NoResi('0023')
-        valid_no_resi = Validation.validate_no_resi(user_no_resi,
+        validator = Validation(('door', 'password'))
+        valid_no_resi = validator.validate_input(user_no_resi,
                                                     test_available_data)
 
         assert valid_no_resi == None
 
     def test_password_validation_with_correct_password(self):
-        """ Returns True"""
-        assert Validation.validate_door_password('AA5C', 'AA5C')
+        """ Returns 'door' """
+        user_input = NoResi('BCA*')
+        validator = Validation(('door', 'password'))
+        assert validator.validate_input(user_input, {}) == 'door'
     
     def test_password_validation_with_uncorrect_password(self):
-        """ Returns False """
-        assert not Validation.validate_door_password('5696', 'AA5C')
+        """ Returns None """
+        user_input = NoResi('5569')
+        validator = Validation(('door', 'password'))
+        assert validator.validate_input(user_input, {}) == None
 
 
 class TestTakingItem:
@@ -492,7 +498,7 @@ class TestSecurity:
         with patch.object(door, 'sense_door_state') as mock_door:
             mock_door.return_value = 1
             sec = Security()
-            sec._operation()
+            sec.run()
             # give time for the sound to play
             time.sleep(0.5)
             assert sec._has_alert == True
@@ -507,7 +513,7 @@ class TestSecurity:
         with patch.object(door, 'sense_door_state') as mock_door:
             mock_door.return_value = 0
             sec = Security()
-            sec._operation()
+            sec.run()
             # give time for the sound to play
             time.sleep(0.5)
             assert sec._has_alert == False
@@ -522,10 +528,10 @@ class TestSecurity:
         with patch.object(door, 'sense_door_state') as mock_door:
             mock_door.return_value = 1
             sec = Security()
-            sec._operation()
+            sec.run()
             # give time for the sound to play
             time.sleep(1.0)
-            sec._operation()
+            sec.run()
             mock_door.return_value = 0
             # give time for prcocessing the door state
             time.sleep(1.0)

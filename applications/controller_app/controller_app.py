@@ -206,45 +206,41 @@ class Validation:
             1. No resi inputted by user
             2. Door password  inputted by user
     """
-    @staticmethod
-    def validate_no_resi(no_resi:NoResi, 
-                         available_data_items:dict) -> DataItem | None:
-        """ Validates no resi inputted by user
-            Rules:
-                1. It consists from 4 chars
-                2. Should exist in data items available (variable)
-            Args:
-                no_resi (str): no resi inputted by user.
-            Returns:
-                target data item if no resi exist else None
-
+    def __init__(self, security_param:tuple) -> None:
+        """ security param is ('section' and 'option')
+            Please refers to config.ini
         """
-        if no_resi.value_4_digits in available_data_items.keys():
+        self._door_password = read_config_file(security_param[0], security_param[1])
+
+    def validate_input(self, no_resi:NoResi, available_data_items:dict\
+                       )-> DataItem | str | None:
+        """ Validate user input. It validates no resi or door password  from user
+            input ( no resi)
+            Args:
+                + no resi (NoResi) : user input no resi in 4 digits
+                + available_data_items (dict) : dicts of available data item stored in
+                  device. ex: {'5555', 
+                    {'no_resi' : '5555, 
+                    'item' : 'baju', 
+                    'date': 'etc ...}
+                  }
+            Returns:
+                DataItem if no resi is valid or 'door' (str) if door pass is valid or
+                None if no resi does not match avalable resi and door pass.
+            """
+        
+        if no_resi.value_4_digits in available_data_items:
             target_data = available_data_items[no_resi.value_4_digits]
             return DataItem(
                 target_data['no_resi'],
                 target_data['item'],
                 target_data['date_ordered']
             )
+        elif no_resi.value_4_digits == self._door_password:
+            return 'door'
         return None
-         
 
-    @staticmethod
-    def validate_door_password(password:DoorPassword, door_pass:str):
-        """ Validates door password inputted by user
-            Rules:
-                1. It consists from 4 chars
-                2. Should exist in config file (section: door_password)
-            Args:
-                password (str): password in chars inputted by user.
-                door_pass (str) : Valid password
-            Returns:
-                Validation status (bool): True is valid and False is
-                invalid
-
-        """
-        return True if password is door_pass else False
-
+    
 
 class TakingItem:
     """ Performs taking-items routine inside the box routine 
