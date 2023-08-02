@@ -419,11 +419,11 @@ class Notify:
     """ Notify the user throught medias"""
     @staticmethod
     def send_telegram_notification(target_data_item: DataItem,
-                              bin_data_photo)->int:
+                              photo:FilePhoto)->int:
         """ Send a notification to telegram bot 
             Args:
                 target_data_item(DataItem): selected data item
-                bin_data_photo(bytes): File photo for sending photo
+                photo(FilePhoto): File photo for sending photo
                                         to telegram bot
             Returns:
                 http status code (int)
@@ -434,7 +434,7 @@ class Notify:
         }
         telegram = TelegramApp()
         return telegram.send_notification(data_to_dict, 
-                                          bin_data_photo) 
+                                          photo.bin_data) 
     
 
 class Security:
@@ -445,7 +445,7 @@ class Security:
         self._sound_alert:mp.Process = None
         self._periph = PeripheralOperations.get_instance()
 
-    def _operation(self) -> None:
+    def run(self) -> None:
         """ Check the door if it is opem. 
             It will alert the user by:
              + playing a warning sound (stop when door is closed)
@@ -490,6 +490,69 @@ class Registration:
             log.logger.info(f"Device ini telah terhubung ke server pada {date_registered} dengan pemilik {os.environ.get('OWNER')} ")
             return True
         return False
+
+
+class ControllerApp:
+    """ Controller of main operation for device 
+        1. Registration 
+        2. Display the result of registration status
+        3. 
+    """
+    def __init__(self) -> None:
+        self._queue_to_display: mp.Queue
+        self._queue_from_data_access:mp.Queue
+        self._queue_to_data_access:mp.Queue
+        self._concise_data:dict
+
+    def run(self):
+        # Registration
+        device_register = Registration()
+        routine = DataItemRoutines()
+        security = Security()
+        user_input = UserInputNoResi()
+        taking_photo = TakingPhoto()
+        taking_item = TakingItem()
+        receiving_item = ReceivingItem()
+        process_data =ProcessingData()
+        periph = PeripheralOperations.get_instance()
+        
+        status_register = device_register.register_device()
+        if not status_register:
+            self._queue_to_display.put_nowait(LcdData.UNREGISTERED_STATUS)
+        while True:
+            security.run()
+            new_data_item = routine.get(self._queue_from_data_access)
+            # concise all data 
+            if new_data_item:
+                self._concise_data[new_data_item.no_resi] = new_data_item
+
+            # Read user input
+            user_no_resi = user_input.get(periph, self._queue_to_display)
+            
+            # Validate
+            validation = Validation.validate_no_resi(user_no_resi)
+            if not validation:
+                validation = Validation.validate_door_password(user_no_resi)
+            
+            weight:ItemsWeight = None 
+            photo:FilePhoto = None 
+            if validation:
+                photo = taking_photo.process(photo, periph)
+                receiving_item.process(periph, weight)
+                process_data.process(self._queue_to_data_access, user_no_resi,
+                                     photo)
+                telegram_notif = Notify.send_telegram_notification(user_no_resi,)
+                
+
+
+
+
+
+
+
+            
+
+
 
 
 

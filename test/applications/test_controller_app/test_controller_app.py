@@ -434,13 +434,14 @@ class TestNotify:
             stream.seek(0)  # Move the stream cursor to the beginning
             binary_data_read = stream.read()
         
+        test_photo = FilePhoto(binary_data_read)
         test_target_data_item = DataItem('0030', 'rokok', '2023-07-20 22:26:40')
         with patch.object(TelegramApp, 'send_notification', return_value = 1) as mock_notify:
             Notify.send_telegram_notification(test_target_data_item,
-                                              binary_data_read)
+                                              test_photo)
             mock_notify.assert_called_once_with(
                 {'no_resi':'0030', 'item' : 'rokok'},
-                binary_data_read
+                test_photo.bin_data
             )
 
 
