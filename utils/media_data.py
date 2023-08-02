@@ -72,8 +72,9 @@ class LcdData:
         'cmd': DisplayMode.NORMAL,
         'payload': ['ERROR:', 'Uni pass > 4 c!']
     }
-    UNREGISTERED_DEVICE = {
-
+    UNREGISTERED_STATUS = {
+        'cmd': DisplayMode.NORMAL,
+        'payload': ['INFO:', 'UNREGISTERED !']
     }
 
 class SoundData:
