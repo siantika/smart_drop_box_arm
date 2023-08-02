@@ -191,13 +191,13 @@ class ResponseHandler:
         except json.decoder.JSONDecodeError:
             return "Error: API does not return correct JSON format!"
 
-    def _handle_returning_data(self, response: requests.Response) -> str:
-        " Handling the server returning data contents"
+    def _handle_returning_data(self, response: requests.Response) -> dict | str :
+        " Handling data content from API server "
         return self._decode_json_data(response.text)
 
     def _handle_status_code_response(self, response: 
                                      requests.Response) -> str:
-        """ Handling status code from requests based on library maker.
+        """ Handling status code from requests based on custom.
             I created the common status code and it's content. Preventing
             from bad API returns.
 
@@ -206,7 +206,7 @@ class ResponseHandler:
         return self.STATUS_MESSAGES.get(status_code, str(status_code))
 
     def return_response(self, response: requests.Response) \
-        -> tuple[int, any]:
+        -> tuple[int, dict | str]:
         """Processes the HTTP response and returns the status code 
            and response data.
 
@@ -272,7 +272,7 @@ class HttpDataAccess(DataAccess):
                     "Http header argument should be dictionary type !")
 
     def get(self, param: dict, endpoint: str, http_header: dict = None,
-            time_out: int = 1) -> tuple[int, str]:
+            time_out: int = 1) -> tuple[int, dict | str]:
         """Makes a GET request to retrieve data based on the provided 
            parameters.
 
@@ -301,7 +301,7 @@ class HttpDataAccess(DataAccess):
     def post(self, payload: dict, endpoint: str, http_header: 
              dict = None,
              file: dict[str, IO] = None, time_out: int = 1) \
-                -> tuple[int, str]:
+                -> tuple[int, dict | str]:
         """Makes a POST request to create new data with the given 
            payload.
 
@@ -341,7 +341,7 @@ class HttpDataAccess(DataAccess):
 
     def update(self, payload: dict, endpoint: str, 
                http_header: dict = None,
-               time_out: int = 1) -> tuple[int, str]:
+               time_out: int = 1) -> tuple[int, dict | str]:
         """Makes a PATCH request to update existing data using the 
            provided payload.
         Args:
@@ -370,7 +370,7 @@ class HttpDataAccess(DataAccess):
 
     def delete(self, param: dict, endpoint:str, http_header: 
                dict = None,
-               time_out: int = 1) -> tuple[int, str]:
+               time_out: int = 1) -> tuple[int, dict | str]:
         """Makes a DELETE request to delete data based on the specified 
            parameters.
 
