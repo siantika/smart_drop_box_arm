@@ -3,13 +3,23 @@
     for playing sound.
 
 '''
+import configparser
 import os
 import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sound_assets_dir = os.path.join(parent_dir, './assets/sounds/')
 sys.path.append(os.path.join(parent_dir, 'applications/display_app'))
-
+full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 from display_app import DisplayMode
+
+""" Utility Functions """
+def read_config_file(section:str, option:str)-> str:
+    """ Read intended data from config file """
+    file = configparser.ConfigParser()
+    file.read(full_path_config_file)
+    raw_data =  file.get(section, option)
+    return raw_data
+
 
 class LcdData:
     TIMEOUT = {
@@ -75,6 +85,14 @@ class LcdData:
     UNREGISTERED_STATUS = {
         'cmd': DisplayMode.NORMAL,
         'payload': ['INFO:', 'UNREGISTERED !']
+    }
+    REGISTERED_STATUS = {
+        'cmd' : DisplayMode.NORMAL,
+        'payload' : ['REGISTERED TO', os.environ.get('OWNER')]
+    }
+    VERSION = {
+        'cmd' : DisplayMode.NORMAL,
+        'payload' : ['Smart Drop Box', read_config_file('device-info', 'version')]
     }
 
 class SoundData:
