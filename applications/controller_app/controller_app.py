@@ -34,9 +34,6 @@ from media_data import LcdData, SoundData
 from data_access import HttpDataAccess
 import log
 
-# telegram app object
-Telegram = TelegramApp()
-
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 full_photo_folder = os.path.join(parent_dir, 'assets/photos/')
 
@@ -213,7 +210,7 @@ class Validation:
         self._door_password = read_config_file(security_param[0], security_param[1])
 
     def validate_input(self, no_resi:NoResi, available_data_items:dict\
-                       )-> DataItem | str | None:
+                       )-> str | None:
         """ Validate user input. It validates no resi or door password  from user
             input ( no resi)
             Args:
@@ -230,12 +227,7 @@ class Validation:
             """
         
         if no_resi.value_4_digits in available_data_items:
-            target_data = available_data_items[no_resi.value_4_digits]
-            return DataItem(
-                target_data['no_resi'],
-                target_data['item'],
-                target_data['date_ordered']
-            )
+            return 'no_resi'
         elif no_resi.value_4_digits == self._door_password:
             return 'door'
         return None
@@ -267,7 +259,6 @@ class TakingItem:
             if periph.door.sense_door_state() == True and \
                 (time.time() - time_start > DOOR_TIMEOUT) and\
                     is_sound_warning_played == False:
-                
                 is_sound_warning_played = True
                 sound_thread = periph.sound.play\
                     (SoundData.WARNING_DOOR_OPEN, False, True)
@@ -489,56 +480,98 @@ class Registration:
 
 
 class ControllerApp:
-    """ Controller of main operation for device 
-        1. Registration 
-        2. Display the result of registration status
-        3. 
-    """
+    """ Controller of main operation for device """
     def __init__(self) -> None:
         self._queue_to_display: mp.Queue
         self._queue_from_data_access:mp.Queue
         self._queue_to_data_access:mp.Queue
-        self._concise_data:dict
 
     def run(self):
-        # Registration
+        courier_photo:FilePhoto = None 
+        state_process = None 
+        item_weight_now = 0.0
+        all_stored_data_items = {}
+        target_data_item:DataItem= None
+
         device_register = Registration()
         routine = DataItemRoutines()
         security = Security()
         user_input = UserInputNoResi()
+        validation = Validation(('door', 'password'))
         taking_photo = TakingPhoto()
         taking_item = TakingItem()
         receiving_item = ReceivingItem()
         process_data =ProcessingData()
+        notify = Notify()
         periph = PeripheralOperations.get_instance()
         
+        """ Registration phase """
         status_register = device_register.register_device()
         if not status_register:
             self._queue_to_display.put_nowait(LcdData.UNREGISTERED_STATUS)
-        while True:
-            security.run()
-            new_data_item = routine.get(self._queue_from_data_access)
-            # concise all data 
-            if new_data_item:
-                self._concise_data[new_data_item.no_resi] = new_data_item
+            # exit the app 
+            sys.exit(1)
+        elif status_register:
+            self._queue_to_display(LcdData.REGISTERED_STATUS)
+            time.sleep(2)
 
-            # Read user input
-            user_no_resi = user_input.get(periph, self._queue_to_display)
+        """ Display version """
+        self._queue_to_display.put_nowait(LcdData.VERSION)
+        time.sleep(2.0)
+
+        """ jump to routine """
+        state_process ='routine'
+
+        """ Read the initial item weight """
+        periph.weight.calibrate()
+        item_weight_now = periph.weight.get_weight()
+        
+        """ Main phase """
+        while True:
+            """ Routine """
+            if state_process == 'routine':
+                # Run the security
+                security.run()
+                all_stored_data_items = routine.get(self._queue_from_data_access)
+   
+            """ Read user input """
+            # Trigger the user input once
+            user_no_resi = periph.keypad.reading_input_char()
+            if user_no_resi:
+                user_no_resi = user_input.get(periph, self._queue_to_display)
+                # Validate
+                status_validation = validation.validate_input(user_no_resi, {})
+                if status_validation == 'door':
+                    state_process = 'taking_item'
+                elif status_validation == 'no_resi':
+                    state_process = 'receiving_item'
             
-            # Validate
-            validation = Validation.validate_no_resi(user_no_resi)
-            if not validation:
-                validation = Validation.validate_door_password(user_no_resi)
+            """ Taking item """
+            if state_process == 'taking_item':
+                item_weight_now = taking_item.process()
+                state_process = 'routine'
             
-            weight:ItemsWeight = None 
-            photo:FilePhoto = None 
-            if validation:
-                photo = taking_photo.process(photo, periph)
-                receiving_item.process(periph, weight)
-                process_data.process(self._queue_to_data_access, user_no_resi,
-                                     photo)
-                telegram_notif = Notify.send_telegram_notification(user_no_resi,)
-                
+            """ Receiving item """
+            if state_process == 'receiving_item':
+                courier_photo = taking_photo.process(periph)
+                item_weight_now = receiving_item.process(periph, item_weight_now, self._queue_to_display)
+                state_process = 'data_process'
+            
+            """ Data process """
+            if state_process == 'data_process':
+                target_data_item = all_stored_data_items[user_no_resi]
+                process_data.process(self._queue_to_data_access, target_data_item, courier_photo)
+                state_process = 'notify'
+
+            """ Notify user """
+            if state_process == 'notify':
+                notify.send_telegram_notification(target_data_item, courier_photo)
+                state_process = 'clear_resource'
+
+            """ Clear the resource """
+            if state_process == 'clear_resource':
+                periph.camera.delete_all_photos()
+                state_process = 'routine'
 
 
 

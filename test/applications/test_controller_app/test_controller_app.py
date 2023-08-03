@@ -217,12 +217,9 @@ class TestValidation:
         }
         user_no_resi = NoResi('2321')
         validator = Validation(('door', 'password'))
-        valid_no_resi = validator.validate_input(user_no_resi,
+        status = validator.validate_input(user_no_resi,
                                                     test_available_data)
-
-        assert valid_no_resi.no_resi == '2321'
-        assert valid_no_resi.item == 'bola'
-        assert valid_no_resi.date_ordered == '2023-07-20 22:26:40'
+        assert status == 'no_resi'
 
     def test_validation_no_resi_with_non_exist_data(self):
         """ Returns None """
