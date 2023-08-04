@@ -1,1 +1,3 @@
 2023-07-31 21:13:38,289 - log - INFO - Barang telah di ambil
+2023-08-04 16:33:40,174 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:33:43,874 - log - INFO - Response dari request : Posted successfully
