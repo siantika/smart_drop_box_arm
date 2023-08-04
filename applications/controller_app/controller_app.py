@@ -117,7 +117,7 @@ class ItemsWeight:
 
 """ Use cases """
 class DataItemRoutines:
-    """ Fetching and storing data items from data sources/server """
+    """ Fetching data items from data sources/server """
 
     def _get_data_from_queue(self, queue: mp.Queue)-> DataItem | None:
         """ Gets a data from queue
@@ -128,12 +128,12 @@ class DataItemRoutines:
         """
         return queue.get_nowait() if not queue.empty() else None
 
-    def get(self, queue_data: mp.Queue) -> DataItem | None:
+    def get(self, queue_data: mp.Queue) -> dict[str:dict] | None:
         """Reads existing data from data source using queue.
         Args:
             queue_data (mp.Queue): Queue data for receiving data from other threads.
         Returns:
-            Data items (DataItem) or None if no data in queue.
+            key-val data items or None if no data in queue.
         """
         raw_data_items = self._get_data_from_queue(queue_data)
         if raw_data_items:
@@ -540,7 +540,7 @@ class ControllerApp:
             if user_no_resi:
                 user_no_resi = user_input.get(periph, self._queue_to_display)
                 # Validate
-                status_validation = validation.validate_input(user_no_resi, {})
+                status_validation = validation.validate_input(user_no_resi, all_stored_data_items)
                 if status_validation == 'door':
                     state_process = 'taking_item'
                 elif status_validation == 'no_resi':
