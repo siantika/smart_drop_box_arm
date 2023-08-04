@@ -242,11 +242,21 @@ class HttpGetResiDataRoutineApp(AppInterface):
         """ Set a shared queue for sending  'get' response from server """
         self._shared_queue_data = queue_data
 
+    def _process_requests(self, response_text:dict)->dict[str:dict]:
+        """ Process requests text and returns it as key-val data. 
+            Key is 'no resi' and value is dictionary contains data payload
+            from server (inlcuding no resi). It eases us for finding data in
+            controller app
+        """
+        data_items = response_text[1]
+        key_val_data = {data_item['no_resi']: data_item for data_item in data_items}
+        return key_val_data
+
     def _get_request_routine(self):
         responses = self._data_processor.process(PAYLOAD_GET_DATA)
         # Only get the response text, index 0 represents http status code
         # and index 1 represents the content/data from the API.
-        new_response_text = responses[1]
+        new_response_text = self._process_requests(responses)
         # Just put the newest data from server. Prevents unecessary
         # put data to queue
         if self._old_response_text != new_response_text:
@@ -258,6 +268,15 @@ class HttpGetResiDataRoutineApp(AppInterface):
             Executes infinite get-request-routine app.
             Performs periodic get requests to server base on
             given interval time in seconds. 
+            Example data to be sent through queue:
+            {
+                '5555' : {
+                'no_resi' : '5555',
+                'item' : 'sandal',
+                'date_ordered' : '25/02/2024'
+                },
+                etc ...
+            }
         """
         prev_time = time.time()
         while True:

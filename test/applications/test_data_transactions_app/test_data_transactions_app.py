@@ -249,39 +249,47 @@ class TestSendRequests:
 
 class TestGetRequestsRoutine:
     """ Test get requests from server """
-    def _help_mock_get_requests_with_return_response(self):
-        patch.stopall()
+    def _help_mock_get_requests(self):
         self._mock_get_requests = patch.object(HttpDataAccess, 'get').start()
-        self._mock_get_requests.return_value = ( 200, {
-            'no_resi' : '0789',
-            'item' : 'tamiya',
-            'date_ordered' : '27/02/2023'
-        } )
 
-    def _help_mock_get_requests_with_no_return_response(self):
-        patch.stopall()
-        self._mock_get_requests = patch.object(HttpDataAccess, 'get').start()
-    
     def test_with_exists_get_response_data(self):
         """ Get requests should be called once,
             Return the response text/content only """
-        self._help_mock_get_requests_with_return_response()
+        self._help_mock_get_requests()
+        self._mock_get_requests.return_value = ( 200, [{
+            'no_resi' : '0789',
+            'item' : 'tamiya',
+            'date_ordered' : '27/02/2023'
+            }, 
+            {
+            'no_resi' : '5565',
+            'item' : 'setrika',
+            'date_ordered' : '25/02/2024',
+            }
+            ])
         test_queue = mp.Queue(2)
         get_requests_app = HttpGetResiDataRoutineApp()
         get_requests_app.set_queue_data(test_queue)
         get_requests_app._get_request_routine()
         # Tests
         self._mock_get_requests.assert_called_once()
-        assert test_queue.get() == {
+        assert test_queue.get() == {'0789' : {
             'no_resi' : '0789',
             'item' : 'tamiya',
             'date_ordered' : '27/02/2023'
+        },
+            '5565' : {
+                'no_resi' : '5565',
+                'item' : 'setrika',
+                'date_ordered' : '25/02/2024',
+            }
         }
+        patch.stopall()
 
     def test_with_no_get_response_data(self):
         """ No get method invoked and queue is empty
          (no new data)"""
-        self._help_mock_get_requests_with_no_return_response()
+        self._help_mock_get_requests()
         test_queue = mp.Queue(2)
         get_requests_app = HttpGetResiDataRoutineApp()
         get_requests_app.set_queue_data(test_queue)
@@ -291,5 +299,36 @@ class TestGetRequestsRoutine:
         assert test_queue.empty()
         patch.stopall()
 
-
-
+    def test_with_twice_same_response_data(self):
+        """ Should send the first data, ignore the second data """
+        self._help_mock_get_requests()
+        self._mock_get_requests.return_value = ( 200, [{
+            'no_resi' : '0789',
+            'item' : 'tamiya',
+            'date_ordered' : '27/02/2023'
+            }, 
+            {
+            'no_resi' : '5565',
+            'item' : 'setrika',
+            'date_ordered' : '25/02/2024',
+            }
+            ])
+        test_queue = mp.Queue(4)
+        get_requests_app = HttpGetResiDataRoutineApp()
+        get_requests_app.set_queue_data(test_queue)
+        # invoke it twice with the same data
+        get_requests_app._get_request_routine()
+        get_requests_app._get_request_routine()
+        assert test_queue.get() == {'0789' : {
+            'no_resi' : '0789',
+            'item' : 'tamiya',
+            'date_ordered' : '27/02/2023'
+        },
+            '5565' : {
+                'no_resi' : '5565',
+                'item' : 'setrika',
+                'date_ordered' : '25/02/2024',
+            }
+        }
+        patch.stopall()
+# EOF
