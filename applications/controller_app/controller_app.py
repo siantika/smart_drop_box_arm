@@ -124,7 +124,7 @@ class DataItemRoutines:
             Args:
                 queue (mp.Queue) : queue data 
             Returns:
-                Data items (DataItem) or None if no data in queue.
+                Key-val data items (dict) or None if no data in queue.
         """
         return queue.get_nowait() if not queue.empty() else None
 
@@ -133,7 +133,7 @@ class DataItemRoutines:
         Args:
             queue_data (mp.Queue): Queue data for receiving data from other threads.
         Returns:
-            key-val data items or None if no data in queue.
+            Key-val data items or None if no data in queue.
         """
         raw_data_items = self._get_data_from_queue(queue_data)
         if raw_data_items:
@@ -554,7 +554,8 @@ class ControllerApp:
             """ Receiving item """
             if state_process == 'receiving_item':
                 courier_photo = taking_photo.process(periph)
-                item_weight_now = receiving_item.process(periph, item_weight_now, self._queue_to_display)
+                item_weight_now = receiving_item.process(periph, item_weight_now, 
+                                                         self._queue_to_display)
                 state_process = 'data_process'
             
             """ Data process """
