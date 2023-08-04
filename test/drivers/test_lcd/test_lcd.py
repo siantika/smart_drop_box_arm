@@ -3,13 +3,14 @@ Test cases for LCD interface. I tests I2C PCF8574
 implementation for LowLevelInterface and LCDi2C driver implementation.
 
 """
+import os
 import sys
 import time
 from smbus2 import SMBus
 from unittest.mock import patch, call
-sys.path.append('drivers/lcd') 
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/lcd'))
 from lcd import *
-
 
 test_dev_addr = 0x27
 test_bus_line_0 = 0

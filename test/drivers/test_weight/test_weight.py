@@ -3,12 +3,14 @@
     NOTE: Failed to test threading!
 '''
 
+import os
 from unittest.mock import patch, call
 import sys
 import platform
 import pytest
-sys.path.append('drivers/weight')
-sys.path.append('drivers/mock_wiringpi')
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/weight'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/mock_wiringpi'))
 from weight import *
 
 TEST_PIN_PD_SCK = 10

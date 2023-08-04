@@ -8,8 +8,8 @@ import requests
 import sys
 import pytest
 import os 
-abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(abs_path, 'drivers/data_access'))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/data_access'))
 from data_access import *
 
 

@@ -20,7 +20,7 @@ import os
 import subprocess
 import re
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(parent_dir, 'drivers/sound'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/sound'))
 from sound import Aplay, SoundProcessing
 
 # Choose the sound-processing mode base on operating system

@@ -14,8 +14,8 @@ Classes:
 import os
 import sys
 import pytest 
-abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(abs_path, 'drivers/camera'))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/camera'))
 
 from camera import *
 

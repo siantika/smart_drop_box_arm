@@ -11,12 +11,14 @@ Classes:
 """
 
 
+import os
 import sys
 import pytest
 from unittest.mock import patch
 import serial
-sys.path.append('drivers/keypad')
-sys.path.append('drivers/mock_wiringpi')
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/keypad'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/mock_wiringpi'))
 
 from keypad import *
 
