@@ -32,6 +32,9 @@ Note:
   that specifically handles data access through HTTP requests. It utilizes 
   the 'HttpRequestProcessor' to make HTTP requests and the 'ResponseHandler' 
   to process the responses.
+- To add authorization when the data access object already initialized with 'None' token/auth
+  , we can add  the 'authorization' data in header http. It will set the http requests 
+  in auth mode.
 
 For usage and detailed documentation, please refer to the individual class docstrings.
 """
@@ -295,6 +298,11 @@ class HttpDataAccess(DataAccess):
             param=param,
             time_out=time_out
         )
+        # Check the auth header if it initialize in http_header else return
+        # token initialize / default value
+        self._token = http_header['authorization'] if 'authorization' in \
+          http_header.keys() else self._token
+            
         return self._http_request.request_processor(http_data, 
                                                     self._token)
 
@@ -336,6 +344,11 @@ class HttpDataAccess(DataAccess):
             file=file,
             time_out=time_out
         )
+        # Check the auth header if it initialize in http_header else return
+        # token initialize / default value
+        self._token = http_header['authorization'] if 'authorization' in \
+          http_header.keys() else self._token
+        
         return self._http_request.request_processor(http_data, 
                                                     self._token)
 
@@ -365,6 +378,10 @@ class HttpDataAccess(DataAccess):
             data=json_payload,
             time_out=time_out
         )
+        # Check the auth header if it initialize in http_header else return
+        # token initialize / default value
+        self._token = http_header['authorization'] if 'authorization' in \
+          http_header.keys() else self._token
         return self._http_request.request_processor(http_data, 
                                                     self._token)
 
@@ -392,5 +409,9 @@ class HttpDataAccess(DataAccess):
             param=param,
             time_out=time_out
         )
+        # Check the auth header if it initialize in http_header else return
+        # token initialize / default value
+        self._token = http_header['authorization'] if 'authorization' in \
+          http_header.keys() else self._token
         return self._http_request.request_processor(http_data, 
                                                     self._token)

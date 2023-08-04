@@ -548,3 +548,117 @@ class TestHttpDataAccessDeleteMethod(HelpMockMethod):
         # Not in STATUS_MESSAGES Response handler class variable
         assert data_retrieved[0] is not data._http_request._response_handler.STATUS_MESSAGES.keys()
         assert data_retrieved[1] == "582"
+
+
+class TestRequestsWithLateSetAuthHeader(HelpMockMethod):
+    """ Test the requests when auth header setted lately """
+
+    def test_get_with_token_in_http_header(self):
+        """ get request in auth mode """
+        test_payload = {
+            'no_resi' : '0230',
+            'item' : 'sapu lidi',
+        }
+        self.help_mock_api_response(200, test_payload, True)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json',
+                       'authorization' : TEST_GENERATED_TOKEN}
+        data.get({'no_resi' : '0230 '}, 'get', http_header)
+        assert data._token == TEST_GENERATED_TOKEN
+    
+    def test_get_with_no_token_in_http_header(self):
+        """ get request in no auth mode """
+        test_payload = {
+            'no_resi' : '0230',
+            'item' : 'sapu lidi',
+        }
+        self.help_mock_api_response(200, test_payload, True)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json'}
+        data.get({'no_resi' : '0230 '}, 'get', http_header)
+        assert data._token == None
+
+    def test_post_with_token_in_http_header(self):
+        """ post request in auth mode """
+        test_payload = "success posted in server"
+        self.help_mock_api_response(204, test_payload, False)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json',
+                       'authorization' : TEST_GENERATED_TOKEN}
+        data.post({'no_resi' : '0230 ',
+                   'item':'rokok',
+                   'date_ordered': '2023'}, 'post.php', http_header)
+        assert data._token == TEST_GENERATED_TOKEN
+    
+    def test_post_with_no_token_in_http_header(self):
+        """ post request in no auth mode """
+        test_payload = " Successfully posted in server "
+        self.help_mock_api_response(204, test_payload, False)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json'}
+        data.post({'no_resi' : '0230 ',
+                   'item':'rokok',
+                   'date_ordered': '2023'}, 'post.php', http_header)
+        assert data._token == None
+
+    def test_update_with_token_in_http_header(self):
+        """ update request in auth mode """
+        test_payload = "success updated old data "
+        self.help_mock_api_response(204, test_payload, False)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json',
+                       'authorization' : TEST_GENERATED_TOKEN}
+        data_retrieved = data.update({
+                'no_resi' : '5563',
+                'item' : 'Casing android phone',
+                }, 'update.php', http_header)
+        assert data._token == TEST_GENERATED_TOKEN
+    
+    def test_update_with_no_token_in_http_header(self):
+        """ update request in no auth mode """
+        test_payload = " Successfully update old data "
+        self.help_mock_api_response(204, test_payload, False)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json'}
+        data_retrieved = data.update({
+                'no_resi' : '5563',
+                'item' : 'Casing android phone',
+                }, 'update.php', http_header)
+        assert data._token == None
+
+    def test_delete_with_token_in_http_header(self):
+        """ update request in auth mode """
+        test_payload = "success deleted data "
+        self.help_mock_api_response(204, test_payload, False)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json',
+                       'authorization' : TEST_GENERATED_TOKEN}
+        data_retrieved = data.delete({
+                'no_resi' : '5563'}, 'delete.php', http_header)
+        assert data._token == TEST_GENERATED_TOKEN
+    
+    def test_delete_with_no_token_in_http_header(self):
+        """ update request in no auth mode """
+        test_payload = " Successfully deleted data "
+        self.help_mock_api_response(204, test_payload, False)
+        data = HttpDataAccess(
+            TEST_URL,
+        )
+        http_header = {'content-type' : 'application/json'}
+        data_retrieved = data.update({
+                'no_resi' : '5563'}, 'delete.php', http_header)
+        assert data._token == None
