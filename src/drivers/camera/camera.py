@@ -18,7 +18,7 @@ import subprocess
 import os
 from enum import Enum
 
-abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 class CameraResolution(Enum):

@@ -16,12 +16,12 @@ from pathlib import Path
 import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(parent_dir, 'drivers/keypad'))
-sys.path.append(os.path.join(parent_dir, 'drivers/weight'))
-sys.path.append(os.path.join(parent_dir, 'drivers/door'))
-sys.path.append(os.path.join(parent_dir, 'drivers/camera'))
-sys.path.append(os.path.join(parent_dir, 'drivers/sound'))
-sys.path.append(os.path.join(parent_dir, 'utils'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/keypad'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/weight'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/door'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/camera'))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/sound'))
+sys.path.append(os.path.join(parent_dir, 'src/utils'))
 
 config_dir = os.path.join(parent_dir, 'conf/config.ini')
 # Should put here due to local DIY libs

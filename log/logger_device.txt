@@ -3,3 +3,10 @@
 2023-08-04 16:33:43,874 - log - INFO - Response dari request : Posted successfully
 2023-08-04 16:39:10,438 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
 2023-08-04 16:39:14,140 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:42:27,137 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:42:27,428 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:46:14,198 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:46:14,504 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:49:03,238 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:50:30,629 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:50:34,345 - log - INFO - Response dari request : Posted successfully
