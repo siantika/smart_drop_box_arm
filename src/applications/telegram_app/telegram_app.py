@@ -16,7 +16,7 @@ import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
-sys.path.append(os.path.join(parent_dir, 'utils'))
+sys.path.append(os.path.join(parent_dir, 'src/utils'))
 # should put here!
 import log
 # Time out for sending request to telegram server

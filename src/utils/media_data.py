@@ -6,9 +6,9 @@
 import configparser
 import os
 import sys
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sound_assets_dir = os.path.join(parent_dir, './assets/sounds/')
-sys.path.append(os.path.join(parent_dir, 'applications/display_app'))
+sys.path.append(os.path.join(parent_dir, 'src/applications/display_app'))
 full_path_config_file = os.path.join(parent_dir, 'conf/config.ini')
 from display_app import DisplayMode
 

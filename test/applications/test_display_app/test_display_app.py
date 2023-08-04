@@ -11,7 +11,7 @@ import os
 import pytest 
 
 parrent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(parrent_dir, 'applications/display_app'))
+sys.path.append(os.path.join(parrent_dir, 'src/applications/display_app'))
                 
 sys.path.append('drivers/lcd')
 from display_app import DisplayApp, DisplayMode

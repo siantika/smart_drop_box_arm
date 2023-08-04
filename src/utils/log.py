@@ -6,7 +6,7 @@
 import os
 import logging
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 LOG_DIR = os.path.join(parent_dir, "log/logger_device.txt")
 

@@ -6,8 +6,8 @@ import serial
 import multiprocessing as mp
 from unittest.mock import patch
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(parent_dir, 'applications/controller_app'))
-sys.path.append(os.path.join(parent_dir, 'applications/display_app'))
+sys.path.append(os.path.join(parent_dir, 'src/applications/controller_app'))
+sys.path.append(os.path.join(parent_dir, 'src/applications/display_app'))
 
 from controller_app import *
 from display_app import * 

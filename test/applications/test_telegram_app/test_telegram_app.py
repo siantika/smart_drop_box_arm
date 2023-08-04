@@ -1,8 +1,9 @@
+import os
 import sys
 from unittest.mock import patch
-
 import requests
-sys.path.append('applications/telegram_app')
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/applications/telegram_app'))
 from telegram_app import TelegramApp
 
 class TestTelegramApp:
