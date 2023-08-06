@@ -486,6 +486,16 @@ class ControllerApp:
         self._queue_from_data_access:mp.Queue
         self._queue_to_data_access:mp.Queue
 
+    def set_queue_data(self, queue_to_display:mp.Queue, 
+                       queue_from_data_access:mp.Queue,
+                       queue_to_data_acces:mp.Queue):
+        """ Initiates the queue data for communication mediums 
+            between threads
+        """
+        self._queue_to_display = queue_to_display
+        self._queue_to_data_access = queue_to_data_acces
+        self._queue_from_data_access = queue_from_data_access
+
     def run(self):
         courier_photo:FilePhoto = None 
         state_process = None 
