@@ -8,7 +8,6 @@
         It runs the operations needed by the core app and provide queue data
         as shared resources between threads.
 
-    License: see 'licenses.txt' file in the root of project
 """
 
 import os
@@ -16,75 +15,75 @@ import sys
 import multiprocessing as mp
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(os.path.join(parent_dir, 'applications/operation_thread'))
-sys.path.append(os.path.join(parent_dir, 'applications/lcd_thread'))
-sys.path.append(os.path.join(parent_dir, 'applications/network_thread'))
+sys.path.append(os.path.join(parent_dir, 'src/applications/controller_app'))
+sys.path.append(os.path.join(parent_dir, 'src/applications/display_app'))
+sys.path.append(os.path.join(parent_dir, 'src/applications/data_transactions_app'))
 
-from operation_thread import ThreadOperation
-from lcd_thread import LcdThread
-from network_thread import GetRequest, PostRequest
+from controller_app import ControllerApp
+from display_app import DisplayApp
+from data_transactions_app import HttpGetResiDataRoutineApp, HttpSendDataApp
 
 # shared resources, the names are perspective from opeartion thread
-q_data_to_lcd = mp.Queue(10)
-q_data_to_net = mp.Queue(10)
-q_data_from_net = mp.Queue(10)
+q_data_to_display = mp.Queue(10)
+q_data_to_data_access = mp.Queue(10)
+q_data_from_data_access = mp.Queue(10)
 
 # create functions for running each thread
-def opt_routine(q_data_to_lcd, q_data_from_net, q_data_to_net):
+def controller_routine(q_data_to_display, q_data_from_data_access, q_data_to_data_data_access):
    '''
       Control all threads.
-   
    '''
-   opt_t = ThreadOperation()
-   opt_t.set_queue_to_lcd_thread(q_data_to_lcd)
-   opt_t.set_queue_from_net_thread (q_data_from_net)
-   opt_t.set_queue_to_net_thread (q_data_to_net)
-   opt_t.run()
+   controller = ControllerApp()
+   controller.set_queue_data(q_data_to_display,
+                             q_data_from_data_access,
+                             q_data_to_data_data_access)
+   controller.run()
 
 
-def lcd_routine(q_data_to_lcd):
+def display_routine(q_data_to_display):
    '''
-      Display data from operation thread
+      Display data from controller thread
    '''
-   lcd_t = LcdThread()
-   lcd_t.set_queue_data(q_data_to_lcd)
-   lcd_t.run()
+   display = DisplayApp()
+   display.set_queue_data(q_data_to_display)
+   display.run()
 
 
-def net_receive_routine(q_data_from_net):
+def get_data_routine(q_data_from_data_access):
    '''
-      Polling requests GET from server every 5 secs   
+      Handle data routine every 5 secs
    '''
-   net_t = GetRequest()
-   net_t.set_queue_data_to_operation(q_data_from_net)
-   net_t.run()
+   get_routine = HttpGetResiDataRoutineApp()
+   get_routine.set_queue_data(q_data_from_data_access)
+   get_routine.run()
 
 
-def net_post_routine(q_data_to_net):
+def data_transactions_routine(q_data_to_data_access):
    '''
-      send requests for DELETE stored no resi data in server
-      and POST success items received plus photos in server.
+      Handle data transactions ( to server )
    '''
-   net_t = PostRequest()
-   net_t.set_queue_data_from_operation(q_data_to_net)
-   net_t.run()
+   send_data = HttpGetResiDataRoutineApp()
+   send_data.set_queue_data(q_data_to_data_access)
+   send_data.run()
 
 
-process_lcd = mp.Process(target=lcd_routine, args=(q_data_to_lcd,))
-process_opt = mp.Process(target=opt_routine, args=(q_data_to_lcd, q_data_from_net, q_data_to_net,))
-process_net_get = mp.Process(target=net_receive_routine, args=(q_data_from_net,))
-process_net_post = mp.Process(target=net_post_routine, args=(q_data_to_net, ))
+thread_display = mp.Process(target=display_routine, args=(q_data_to_display,))
+thread_controller= mp.Process(target=controller_routine, args=(q_data_to_display, 
+                                                                q_data_from_data_access,                                                                
+                                                                 q_data_to_data_access,))
+thread_get_routine = mp.Process(target=get_data_routine, args=(q_data_from_data_access,))
+thread_data_transaction = mp.Process(target=data_transactions_routine, args=(q_data_to_display, ))
 
 
 # Driver code
 if __name__ == '__main__':
-   process_opt.start()
-   process_lcd.start()
-   process_net_get.start()
-   process_net_post.start()
+   thread_controller.start()
+   thread_display.start()
+   thread_get_routine.start()
+   thread_data_transaction.start()
    
-   process_opt.join()
-   process_lcd.join()
-   process_net_get.join()
-   process_net_post.join()
+   thread_controller.join()
+   thread_display.join()
+   thread_get_routine.join()
+   thread_data_transaction.join()
 

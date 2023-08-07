@@ -1,35 +1,14 @@
-2023-07-18 15:34:44,768 - log - WARNING - Your request does not contain any token
-2023-07-18 15:35:30,934 - log - WARNING - Your request does not contain any token
-2023-07-18 15:51:22,427 - log - WARNING - Your request does not contain any token
-2023-07-18 15:55:31,156 - log - WARNING - Your request does not contain any token
-2023-07-18 15:55:39,281 - log - WARNING - Your request does not contain any token
-2023-07-18 15:55:39,284 - log - WARNING - Your request does not contain any token
-2023-07-18 15:55:45,463 - log - WARNING - Your request does not contain any token
-2023-07-19 12:06:08,159 - log - WARNING - Your request does not contain any token
-2023-07-19 12:06:11,899 - log - WARNING - Your request does not contain any token
-2023-07-19 22:58:08,013 - log - WARNING - Your request does not contain any token
-2023-07-20 02:07:11,859 - log - WARNING - Your request does not contain any token
-2023-07-20 14:02:31,730 - log - WARNING - Your request does not contain any token
-2023-07-20 14:04:16,700 - log - WARNING - Your request does not contain any token
-2023-07-20 14:32:14,119 - log - WARNING - Your request does not contain any token
-2023-07-20 14:34:31,099 - log - WARNING - Your request does not contain any token
-2023-07-20 14:35:28,088 - log - WARNING - Your request does not contain any token
-2023-07-20 14:36:50,556 - log - WARNING - Your request does not contain any token
-2023-07-20 14:36:53,961 - log - WARNING - Your request does not contain any token
-2023-07-20 15:04:15,681 - log - WARNING - Your request does not contain any token
-2023-07-20 23:38:30,142 - log - WARNING - Your request does not contain any token
-2023-07-20 23:38:30,142 - log - WARNING - Your request is not authorized!
-2023-07-20 23:39:42,810 - log - WARNING - Your request does not contain any token
-2023-07-20 23:39:42,810 - log - WARNING - Your request is not authorized!
-2023-07-20 23:39:45,057 - log - WARNING - Your request does not contain any token
-2023-07-20 23:39:45,057 - log - WARNING - Your request is not authorized!
-2023-07-20 23:40:16,687 - log - WARNING - Your request does not contain any token
-2023-07-20 23:40:16,687 - log - WARNING - Your request is not authorized!
-2023-07-20 23:40:18,879 - log - WARNING - Your request does not contain any token
-2023-07-20 23:40:18,879 - log - WARNING - Your request is not authorized!
-2023-07-20 23:49:20,814 - log - WARNING - Your request does not contain any token
-2023-07-20 23:50:00,846 - log - WARNING - Your request does not contain any token
-2023-07-20 23:54:25,930 - log - WARNING - Your request does not contain any token
-2023-07-21 13:14:45,988 - log - WARNING - Your request does not contain any token
-2023-07-21 15:54:31,651 - log - WARNING - Your request does not contain any token
-2023-07-21 15:57:12,056 - log - WARNING - Your request does not contain any token
+2023-07-31 21:13:38,289 - log - INFO - Barang telah di ambil
+2023-08-04 16:33:40,174 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:33:43,874 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:39:10,438 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:39:14,140 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:42:27,137 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:42:27,428 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:46:14,198 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:46:14,504 - log - INFO - Response dari request : Posted successfully
+2023-08-04 16:49:03,238 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:50:30,629 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-04 16:50:34,345 - log - INFO - Response dari request : Posted successfully
+2023-08-07 19:17:02,580 - log - INFO - Device ini telah terhubung ke server pada 20:00:00 1/08/2023 dengan pemilik Sian ajus 
+2023-08-07 19:17:06,289 - log - INFO - Response dari request : Posted successfully

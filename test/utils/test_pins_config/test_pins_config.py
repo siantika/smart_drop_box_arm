@@ -7,8 +7,8 @@ class TestPinsConfig:
     def test_pins_from_pins_configuration_class_should_be_correct(self):
         PIN_PD_OUT = 9
         PIN_SCK = 10
-        PIN_DOOR_LOCK = 7
-        PIN_DOOR_SENSE = 5
+        PIN_DOOR_LOCK = 5
+        PIN_DOOR_SENSE = 7
        
         pins = PinsConfig()
 

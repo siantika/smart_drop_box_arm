@@ -14,15 +14,15 @@ Classes:
 import os
 import sys
 import pytest 
-abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(os.path.join(abs_path, 'drivers/camera'))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.append(os.path.join(parent_dir, 'src/drivers/camera'))
 
 from camera import *
 
 class TestUsbCamera:
     def set_up(self):
         self.cam_set = UsbCameraSetting()
-        self.cam_set.resolution = '680x480' 
+        self.cam_set.resolution = CameraResolution._640x480
         self.cam = UsbCamera('/dev/video0', self.cam_set)
 
     def tear_down(self):
@@ -76,7 +76,7 @@ class TestUsbCamera:
         '''Should generate date-time format! '''
         self.set_up()
         ret = self.cam.generate_file_name()
-        assert ret == '%Y-%m-%d_%H-%M-%S.jpg'
+        assert ret == datetime.now().strftime('%Y-%m-%d_%H-%M-%S.jpg')
         self.tear_down()
 
     def test_get_all_photos_name(self):
@@ -110,7 +110,7 @@ class TestUsbCamera:
 class TestUsbDeletePhoto:
     def set_up(self):
         self.cam_set = UsbCameraSetting()
-        self.cam_set.resolution = '680x480' 
+        self.cam_set.resolution = CameraResolution._640x480
         self.cam = UsbCamera('/dev/video0', self.cam_set)
 
     def tear_down(self):
@@ -159,7 +159,7 @@ class TestUsbDeletePhoto:
 class TestUsbCameraExecution:
     def set_up(self):
         self.cam_set = UsbCameraSetting()
-        self.cam_set.resolution = '680x480' 
+        self.cam_set.resolution = CameraResolution._640x480
 
     def tear_down(self):
         self.cam.delete_all_photos()
@@ -171,7 +171,7 @@ class TestUsbCameraExecution:
         self.set_up()
         self.cam = UsbCamera('/dev/video0', self.cam_set)
         self.cam.photo_directory = './assets/photos'
-        ret = self.cam.capture_photo()
+        ret = self.cam.capture_photo()[0]
         assert ret == 0
         self.tear_down()
 
@@ -180,8 +180,41 @@ class TestUsbCameraExecution:
         self.set_up()
         self.cam = UsbCamera('/dev/videoasd0', self.cam_set)
         self.cam.photo_directory = './assets/photos'
-        ret = self.cam.capture_photo()
+        ret = self.cam.capture_photo()[0]
         assert ret == 1
         self.tear_down()
+
+    def test_should_return_success_operation_and_saved_photo_dir(self):
+        """ Should return success and correct photo-saved dir"""
+        dir_saved_photo = None
+        self.set_up()
+        self.cam = UsbCamera('/dev/video0', self.cam_set)
+        self.cam.photo_directory = './assets/photos'
+        ret = self.cam.capture_photo()
+
+        # Get photo file dir
+        file_name = os.listdir(os.path.join(abs_path, self.cam.photo_directory))[0]
+        dir_saved_photo = os.path.join(self.cam.photo_directory,
+                                       file_name)
+        assert ret[0] == 0
+        assert ret[1] == str(dir_saved_photo)
+
+class TestEnumResolution:
+    """ Tests enumeration of resolution for camera"""
+    def test_with_exist_camera_resolution(self):
+        """ Should returns 640x480 in string 
+            (UsbCamera setting attribute)
+        """
+        camera_setting = UsbCameraSetting()
+        camera_setting.resolution = CameraResolution._640x480
+        camera = UsbCamera('/dev/video0', camera_setting)
+        assert camera._setting.resolution == "640x480"
+
+    def test_with_non_exist_camera_resolution(self):
+        """ Should raise an Attribute Error"""
+        with pytest.raises(AttributeError):
+            camera_setting = UsbCameraSetting()
+            camera_setting.resolution = CameraResolution.asdsa
+            camera = UsbCamera('/dev/video0', camera_setting)
 
         
