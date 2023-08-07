@@ -26,7 +26,10 @@
         "./src/drivers/door",
         "./src/drivers/weight",
         "./src/drivers/sound",
-        "./src/drivers/camera"
+        "./src/drivers/camera",
+        "./src/applications/controller_app",
+        "./src/applications/data_transactions_app",
+        "./src/applications/display_app"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"

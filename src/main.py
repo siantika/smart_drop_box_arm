@@ -8,7 +8,6 @@
         It runs the operations needed by the core app and provide queue data
         as shared resources between threads.
 
-    License: see 'licenses.txt' file in the root of project
 """
 
 import os
