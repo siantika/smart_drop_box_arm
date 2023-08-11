@@ -19,17 +19,10 @@ import sys
 import os
 import subprocess
 import re
+import pytest
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(os.path.join(parent_dir, 'src/drivers/sound'))
 from sound import Aplay, SoundProcessing
-
-# Choose the sound-processing mode base on operating system
-# It depends on device's sound card
-if sys.platform == 'armv7l':
-    # default orange pi zero lts sound card
-    SOUND_PROCESSING = SoundProcessing.DAC
-else:
-    SOUND_PROCESSING = SoundProcessing.PCM
 
 
 class TestSoundInterfaceInAplay():
@@ -116,13 +109,18 @@ class TestSoundProcessing:
         assert SoundProcessing.PCM == 'PCM'
 
 
-class TestVolumeControl:
+""" Execeute the tests only in arm board (32 bit)"""
+@pytest.mark.skipif(sys.platform != 'armv7l', reason="requires arm board environment (32 bit)")
+class TestVolumeControl:   
+    """ Using DAC method for producing sound in sbc's sound card"""
+    ARM_SOUND_PROCESSING =SoundProcessing.DAC
+
     def set_up(self):
         self.sound = Aplay()
 
-    def _help_get_sound_proccessing_level(self, sound_processing):
+    def _help_get_sound_proccessing_level(self, SOUND_PROCESSING):
         """ Gets the level of volume (0-63 and not in percent)"""
-        command = ['amixer', 'sget', sound_processing]
+        command = ['amixer', 'sget', SOUND_PROCESSING]
         process = subprocess.Popen(command, stdout=subprocess.PIPE)
         output, _ = process.communicate()
         output = output.decode('utf-8')
@@ -134,20 +132,20 @@ class TestVolumeControl:
 
     def test_volume_control_should_able_set_the_level_to_max(self):
         self.set_up()
-        self.sound.volume_control(100, SOUND_PROCESSING)
-        presentase_sound_processing_now = self._help_get_sound_proccessing_level(SOUND_PROCESSING)
+        self.sound.volume_control(100, self.ARM_SOUND_PROCESSING)
+        presentase_sound_processing_now = self._help_get_sound_proccessing_level(self.ARM_SOUND_PROCESSING)
         assert presentase_sound_processing_now == 63
 
     def test_volume_control_should_able_set_the_level_to_min(self):
         self.set_up()
-        self.sound.volume_control(0, SOUND_PROCESSING)
-        presentase_sound_processing_now = self._help_get_sound_proccessing_level(SOUND_PROCESSING)
+        self.sound.volume_control(0, self.ARM_SOUND_PROCESSING)
+        presentase_sound_processing_now = self._help_get_sound_proccessing_level(self.ARM_SOUND_PROCESSING)
         assert presentase_sound_processing_now == 0
 
     def test_volume_control_should_able_set_the_level_to_average(self):
         self.set_up()
-        self.sound.volume_control(50, SOUND_PROCESSING)
-        presentase_sound_processing_now = self._help_get_sound_proccessing_level(SOUND_PROCESSING)
+        self.sound.volume_control(50, self.ARM_SOUND_PROCESSING)
+        presentase_sound_processing_now = self._help_get_sound_proccessing_level(self.ARM_SOUND_PROCESSING)
         assert presentase_sound_processing_now == 32
 
 
@@ -201,6 +199,6 @@ class TestBlockingAplay:
         # You may want to set a threshold to account for minor variations in execution time
         expected_duration = 1.0  # Replace with the actual duration of your test sound file
         assert execution_time  < expected_duration
-        # Clean the task by stop it so it doesn't affect next test.
+        # Clean the task by stoping it so it doesn't affect next test.
         time.sleep(1.0)
         self.sound.stop(sound_thread)
