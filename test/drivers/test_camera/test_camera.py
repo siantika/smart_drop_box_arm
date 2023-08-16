@@ -162,7 +162,20 @@ class TestUsbCameraExecution:
         self.cam_set.resolution = CameraResolution._640x480
 
     def tear_down(self):
-        self.cam.delete_all_photos()
+        directory_path = './assets/photos'
+        # List all files in the directory
+        file_list = os.listdir(directory_path)
+        # Loop through the files and remove each one
+        for filename in file_list:
+            file_path = os.path.join(directory_path, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    print(f"Removed: {file_path}")
+                else:
+                    print(f"Skipped: {file_path} (not a file)")
+            except Exception as e:
+                print(f"Error while removing {file_path}: {e}")
         del self.cam_set
         del self.cam
 
@@ -198,6 +211,8 @@ class TestUsbCameraExecution:
                                        file_name)
         assert ret[0] == 0
         assert ret[1] == str(dir_saved_photo)
+        self.tear_down()
+        
 
 class TestEnumResolution:
     """ Tests enumeration of resolution for camera"""
@@ -216,5 +231,8 @@ class TestEnumResolution:
             camera_setting = UsbCameraSetting()
             camera_setting.resolution = CameraResolution.asdsa
             camera = UsbCamera('/dev/video0', camera_setting)
+
+
+
 
         
